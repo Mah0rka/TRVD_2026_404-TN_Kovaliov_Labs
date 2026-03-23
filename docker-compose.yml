@@ -1,0 +1,109 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fcms-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fcms
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: fcms-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: fcms-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://root:password@postgres:5432/fcms
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-local-dev-jwt-secret-change-me}
+      - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY:-local-dev-refresh-secret-change-me}
+      - SECURE_COOKIES=false
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - RUN_DB_MIGRATIONS=true
+      - SEED_DEMO_DATA=true
+      - PYTHONPATH=/app
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  backend-worker:
+    build: ./backend
+    container_name: fcms-backend-worker
+    command: /app/scripts/start-worker.sh
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://root:password@postgres:5432/fcms
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-local-dev-jwt-secret-change-me}
+      - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY:-local-dev-refresh-secret-change-me}
+      - SECURE_COOKIES=false
+      - RUN_DB_MIGRATIONS=true
+      - SEED_DEMO_DATA=false
+      - PYTHONPATH=/app
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  backend-beat:
+    build: ./backend
+    container_name: fcms-backend-beat
+    command: /app/scripts/start-beat.sh
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://root:password@postgres:5432/fcms
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-local-dev-jwt-secret-change-me}
+      - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY:-local-dev-refresh-secret-change-me}
+      - SECURE_COOKIES=false
+      - RUN_DB_MIGRATIONS=true
+      - SEED_DEMO_DATA=false
+      - PYTHONPATH=/app
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-alpine
+    container_name: fcms-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=250
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:

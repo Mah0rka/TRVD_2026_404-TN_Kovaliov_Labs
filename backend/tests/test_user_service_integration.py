@@ -1,0 +1,51 @@
+import pytest
+
+from app.models.user import UserRole
+from app.services.user_service import UserService
+from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate
+
+
+@pytest.mark.asyncio
+async def test_user_service_can_create_filter_and_update_users(db_session):
+    service = UserService(db_session)
+
+    created_admin = await service.create_user(
+        UserAdminCreate(
+            email="admin-flow@example.com",
+            password="Password123!",
+            first_name="Admin",
+            last_name="Flow",
+            role=UserRole.ADMIN,
+            is_verified=True,
+        )
+    )
+    created_trainer = await service.create_user(
+        UserAdminCreate(
+            email="trainer-flow@example.com",
+            password="Password123!",
+            first_name="Trainer",
+            last_name="Flow",
+            role=UserRole.TRAINER,
+            is_verified=True,
+        )
+    )
+
+    admins = await service.list_users(UserRole.ADMIN)
+    assert len(admins) == 1
+    assert admins[0].email == "admin-flow@example.com"
+
+    updated_admin = await service.update_user(
+        created_admin.id,
+        UserAdminUpdate(first_name="Updated", phone="+380991112233", role=UserRole.OWNER),
+    )
+    assert updated_admin.first_name == "Updated"
+    assert updated_admin.phone == "+380991112233"
+    assert updated_admin.role == UserRole.OWNER
+
+    updated_trainer = await service.update_profile(
+        created_trainer,
+        UserProfileUpdate(first_name="Coach", last_name="Prime", phone="+380509990000"),
+    )
+    assert updated_trainer.first_name == "Coach"
+    assert updated_trainer.last_name == "Prime"
+    assert updated_trainer.phone == "+380509990000"

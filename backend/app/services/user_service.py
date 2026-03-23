@@ -1,0 +1,70 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
+from app.models.user import User
+from app.models.user import UserRole
+from app.repositories.user_repository import UserRepository
+from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate
+
+
+class UserService:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+        self.repository = UserRepository(session)
+
+    async def list_users(self, role: UserRole | None = None) -> list[User]:
+        return await self.repository.list_all(role)
+
+    async def update_profile(self, user: User, payload: UserProfileUpdate) -> User:
+        update_data = payload.model_dump(exclude_unset=True)
+        for field_name, value in update_data.items():
+            if isinstance(value, str):
+                value = value.strip()
+            setattr(user, field_name, value)
+        return await self.repository.commit(user)
+
+    async def create_user(self, payload: UserAdminCreate) -> User:
+        existing_user = await self.repository.get_by_email(payload.email)
+        if existing_user:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
+        user = User(
+            email=payload.email.lower(),
+            password_hash=hash_password(payload.password),
+            first_name=payload.first_name.strip(),
+            last_name=payload.last_name.strip(),
+            phone=payload.phone.strip() if payload.phone else None,
+            role=payload.role,
+            is_verified=payload.is_verified,
+        )
+        return await self.repository.create(user)
+
+    async def update_user(self, user_id: str, payload: UserAdminUpdate) -> User:
+        from fastapi import HTTPException, status
+
+        user = await self.repository.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        update_data = payload.model_dump(exclude_unset=True)
+        email = update_data.get("email")
+        if email and email.lower() != user.email:
+            existing_user = await self.repository.get_by_email(email)
+            if existing_user and existing_user.id != user.id:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+            user.email = email.lower()
+
+        password = update_data.pop("password", None)
+        if password:
+            user.password_hash = hash_password(password)
+
+        for field_name, value in update_data.items():
+            if field_name == "email":
+                continue
+            if isinstance(value, str):
+                value = value.strip()
+            setattr(user, field_name, value)
+
+        return await self.repository.commit(user)
