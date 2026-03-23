@@ -77,6 +77,7 @@ describe("UsersPage", () => {
     renderWithProviders(<UsersPage />);
 
     await screen.findByText("Створити користувача");
+    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
     await user.type(screen.getByLabelText("Email"), "new@example.com");
     await user.clear(screen.getByLabelText("Ім'я"));
     await user.type(screen.getByLabelText("Ім'я"), "New");
@@ -100,13 +101,32 @@ describe("UsersPage", () => {
   });
 
   it("keeps only one access field in create form", async () => {
+    const user = userEvent.setup();
     getUsersMock.mockResolvedValue(usersFixture);
 
     renderWithProviders(<UsersPage />);
 
     await screen.findByText("Створити користувача");
-    expect(screen.getAllByLabelText("Доступ")).toHaveLength(1);
+    expect(screen.queryByLabelText("Доступ")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Фільтр списку")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
+    expect(screen.getAllByLabelText("Доступ")).toHaveLength(1);
+  });
+
+  it("toggles create form visibility", async () => {
+    const user = userEvent.setup();
+    getUsersMock.mockResolvedValue(usersFixture);
+
+    renderWithProviders(<UsersPage />);
+
+    await screen.findByText("Створити користувача");
+    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Сховати форму" }));
+    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
   });
 
   it("edits an existing user", async () => {
@@ -117,8 +137,8 @@ describe("UsersPage", () => {
     renderWithProviders(<UsersPage />);
 
     await user.click((await screen.findAllByRole("button", { name: "Редагувати" }))[0]);
-    await user.clear(screen.getAllByLabelText("Ім'я")[1]);
-    await user.type(screen.getAllByLabelText("Ім'я")[1], "Updated");
+    await user.clear(screen.getByLabelText("Ім'я"));
+    await user.type(screen.getByLabelText("Ім'я"), "Updated");
     await user.click(screen.getByRole("button", { name: "Зберегти зміни" }));
 
     await waitFor(() => {

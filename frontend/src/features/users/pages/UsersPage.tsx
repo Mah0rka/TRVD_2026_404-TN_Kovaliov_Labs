@@ -23,6 +23,7 @@ function getAccessLabel(role: UserRole): string {
 
 export function UsersPage() {
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<CurrentUser | null>(null);
   const [createForm, setCreateForm] = useState({
     email: "",
@@ -60,6 +61,7 @@ export function UsersPage() {
         role: "CLIENT",
         is_verified: true
       });
+      setIsCreateOpen(false);
     }
   });
 
@@ -108,72 +110,91 @@ export function UsersPage() {
         ))}
       </div>
 
-      <div className="surface-card form-grid">
+      <div className="surface-card create-user-card">
         <div className="heading-row">
-          <h3>Створити користувача</h3>
-        </div>
-        <label>
-          Email
-          <input
-            value={createForm.email}
-            onChange={(event) => setCreateForm((current) => ({ ...current, email: event.target.value }))}
-          />
-        </label>
-        <label>
-          Пароль
-          <input
-            value={createForm.password}
-            onChange={(event) => setCreateForm((current) => ({ ...current, password: event.target.value }))}
-          />
-        </label>
-        <label>
-          Ім'я
-          <input
-            value={createForm.first_name}
-            onChange={(event) =>
-              setCreateForm((current) => ({ ...current, first_name: event.target.value }))
-            }
-          />
-        </label>
-        <label>
-          Прізвище
-          <input
-            value={createForm.last_name}
-            onChange={(event) =>
-              setCreateForm((current) => ({ ...current, last_name: event.target.value }))
-            }
-          />
-        </label>
-        <label>
-          Телефон
-          <input
-            value={createForm.phone}
-            onChange={(event) => setCreateForm((current) => ({ ...current, phone: event.target.value }))}
-          />
-        </label>
-        <label>
-          Доступ
-          <select
-            value={createForm.role}
-            onChange={(event) =>
-              setCreateForm((current) => ({ ...current, role: event.target.value as UserRole }))
-            }
+          <div>
+            <h3>Створити користувача</h3>
+            <p className="muted">
+              Новий акаунт створюється тільки коли тобі це справді потрібно.
+            </p>
+          </div>
+          <button
+            className="ghost-link"
+            type="button"
+            aria-expanded={isCreateOpen}
+            aria-controls="create-user-panel"
+            onClick={() => setIsCreateOpen((current) => !current)}
           >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {getAccessLabel(role)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="secondary-button"
-          type="button"
-          disabled={!createForm.email || !createForm.first_name || !createForm.last_name || createMutation.isPending}
-          onClick={() => createMutation.mutate(createForm)}
-        >
-          {createMutation.isPending ? "Створення..." : "Створити"}
-        </button>
+            {isCreateOpen ? "Сховати форму" : "Відкрити форму"}
+          </button>
+        </div>
+
+        {isCreateOpen ? (
+          <div id="create-user-panel" className="form-grid">
+            <label>
+              Email
+              <input
+                value={createForm.email}
+                onChange={(event) => setCreateForm((current) => ({ ...current, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Пароль
+              <input
+                value={createForm.password}
+                onChange={(event) => setCreateForm((current) => ({ ...current, password: event.target.value }))}
+              />
+            </label>
+            <label>
+              Ім'я
+              <input
+                value={createForm.first_name}
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, first_name: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Прізвище
+              <input
+                value={createForm.last_name}
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, last_name: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Телефон
+              <input
+                value={createForm.phone}
+                onChange={(event) => setCreateForm((current) => ({ ...current, phone: event.target.value }))}
+              />
+            </label>
+            <label>
+              Доступ
+              <select
+                value={createForm.role}
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, role: event.target.value as UserRole }))
+                }
+              >
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {getAccessLabel(role)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={!createForm.email || !createForm.first_name || !createForm.last_name || createMutation.isPending}
+              onClick={() => createMutation.mutate(createForm)}
+            >
+              {createMutation.isPending ? "Створення..." : "Створити"}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {editingUser ? (

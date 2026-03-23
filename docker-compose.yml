@@ -94,6 +94,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - VITE_PROXY_TARGET=http://backend:8000
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=250
     depends_on:

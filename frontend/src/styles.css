@@ -429,6 +429,24 @@ a {
   padding: 18px;
 }
 
+.create-user-card {
+  display: grid;
+  gap: 18px;
+}
+
+.create-user-card .heading-row {
+  align-items: start;
+}
+
+.create-user-card .heading-row h3 {
+  margin: 0 0 6px;
+}
+
+.create-user-card .heading-row .muted {
+  margin: 0;
+  max-width: 42ch;
+}
+
 .dashboard-hero-card {
   position: relative;
   overflow: hidden;
