@@ -77,7 +77,7 @@ describe("UsersPage", () => {
     renderWithProviders(<UsersPage />);
 
     await screen.findByText("Створити користувача");
-    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
+    await user.click(screen.getByRole("button", { name: "Відкрити форму створення" }));
     await user.type(screen.getByLabelText("Email"), "new@example.com");
     await user.clear(screen.getByLabelText("Ім'я"));
     await user.type(screen.getByLabelText("Ім'я"), "New");
@@ -109,7 +109,7 @@ describe("UsersPage", () => {
     await screen.findByText("Створити користувача");
     expect(screen.queryByLabelText("Доступ")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Фільтр списку")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
+    await user.click(screen.getByRole("button", { name: "Відкрити форму створення" }));
     expect(screen.getAllByLabelText("Доступ")).toHaveLength(1);
   });
 
@@ -122,10 +122,10 @@ describe("UsersPage", () => {
     await screen.findByText("Створити користувача");
     expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Відкрити форму" }));
+    await user.click(screen.getByRole("button", { name: "Відкрити форму створення" }));
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Сховати форму" }));
+    await user.click(screen.getByRole("button", { name: "Сховати форму створення" }));
     expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
   });
 

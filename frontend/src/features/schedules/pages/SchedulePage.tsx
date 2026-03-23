@@ -111,15 +111,15 @@ export function SchedulePage() {
         </div>
 
         {showCreate ? (
-          <div className="create-panel">
-            <label>
+          <div className="create-panel schedule-create-panel">
+            <label className="create-panel-field">
               Назва
               <input
                 value={form.title}
                 onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               />
             </label>
-            <label>
+            <label className="create-panel-field">
               Тип
               <select
                 value={form.type}
@@ -134,7 +134,7 @@ export function SchedulePage() {
                 <option value="PERSONAL">PERSONAL</option>
               </select>
             </label>
-            <label>
+            <label className="create-panel-field">
               Початок
               <input
                 type="datetime-local"
@@ -142,7 +142,7 @@ export function SchedulePage() {
                 onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))}
               />
             </label>
-            <label>
+            <label className="create-panel-field">
               Кінець
               <input
                 type="datetime-local"
@@ -150,7 +150,7 @@ export function SchedulePage() {
                 onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))}
               />
             </label>
-            <label>
+            <label className="create-panel-field">
               Кількість місць
               <input
                 type="number"
@@ -163,7 +163,7 @@ export function SchedulePage() {
               />
             </label>
             {isAdmin ? (
-              <label>
+              <label className="create-panel-field">
                 Тренер
                 <select
                   value={form.trainerId}
@@ -181,7 +181,7 @@ export function SchedulePage() {
               </label>
             ) : null}
             <button
-              className="secondary-button"
+              className="secondary-button create-panel-action"
               onClick={() => createMutation.mutate(form)}
               disabled={
                 !form.title ||

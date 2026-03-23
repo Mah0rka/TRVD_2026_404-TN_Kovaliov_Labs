@@ -119,13 +119,16 @@ export function UsersPage() {
             </p>
           </div>
           <button
-            className="ghost-link"
+            className="ghost-link create-user-toggle"
             type="button"
+            aria-label={isCreateOpen ? "Сховати форму створення" : "Відкрити форму створення"}
             aria-expanded={isCreateOpen}
             aria-controls="create-user-panel"
             onClick={() => setIsCreateOpen((current) => !current)}
           >
-            {isCreateOpen ? "Сховати форму" : "Відкрити форму"}
+            <span className={isCreateOpen ? "create-user-toggle-icon open" : "create-user-toggle-icon"}>
+              &gt;
+            </span>
           </button>
         </div>
 

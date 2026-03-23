@@ -447,6 +447,26 @@ a {
   max-width: 42ch;
 }
 
+.create-user-toggle {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.create-user-toggle-icon {
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 180ms ease;
+}
+
+.create-user-toggle-icon.open {
+  transform: rotate(-90deg);
+}
+
 .dashboard-hero-card {
   position: relative;
   overflow: hidden;
@@ -1060,6 +1080,42 @@ a {
   background: rgba(28, 28, 28, 0.84);
 }
 
+.create-panel-field,
+.create-panel-action {
+  min-width: 0;
+}
+
+.schedule-create-panel {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+}
+
+.schedule-create-panel .create-panel-field:nth-child(1) {
+  grid-column: span 3;
+}
+
+.schedule-create-panel .create-panel-field:nth-child(2) {
+  grid-column: span 2;
+}
+
+.schedule-create-panel .create-panel-field:nth-child(3),
+.schedule-create-panel .create-panel-field:nth-child(4) {
+  grid-column: span 3;
+}
+
+.schedule-create-panel .create-panel-field:nth-child(5) {
+  grid-column: span 1;
+}
+
+.schedule-create-panel .create-panel-field:nth-child(6) {
+  grid-column: span 3;
+}
+
+.schedule-create-panel .create-panel-action {
+  grid-column: span 3;
+  min-height: 52px;
+}
+
 .chips {
   display: flex;
   gap: 10px;
@@ -1544,6 +1600,15 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .schedule-create-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-create-panel .create-panel-field,
+  .schedule-create-panel .create-panel-action {
+    grid-column: span 1 !important;
+  }
+
   .hero-section,
   .zone-grid,
   .trainer-grid,
@@ -1646,6 +1711,15 @@ a {
 
   .hero-stage {
     grid-template-columns: 1fr;
+  }
+
+  .schedule-create-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-create-panel .create-panel-field,
+  .schedule-create-panel .create-panel-action {
+    grid-column: span 1 !important;
   }
 
   .dashboard-hero-card,
