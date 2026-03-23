@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy import select
 
+from app.models.booking import Booking
 from app.core.database import async_session_factory
 from app.core.security import hash_password
 from app.models.payment import Payment
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 async def seed_demo_data() -> None:
     async with async_session_factory() as session:
         users = await _ensure_users(session)
+        await _reconcile_legacy_demo_users(session, users)
         trainer = users["trainer"]
         client = users["client"]
 
@@ -55,6 +57,51 @@ async def _ensure_users(session) -> dict[str, User]:
         created[key] = user
 
     return created
+
+
+async def _reconcile_legacy_demo_users(session, canonical_users: dict[str, User]) -> None:
+    legacy_emails = {
+        "owner@fcms.local": "owner",
+        "admin@fcms.local": "admin",
+        "trainer@fcms.local": "trainer",
+        "client@fcms.local": "client",
+    }
+
+    for legacy_email, canonical_key in legacy_emails.items():
+        result = await session.execute(select(User).where(User.email == legacy_email))
+        legacy_user = result.scalar_one_or_none()
+        if not legacy_user:
+            continue
+
+        canonical_user = canonical_users[canonical_key]
+        await _migrate_user_relations(session, legacy_user, canonical_user)
+        await session.delete(legacy_user)
+        await session.flush()
+
+
+async def _migrate_user_relations(session, source_user: User, target_user: User) -> None:
+    if source_user.id == target_user.id:
+        return
+
+    subscription_result = await session.execute(
+        select(Subscription).where(Subscription.user_id == source_user.id)
+    )
+    for subscription in subscription_result.scalars().all():
+        subscription.user_id = target_user.id
+
+    payment_result = await session.execute(select(Payment).where(Payment.user_id == source_user.id))
+    for payment in payment_result.scalars().all():
+        payment.user_id = target_user.id
+
+    booking_result = await session.execute(select(Booking).where(Booking.user_id == source_user.id))
+    for booking in booking_result.scalars().all():
+        booking.user_id = target_user.id
+
+    class_result = await session.execute(
+        select(WorkoutClass).where(WorkoutClass.trainer_id == source_user.id)
+    )
+    for workout_class in class_result.scalars().all():
+        workout_class.trainer_id = target_user.id
 
 
 async def _ensure_schedule(session, trainer: User) -> None:

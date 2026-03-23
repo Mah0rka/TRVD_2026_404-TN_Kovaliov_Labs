@@ -111,17 +111,6 @@ export function UsersPage() {
       <div className="surface-card form-grid">
         <div className="heading-row">
           <h3>Створити користувача</h3>
-          <select
-            value={filterRole}
-            onChange={(event) => setFilterRole(event.target.value as UserRole | "ALL")}
-          >
-            <option value="ALL">Усі рівні доступу</option>
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {getAccessLabel(role)}
-              </option>
-            ))}
-          </select>
         </div>
         <label>
           Email
@@ -264,7 +253,23 @@ export function UsersPage() {
       <div className="surface-card table-card">
         <div className="table-header">
           <h3>Список користувачів</h3>
-          <span className="muted">{usersQuery.data?.length ?? 0} записів</span>
+          <div className="heading-row">
+            <label>
+              Фільтр списку
+              <select
+                value={filterRole}
+                onChange={(event) => setFilterRole(event.target.value as UserRole | "ALL")}
+              >
+                <option value="ALL">Усі учасники</option>
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {getAccessLabel(role)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="muted">{usersQuery.data?.length ?? 0} записів</span>
+          </div>
         </div>
 
         {usersQuery.isLoading ? <p className="muted">Завантаження користувачів...</p> : null}

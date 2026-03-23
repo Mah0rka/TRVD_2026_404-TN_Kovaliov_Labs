@@ -1,0 +1,72 @@
+import userEvent from "@testing-library/user-event";
+import { screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+
+import { renderWithProviders } from "../../../test/utils";
+import { BookingsPage } from "./BookingsPage";
+
+const getMyBookingsMock = vi.fn();
+const cancelBookingMock = vi.fn();
+
+vi.mock("../../../shared/api", async () => {
+  const actual = await vi.importActual<typeof import("../../../shared/api")>("../../../shared/api");
+  return {
+    ...actual,
+    getMyBookings: () => getMyBookingsMock(),
+    cancelBooking: (...args: unknown[]) => cancelBookingMock(...args)
+  };
+});
+
+describe("BookingsPage", () => {
+  beforeEach(() => {
+    getMyBookingsMock.mockReset();
+    cancelBookingMock.mockReset();
+  });
+
+  it("renders empty state", async () => {
+    getMyBookingsMock.mockResolvedValue([]);
+
+    renderWithProviders(<BookingsPage />);
+
+    expect(await screen.findByText("Поки що без бронювань")).toBeInTheDocument();
+  });
+
+  it("renders bookings and cancels confirmed one", async () => {
+    const user = userEvent.setup();
+    getMyBookingsMock.mockResolvedValue([
+      {
+        id: "booking-1",
+        user_id: "client-1",
+        class_id: "class-1",
+        status: "CONFIRMED",
+        created_at: "2026-03-23T00:00:00Z",
+        updated_at: "2026-03-23T00:00:00Z",
+        workout_class: {
+          id: "class-1",
+          title: "Morning Burn",
+          trainer_id: "trainer-1",
+          start_time: "2026-03-25T08:00:00Z",
+          end_time: "2026-03-25T09:00:00Z",
+          capacity: 12,
+          trainer: {
+            id: "trainer-1",
+            first_name: "Ira",
+            last_name: "Coach"
+          }
+        }
+      }
+    ]);
+    cancelBookingMock.mockResolvedValue({ status: "CANCELLED" });
+
+    renderWithProviders(<BookingsPage />);
+
+    expect(await screen.findByText("Morning Burn")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Скасувати" }));
+
+    await waitFor(() => {
+      expect(cancelBookingMock).toHaveBeenCalled();
+      expect(cancelBookingMock.mock.calls[0]?.[0]).toBe("booking-1");
+    });
+  });
+});

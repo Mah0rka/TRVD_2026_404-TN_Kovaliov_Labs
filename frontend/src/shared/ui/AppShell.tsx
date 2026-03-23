@@ -40,6 +40,7 @@ export function AppShell({ children }: PropsWithChildren) {
             <NavLink
               key={item.to}
               to={item.to}
+              end
               className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
             >
               {item.label}
