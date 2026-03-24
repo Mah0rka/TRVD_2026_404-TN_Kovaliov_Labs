@@ -66,3 +66,9 @@ export async function updateUser(
 
   return userSchema.parse(data);
 }
+
+export async function deleteUser(userId: string): Promise<void> {
+  await request<void>(`/users/${userId}`, {
+    method: "DELETE"
+  });
+}

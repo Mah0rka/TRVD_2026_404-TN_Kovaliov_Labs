@@ -57,3 +57,13 @@ async def update_user(
     service = UserService(db)
     user = await service.update_user(user_id, payload)
     return UserRead.model_validate(user)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: str,
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OWNER)),
+    db: AsyncSession = Depends(get_db_session),
+) -> None:
+    service = UserService(db)
+    await service.delete_user(current_user, user_id)

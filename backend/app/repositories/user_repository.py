@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User, UserRole
@@ -33,3 +33,13 @@ class UserRepository:
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def count_by_role(self, role: UserRole) -> int:
+        result = await self.session.execute(
+            select(func.count()).select_from(User).where(User.role == role)
+        )
+        return int(result.scalar_one())
+
+    async def delete(self, user: User) -> None:
+        await self.session.delete(user)
+        await self.session.commit()

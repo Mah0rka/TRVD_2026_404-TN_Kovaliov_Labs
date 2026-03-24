@@ -34,7 +34,7 @@ export async function register(input: {
 }
 
 export async function getCurrentUser(): Promise<CurrentUser> {
-  const data = await request<unknown>("/auth/me", { method: "GET" }, { retryOnAuth: false });
+  const data = await request<unknown>("/auth/me", { method: "GET" });
   return userSchema.parse(data);
 }
 

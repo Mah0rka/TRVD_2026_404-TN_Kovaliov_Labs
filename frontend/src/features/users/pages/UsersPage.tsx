@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createUser,
+  deleteUser,
   deleteClientSubscription,
   getManagedSubscriptions,
   getPayments,
@@ -17,6 +18,7 @@ import {
   updateClientSubscription,
   updateUser
 } from "../../../shared/api";
+import { useAuthStore } from "../../auth/model/store";
 
 const roles: UserRole[] = ["CLIENT", "TRAINER", "ADMIN", "OWNER"];
 
@@ -50,6 +52,25 @@ function getAuditLabel(subscription: Subscription): string {
     return `Редагував ${subscription.last_modified_by.first_name} ${subscription.last_modified_by.last_name} · ${new Date(subscription.last_modified_at).toLocaleString("uk-UA")}`;
   }
   return "Без змін менеджером";
+}
+
+function getSubscriptionPriority(subscription: Subscription): number {
+  if (subscription.deleted_at) return 0;
+  if (subscription.status === "ACTIVE") return 4;
+  if (subscription.status === "FROZEN") return 3;
+  if (subscription.status === "EXPIRED") return 2;
+  return 1;
+}
+
+function getUserSearchValue(user: CurrentUser): string {
+  return [
+    user.first_name,
+    user.last_name,
+    `${user.first_name} ${user.last_name}`,
+    user.phone ?? ""
+  ]
+    .join(" ")
+    .toLocaleLowerCase("uk-UA");
 }
 
 function emptyCreateForm() {
@@ -96,42 +117,61 @@ function emptySubscriptionEditForm() {
   };
 }
 
+type DestructiveConfirmation =
+  | { kind: "user"; user: CurrentUser }
+  | { kind: "subscription"; subscription: Subscription };
+
 export function UsersPage() {
   const queryClient = useQueryClient();
+  const authUser = useAuthStore((state) => state.user);
+  const isAuthReady = useAuthStore((state) => state.isReady);
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CurrentUser | null>(null);
   const [editingSubscriptionId, setEditingSubscriptionId] = useState<string | null>(null);
+  const [confirmationState, setConfirmationState] = useState<DestructiveConfirmation | null>(null);
+  const [confirmationInput, setConfirmationInput] = useState("");
   const [createForm, setCreateForm] = useState(emptyCreateForm());
   const [editForm, setEditForm] = useState(emptyEditForm());
   const [issueForm, setIssueForm] = useState(emptyIssueForm());
   const [subscriptionEditForm, setSubscriptionEditForm] = useState(emptySubscriptionEditForm());
+  const canLoadManagementData = Boolean(isAuthReady && authUser);
 
   const allUsersQuery = useQuery({
     queryKey: ["users", "all"],
-    queryFn: () => getUsers()
+    queryFn: () => getUsers(),
+    enabled: canLoadManagementData
   });
 
   const usersQuery = useQuery({
     queryKey: ["users", filterRole],
-    queryFn: () => getUsers(filterRole === "ALL" ? undefined : filterRole)
+    queryFn: () => getUsers(filterRole === "ALL" ? undefined : filterRole),
+    enabled: canLoadManagementData
   });
 
   const plansQuery = useQuery({
     queryKey: ["membership-plans"],
-    queryFn: getSubscriptionPlans
+    queryFn: getSubscriptionPlans,
+    enabled: canLoadManagementData
+  });
+
+  const allSubscriptionsQuery = useQuery({
+    queryKey: ["managed-subscriptions", "all-users"],
+    queryFn: () => getManagedSubscriptions({ includeDeleted: true }),
+    enabled: canLoadManagementData
   });
 
   const subscriptionsQuery = useQuery({
     queryKey: ["managed-subscriptions", selectedUser?.id],
     queryFn: () => getManagedSubscriptions({ userId: selectedUser?.id, includeDeleted: true }),
-    enabled: Boolean(selectedUser?.id)
+    enabled: Boolean(canLoadManagementData && selectedUser?.id)
   });
 
   const paymentsQuery = useQuery({
     queryKey: ["payments-ledger", selectedUser?.id],
     queryFn: () => getPayments({ userId: selectedUser?.id }),
-    enabled: Boolean(selectedUser?.id)
+    enabled: Boolean(canLoadManagementData && selectedUser?.id)
   });
 
   const createMutation = useMutation({
@@ -186,6 +226,9 @@ export function UsersPage() {
     mutationFn: deleteClientSubscription,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", "all-users"] });
+      setConfirmationState(null);
+      setConfirmationInput("");
     }
   });
 
@@ -193,6 +236,20 @@ export function UsersPage() {
     mutationFn: restoreClientSubscription,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: (_, deletedUserId) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", "all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["payments-ledger"] });
+      if (selectedUser?.id === deletedUserId) {
+        setSelectedUser(null);
+      }
+      setConfirmationState(null);
+      setConfirmationInput("");
     }
   });
 
@@ -208,6 +265,72 @@ export function UsersPage() {
     () => (plansQuery.data ?? []).filter((plan) => plan.is_active),
     [plansQuery.data]
   );
+
+  const subscriptionsByUser = useMemo(() => {
+    const map = new Map<string, Subscription>();
+
+    for (const subscription of allSubscriptionsQuery.data ?? []) {
+      const current = map.get(subscription.user_id);
+      if (!current) {
+        map.set(subscription.user_id, subscription);
+        continue;
+      }
+
+      const currentPriority = getSubscriptionPriority(current);
+      const nextPriority = getSubscriptionPriority(subscription);
+
+      if (
+        nextPriority > currentPriority ||
+        (nextPriority === currentPriority &&
+          new Date(subscription.updated_at).getTime() > new Date(current.updated_at).getTime())
+      ) {
+        map.set(subscription.user_id, subscription);
+      }
+    }
+
+    return map;
+  }, [allSubscriptionsQuery.data]);
+
+  const filteredUsers = useMemo(() => {
+    const users = usersQuery.data ?? [];
+    const normalizedQuery = userSearchTerm.trim().toLocaleLowerCase("uk-UA");
+
+    if (!normalizedQuery) {
+      return users;
+    }
+
+    return users.filter((user) => getUserSearchValue(user).includes(normalizedQuery));
+  }, [userSearchTerm, usersQuery.data]);
+
+  useEffect(() => {
+    if (!selectedUser) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedUser(null);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedUser]);
+
+  useEffect(() => {
+    if (!authUser) {
+      setSelectedUser(null);
+      setEditingSubscriptionId(null);
+      setConfirmationState(null);
+      setConfirmationInput("");
+    }
+  }, [authUser]);
 
   function selectUser(user: CurrentUser) {
     setSelectedUser(user);
@@ -233,6 +356,21 @@ export function UsersPage() {
       total_visits: subscription.total_visits === null ? "" : String(subscription.total_visits),
       remaining_visits: subscription.remaining_visits === null ? "" : String(subscription.remaining_visits)
     });
+  }
+
+  function openUserDeleteConfirmation(user: CurrentUser) {
+    setConfirmationInput("");
+    setConfirmationState({ kind: "user", user });
+  }
+
+  function openSubscriptionDeleteConfirmation(subscription: Subscription) {
+    setConfirmationInput("");
+    setConfirmationState({ kind: "subscription", subscription });
+  }
+
+  function closeConfirmationModal() {
+    setConfirmationState(null);
+    setConfirmationInput("");
   }
 
   function buildIssuePayload() {
@@ -264,6 +402,33 @@ export function UsersPage() {
           : Number(subscriptionEditForm.remaining_visits)
     };
   }
+
+  const confirmationExpectedValue =
+    confirmationState?.kind === "user"
+      ? confirmationState.user.email
+      : confirmationState
+        ? "ВИДАЛИТИ"
+        : "";
+
+  const confirmationTitle =
+    confirmationState?.kind === "user"
+      ? "Видалення акаунта"
+      : confirmationState
+        ? "Видалення абонемента"
+        : "";
+
+  const confirmationDescription =
+    confirmationState?.kind === "user"
+      ? `Щоб видалити акаунт ${confirmationState.user.first_name} ${confirmationState.user.last_name}, введіть email ${confirmationState.user.email}.`
+      : confirmationState
+        ? "Щоб видалити абонемент, введіть слово ВИДАЛИТИ. Це захист від випадкового кліку."
+        : "";
+
+  const confirmationActionLabel =
+    confirmationState?.kind === "user" ? "Видалити акаунт" : "Видалити абонемент";
+
+  const confirmationMatches =
+    confirmationState !== null && confirmationInput.trim() === confirmationExpectedValue;
 
   return (
     <section className="panel-stack">
@@ -349,19 +514,46 @@ export function UsersPage() {
       <div className="surface-card table-card">
         <div className="table-header">
           <h3>Список користувачів</h3>
-          <div className="heading-row">
-            <label>
-              Фільтр списку
-              <select value={filterRole} onChange={(event) => setFilterRole(event.target.value as UserRole | "ALL")}>
-                <option value="ALL">Усі учасники</option>
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {getAccessLabel(role)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className="muted">{usersQuery.data?.length ?? 0} записів</span>
+          <div className="table-toolbar">
+            <div className="table-toolbar-fields">
+              <label className="toolbar-field">
+                <span className="toolbar-label">Фільтр списку</span>
+                <span className="toolbar-select-shell">
+                  <select
+                    className="toolbar-control"
+                    aria-label="Фільтр списку"
+                    value={filterRole}
+                    onChange={(event) => setFilterRole(event.target.value as UserRole | "ALL")}
+                  >
+                    <option value="ALL">Усі учасники</option>
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {getAccessLabel(role)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="toolbar-select-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </span>
+              </label>
+              <label className="toolbar-field toolbar-field-search">
+                <span className="toolbar-label">Пошук</span>
+                <span className="toolbar-search-shell">
+                  <span className="toolbar-search-icon" aria-hidden="true">
+                    ⌕
+                  </span>
+                  <input
+                    className="toolbar-control toolbar-search-input"
+                    aria-label="Пошук"
+                    value={userSearchTerm}
+                    onChange={(event) => setUserSearchTerm(event.target.value)}
+                    placeholder="Ім'я, прізвище або телефон"
+                  />
+                </span>
+              </label>
+            </div>
+            <span className="toolbar-count">{filteredUsers.length} записів</span>
           </div>
         </div>
 
@@ -372,49 +564,85 @@ export function UsersPage() {
           <div className="management-table-head users-table-layout">
             <span>Учасник</span>
             <span>Контакти</span>
+            <span>Абонемент</span>
             <span>Доступ</span>
             <span>Статус</span>
             <span>Створено</span>
             <span>Дії</span>
           </div>
-          {usersQuery.data?.map((user) => (
-            <article key={user.id} className="management-table-row users-table-layout">
-              <div className="management-table-cell">
-                <strong>{user.first_name} {user.last_name}</strong>
-                <span className="muted">ID: {user.id.slice(0, 8)}</span>
-              </div>
-              <div className="management-table-cell">
-                <span>{user.email}</span>
-                <span className="muted">{user.phone || "Телефон не вказано"}</span>
-              </div>
-              <div className="management-table-cell">
-                <span>{getAccessLabel(user.role)}</span>
-              </div>
-              <div className="management-table-cell">
-                <span className={user.is_verified ? "status-pill success" : "status-pill warning"}>
-                  {user.is_verified ? "Підтверджено" : "Очікує"}
-                </span>
-              </div>
-              <div className="management-table-cell">
-                <span>{new Date(user.created_at).toLocaleDateString("uk-UA")}</span>
-              </div>
-              <div className="management-table-cell">
-                <button className="ghost-link" onClick={() => selectUser(user)}>Редагувати</button>
-              </div>
-            </article>
-          ))}
+          {filteredUsers.map((user) => {
+            const userSubscription = subscriptionsByUser.get(user.id);
+
+            return (
+              <article key={user.id} className="management-table-row users-table-layout">
+                <div className="management-table-cell">
+                  <strong>{user.first_name} {user.last_name}</strong>
+                  <span className="muted">ID: {user.id.slice(0, 8)}</span>
+                </div>
+                <div className="management-table-cell">
+                  <span>{user.email}</span>
+                  <span className="muted">{user.phone || "Телефон не вказано"}</span>
+                </div>
+                <div className="management-table-cell">
+                  {userSubscription ? (
+                    <>
+                      <strong>{userSubscription.plan?.title ?? getSubscriptionStatusLabel(userSubscription.status)}</strong>
+                      <span className="muted">
+                        {userSubscription.deleted_at
+                          ? "Видалений"
+                          : getSubscriptionStatusLabel(userSubscription.status)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="muted">Немає абонемента</span>
+                  )}
+                </div>
+                <div className="management-table-cell">
+                  <span>{getAccessLabel(user.role)}</span>
+                </div>
+                <div className="management-table-cell">
+                  <span className={user.is_verified ? "status-pill success" : "status-pill warning"}>
+                    {user.is_verified ? "Підтверджено" : "Очікує"}
+                  </span>
+                </div>
+                <div className="management-table-cell">
+                  <span>{new Date(user.created_at).toLocaleDateString("uk-UA")}</span>
+                </div>
+                <div className="management-table-cell">
+                  <button className="ghost-link" onClick={() => selectUser(user)}>Редагувати</button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
 
       {selectedUser ? (
-        <div className="detail-layout">
-          <div className="surface-card detail-panel">
+        <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
+          <div
+            className="modal-panel participant-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="participant-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="participant-modal-toolbar">
+              <div>
+                <p className="eyebrow">Учасник</p>
+                <h3 id="participant-modal-title">
+                  {selectedUser.first_name} {selectedUser.last_name}
+                </h3>
+              </div>
+              <button className="ghost-link" onClick={() => setSelectedUser(null)}>Закрити</button>
+            </div>
+
+            <div className="detail-layout detail-layout-modal">
+              <div className="surface-card detail-panel participant-sidebar">
             <div className="heading-row">
               <div>
                 <h3>Профіль учасника</h3>
                 <p className="muted">Повна інформація по {selectedUser.first_name} {selectedUser.last_name}.</p>
               </div>
-              <button className="ghost-link" onClick={() => setSelectedUser(null)}>Закрити</button>
             </div>
 
             <div className="summary-grid">
@@ -426,7 +654,7 @@ export function UsersPage() {
               <div className="summary-item"><span className="stat-label">Створено</span><strong>{new Date(selectedUser.created_at).toLocaleString("uk-UA")}</strong></div>
             </div>
 
-            <div className="form-grid">
+            <div className="form-grid participant-form-grid">
               <div className="heading-row"><h3>Редагування учасника</h3></div>
               <label>
                 Ім'я
@@ -473,10 +701,22 @@ export function UsersPage() {
               >
                 {updateMutation.isPending ? "Оновлення..." : "Зберегти зміни"}
               </button>
+              <button
+                className="danger-link"
+                type="button"
+                disabled={selectedUser.id === authUser?.id || deleteUserMutation.isPending}
+                onClick={() => openUserDeleteConfirmation(selectedUser)}
+              >
+                {selectedUser.id === authUser?.id
+                  ? "Не можна видалити свій акаунт"
+                  : deleteUserMutation.isPending
+                    ? "Видалення..."
+                    : "Видалити акаунт"}
+              </button>
             </div>
-          </div>
+              </div>
 
-          <div className="surface-card detail-panel">
+              <div className="surface-card detail-panel participant-main">
             <div className="heading-row">
               <div>
                 <h3>Керування абонементами</h3>
@@ -484,7 +724,7 @@ export function UsersPage() {
               </div>
             </div>
 
-            <div className="form-grid">
+            <div className="form-grid participant-form-grid">
               <div className="heading-row"><h3>Видати абонемент</h3></div>
               <label>
                 Абонемент для видачі
@@ -535,6 +775,7 @@ export function UsersPage() {
               {subscriptionsQuery.isLoading ? <p className="muted">Завантаження абонементів...</p> : null}
               {subscriptionsQuery.isError ? <p className="error-banner">{subscriptionsQuery.error instanceof Error ? subscriptionsQuery.error.message : "Помилка"}</p> : null}
 
+              <div className="table-scroll-shell">
               <div className="management-table">
                 <div className="management-table-head subscriptions-table-layout">
                   <span>Абонемент</span>
@@ -573,7 +814,13 @@ export function UsersPage() {
                       {!subscription.deleted_at ? (
                         <>
                           <button className="ghost-link" onClick={() => startEditingSubscription(subscription)}>Редагувати абонемент</button>
-                          <button className="danger-link" onClick={() => deleteSubscriptionMutation.mutate(subscription.id)} disabled={deleteSubscriptionMutation.isPending}>Видалити абонемент</button>
+                          <button
+                            className="danger-link"
+                            onClick={() => openSubscriptionDeleteConfirmation(subscription)}
+                            disabled={deleteSubscriptionMutation.isPending}
+                          >
+                            Видалити абонемент
+                          </button>
                         </>
                       ) : (
                         <button className="ghost-link" onClick={() => restoreSubscriptionMutation.mutate(subscription.id)} disabled={restoreSubscriptionMutation.isPending}>
@@ -584,10 +831,11 @@ export function UsersPage() {
                   </article>
                 ))}
               </div>
+              </div>
             </div>
 
             {editingSubscriptionId ? (
-              <div className="form-grid">
+              <div className="form-grid participant-form-grid">
                 <div className="heading-row">
                   <h3>Редагування абонемента</h3>
                   <button className="ghost-link" onClick={() => { setEditingSubscriptionId(null); setSubscriptionEditForm(emptySubscriptionEditForm()); }}>
@@ -647,6 +895,7 @@ export function UsersPage() {
               {paymentsQuery.isLoading ? <p className="muted">Завантаження оплат...</p> : null}
               {paymentsQuery.isError ? <p className="error-banner">{paymentsQuery.error instanceof Error ? paymentsQuery.error.message : "Помилка"}</p> : null}
 
+              <div className="table-scroll-shell">
               <div className="management-table">
                 <div className="management-table-head payments-table-layout">
                   <span>Сума</span>
@@ -673,6 +922,68 @@ export function UsersPage() {
                   </article>
                 ))}
               </div>
+              </div>
+            </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmationState ? (
+        <div className="modal-overlay" onClick={closeConfirmationModal}>
+          <div
+            className="modal-panel confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmation-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="participant-modal-toolbar">
+              <div>
+                <p className="eyebrow">Підтвердження</p>
+                <h3 id="confirmation-modal-title">{confirmationTitle}</h3>
+              </div>
+              <button className="ghost-link" type="button" onClick={closeConfirmationModal}>
+                Закрити
+              </button>
+            </div>
+
+            <p className="muted">{confirmationDescription}</p>
+
+            <label>
+              {confirmationState.kind === "user" ? "Email для підтвердження" : "Підтвердження"}
+              <input
+                value={confirmationInput}
+                onChange={(event) => setConfirmationInput(event.target.value)}
+                placeholder={confirmationExpectedValue}
+              />
+            </label>
+
+            <div className="confirm-modal-actions">
+              <button className="ghost-link" type="button" onClick={closeConfirmationModal}>
+                Скасувати
+              </button>
+              <button
+                className="danger-link"
+                type="button"
+                disabled={
+                  !confirmationMatches ||
+                  deleteSubscriptionMutation.isPending ||
+                  deleteUserMutation.isPending
+                }
+                onClick={() => {
+                  if (confirmationState.kind === "user") {
+                    deleteUserMutation.mutate(confirmationState.user.id);
+                    return;
+                  }
+                  deleteSubscriptionMutation.mutate(confirmationState.subscription.id);
+                }}
+              >
+                {deleteUserMutation.isPending || deleteSubscriptionMutation.isPending
+                  ? "Виконуємо..."
+                  : confirmationActionLabel}
+              </button>
             </div>
           </div>
         </div>

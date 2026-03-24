@@ -10,6 +10,7 @@ import {
   cancelBooking,
   createBooking,
   deleteClientSubscription,
+  deleteUser,
   createMembershipPlan,
   createSchedule,
   createUser,
@@ -226,6 +227,9 @@ describe("api modules", () => {
 
     requestMock.mockResolvedValueOnce(currentUser);
     await updateUser("user-1", { role: "ADMIN" });
+
+    requestMock.mockResolvedValueOnce(undefined);
+    await deleteUser("user-2");
   });
 
   it("handles schedules module calls", async () => {

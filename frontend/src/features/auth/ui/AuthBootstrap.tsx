@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { getCurrentUser } from "../../../shared/api";
+import { AUTH_EXPIRED_EVENT } from "../../../shared/api/core/http";
 import { hasSessionHint } from "../lib/session";
 import { useAuthStore } from "../model/store";
 import { FullScreenState } from "./FullScreenState";
@@ -11,6 +12,17 @@ export function AuthBootstrap() {
   const setUser = useAuthStore((state) => state.setUser);
   const setReady = useAuthStore((state) => state.setReady);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      clearAuth();
+    };
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, [clearAuth]);
 
   const query = useQuery({
     queryKey: ["auth", "me"],

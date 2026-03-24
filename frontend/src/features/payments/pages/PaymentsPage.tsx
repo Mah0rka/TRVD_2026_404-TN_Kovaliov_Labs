@@ -10,6 +10,7 @@ export function PaymentsPage() {
   const isManagement = user?.role === "ADMIN" || user?.role === "OWNER";
   const [statusFilter, setStatusFilter] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const paymentsQuery = useQuery({
     queryKey: isManagement ? ["payments-ledger", statusFilter, methodFilter] : ["my-payments"],
@@ -29,6 +30,30 @@ export function PaymentsPage() {
         .reduce((sum, payment) => sum + payment.amount, 0)
     };
   }, [paymentsQuery.data]);
+
+  const filteredPayments = useMemo(() => {
+    const payments = paymentsQuery.data ?? [];
+    const normalizedQuery = searchTerm.trim().toLocaleLowerCase("uk-UA");
+
+    if (!normalizedQuery) {
+      return payments;
+    }
+
+    return payments.filter((payment) => {
+      const searchableValue = payment.user
+        ? [
+            payment.user.first_name,
+            payment.user.last_name,
+            `${payment.user.first_name} ${payment.user.last_name}`,
+            payment.user.phone ?? ""
+          ]
+            .join(" ")
+            .toLocaleLowerCase("uk-UA")
+        : "";
+
+      return searchableValue.includes(normalizedQuery);
+    });
+  }, [paymentsQuery.data, searchTerm]);
 
   return (
     <main className="screen">
@@ -59,23 +84,63 @@ export function PaymentsPage() {
         </div>
 
         {isManagement ? (
-          <div className="create-panel compact-filter-panel">
-            <label>
-              Статус
-              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                <option value="">Усі</option>
-                <option value="SUCCESS">Підтверджено</option>
-                <option value="FAILED">Неуспішно</option>
-              </select>
-            </label>
-            <label>
-              Метод
-              <select value={methodFilter} onChange={(event) => setMethodFilter(event.target.value)}>
-                <option value="">Усі</option>
-                <option value="CARD">Картка</option>
-                <option value="CASH">Готівка</option>
-              </select>
-            </label>
+          <div className="surface-card filter-toolbar-card">
+            <div className="table-toolbar table-toolbar-wide">
+              <div className="table-toolbar-fields">
+                <label className="toolbar-field">
+                  <span className="toolbar-label">Статус</span>
+                  <span className="toolbar-select-shell">
+                    <select
+                      className="toolbar-control"
+                      aria-label="Статус"
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value)}
+                    >
+                      <option value="">Усі</option>
+                      <option value="SUCCESS">Підтверджено</option>
+                      <option value="FAILED">Неуспішно</option>
+                    </select>
+                    <span className="toolbar-select-caret" aria-hidden="true">
+                      ▾
+                    </span>
+                  </span>
+                </label>
+                <label className="toolbar-field">
+                  <span className="toolbar-label">Метод</span>
+                  <span className="toolbar-select-shell">
+                    <select
+                      className="toolbar-control"
+                      aria-label="Метод"
+                      value={methodFilter}
+                      onChange={(event) => setMethodFilter(event.target.value)}
+                    >
+                      <option value="">Усі</option>
+                      <option value="CARD">Картка</option>
+                      <option value="CASH">Готівка</option>
+                    </select>
+                    <span className="toolbar-select-caret" aria-hidden="true">
+                      ▾
+                    </span>
+                  </span>
+                </label>
+                <label className="toolbar-field toolbar-field-search">
+                  <span className="toolbar-label">Пошук</span>
+                  <span className="toolbar-search-shell">
+                    <span className="toolbar-search-icon" aria-hidden="true">
+                      ⌕
+                    </span>
+                    <input
+                      className="toolbar-control toolbar-search-input"
+                      aria-label="Пошук"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Ім'я, прізвище або телефон"
+                    />
+                  </span>
+                </label>
+              </div>
+              <span className="toolbar-count">{filteredPayments.length} оплат</span>
+            </div>
           </div>
         ) : (
           <div className="surface-card dashboard-focus-card">
@@ -107,8 +172,8 @@ export function PaymentsPage() {
               <span>Дата</span>
             </div>
 
-            {paymentsQuery.data?.length ? (
-              paymentsQuery.data.map((payment) => (
+            {filteredPayments.length ? (
+              filteredPayments.map((payment) => (
                 <article key={payment.id} className="management-table-row payments-table-layout">
                   <div className="management-table-cell">
                     <strong>
@@ -129,7 +194,9 @@ export function PaymentsPage() {
                         <strong>
                           {payment.user.first_name} {payment.user.last_name}
                         </strong>
-                        <span className="muted">{payment.user.email}</span>
+                        <span className="muted">
+                          {payment.user.phone ? `${payment.user.email} · ${payment.user.phone}` : payment.user.email}
+                        </span>
                       </>
                     ) : (
                       <span>Покупка абонемента</span>

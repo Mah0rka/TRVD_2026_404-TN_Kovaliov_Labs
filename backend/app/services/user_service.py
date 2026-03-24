@@ -68,3 +68,26 @@ class UserService:
             setattr(user, field_name, value)
 
         return await self.repository.commit(user)
+
+    async def delete_user(self, actor: User, user_id: str) -> None:
+        from fastapi import HTTPException, status
+
+        user = await self.repository.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        if actor.id == user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot delete your own account",
+            )
+
+        if user.role == UserRole.OWNER:
+            owners_count = await self.repository.count_by_role(UserRole.OWNER)
+            if owners_count <= 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You cannot delete the last owner account",
+                )
+
+        await self.repository.delete(user)

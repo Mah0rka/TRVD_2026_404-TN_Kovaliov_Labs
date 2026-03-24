@@ -2,10 +2,12 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 
+import { useAuthStore } from "../../auth/model/store";
 import { renderWithProviders } from "../../../test/utils";
 import { UsersPage } from "./UsersPage";
 
 const createUserMock = vi.fn();
+const deleteUserMock = vi.fn();
 const getUsersMock = vi.fn();
 const updateUserMock = vi.fn();
 const getManagedSubscriptionsMock = vi.fn();
@@ -21,6 +23,7 @@ vi.mock("../../../shared/api", async () => {
   return {
     ...actual,
     createUser: (...args: unknown[]) => createUserMock(...args),
+    deleteUser: (...args: unknown[]) => deleteUserMock(...args),
     getUsers: (...args: unknown[]) => getUsersMock(...args),
     updateUser: (...args: unknown[]) => updateUserMock(...args),
     getManagedSubscriptions: (...args: unknown[]) => getManagedSubscriptionsMock(...args),
@@ -154,7 +157,24 @@ const paymentsFixture = [
 
 describe("UsersPage", () => {
   beforeEach(() => {
+    useAuthStore.setState({
+      user: {
+        id: "owner-1",
+        email: "owner@example.com",
+        first_name: "Owner",
+        last_name: "Account",
+        role: "OWNER",
+        phone: null,
+        is_verified: true,
+        created_at: currentTime,
+        updated_at: currentTime
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+
     createUserMock.mockReset();
+    deleteUserMock.mockReset();
     getUsersMock.mockReset();
     updateUserMock.mockReset();
     getManagedSubscriptionsMock.mockReset();
@@ -219,6 +239,7 @@ describe("UsersPage", () => {
     restoreClientSubscriptionMock.mockResolvedValue(subscriptionsFixture[0]);
     deleteClientSubscriptionMock.mockResolvedValue(undefined);
     updateClientSubscriptionMock.mockResolvedValue(subscriptionsFixture[0]);
+    deleteUserMock.mockResolvedValue(undefined);
 
     renderWithProviders(<UsersPage />);
 
@@ -257,11 +278,29 @@ describe("UsersPage", () => {
       });
     });
 
+    await user.click(screen.getByRole("button", { name: "Видалити абонемент" }));
+    expect(await screen.findByText("Видалення абонемента")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Підтвердження"), "ВИДАЛИТИ");
+    await user.click((await screen.findAllByRole("button", { name: "Видалити абонемент" }))[1]);
+
+    await waitFor(() => {
+      expect(deleteClientSubscriptionMock.mock.calls[0]?.[0]).toBe("subscription-1");
+    });
+
     await user.click(screen.getByRole("button", { name: "Відновити абонемент" }));
 
     await waitFor(() => {
       expect(restoreClientSubscriptionMock).toHaveBeenCalled();
       expect(restoreClientSubscriptionMock.mock.calls[0]?.[0]).toBe("subscription-2");
+    });
+
+    await user.click(screen.getByRole("button", { name: "Видалити акаунт" }));
+    expect(await screen.findByText("Видалення акаунта")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Email для підтвердження"), "client@example.com");
+    await user.click((await screen.findAllByRole("button", { name: "Видалити акаунт" }))[1]);
+
+    await waitFor(() => {
+      expect(deleteUserMock.mock.calls[0]?.[0]).toBe("client-1");
     });
   });
 });

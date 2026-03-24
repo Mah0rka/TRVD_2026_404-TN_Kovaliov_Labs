@@ -3,6 +3,7 @@ const API_BASE_URL =
   import.meta.env.DEV && typeof window !== "undefined" && window.location.port === "3000"
     ? ""
     : configuredBaseUrl;
+export const AUTH_EXPIRED_EVENT = "fcms:auth-expired";
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -61,11 +62,18 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise;
 }
 
+function notifyAuthExpired() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+  }
+}
+
 export async function request<T>(
   path: string,
   init?: RequestInit,
   options: { retryOnAuth?: boolean } = {}
 ): Promise<T> {
+  let authExpiredNotified = false;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: buildHeaders(init),
@@ -84,9 +92,15 @@ export async function request<T>(
     if (refreshed) {
       return request<T>(path, init, { retryOnAuth: false });
     }
+    notifyAuthExpired();
+    authExpiredNotified = true;
   }
 
   if (!response.ok) {
+    if (response.status === 401 && isRefreshEligiblePath && !authExpiredNotified) {
+      notifyAuthExpired();
+    }
+
     const errorBody = await response
       .json()
       .catch(() => ({ detail: "Request failed", request_id: undefined }));
