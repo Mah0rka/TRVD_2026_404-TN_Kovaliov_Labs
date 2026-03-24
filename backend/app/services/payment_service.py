@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.payment import Payment
+from app.models.membership_plan import MembershipPlan
 from app.models.subscription import SubscriptionType
 from app.repositories.payment_repository import PaymentRepository
 
@@ -43,6 +44,24 @@ class PaymentService:
             method=normalized_method,
             status="SUCCESS",
             currency="UAH",
+        )
+
+    def build_plan_payment(
+        self,
+        user_id: str,
+        plan: MembershipPlan,
+        method: str = "CARD",
+    ) -> Payment:
+        normalized_method = method.upper()
+        if normalized_method not in ALLOWED_PAYMENT_METHODS:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported payment method")
+
+        return Payment(
+            user_id=user_id,
+            amount=plan.price,
+            method=normalized_method,
+            status="SUCCESS",
+            currency=plan.currency,
         )
 
     async def list_for_user(self, user_id: str) -> list[Payment]:

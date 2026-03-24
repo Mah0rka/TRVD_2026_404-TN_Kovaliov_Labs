@@ -18,7 +18,7 @@ export const navigationItems: NavigationItem[] = [
   { to: "/dashboard/profile", label: "Профіль", roles: allRoles },
   { to: "/dashboard/schedule", label: "Розклад", roles: allRoles },
   { to: "/dashboard/bookings", label: "Мої записи", roles: clientRoles },
-  { to: "/dashboard/subscriptions", label: "Абонементи", roles: clientRoles },
+  { to: "/dashboard/subscriptions", label: "Абонементи", roles: clientAndManagementRoles },
   { to: "/dashboard/payments", label: "Історія оплат", roles: clientAndManagementRoles },
   { to: "/dashboard/my-classes", label: "Мої класи", roles: trainerRoles },
   { to: "/dashboard/users", label: "Учасники", roles: managementRoles },

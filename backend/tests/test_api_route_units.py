@@ -10,10 +10,18 @@ from app.core.cookies import AuthCookies
 from app.models.user import UserRole
 from app.schemas.auth import AuthPayload, AuthResult, LoginRequest, RefreshResponse, RegisterRequest
 from app.schemas.booking import BookingRead
+from app.schemas.membership_plan import MembershipPlanRead
+from app.schemas.membership_plan import MembershipPlanCreate, MembershipPlanUpdate
 from app.schemas.payment import PaymentCreateRequest
 from app.schemas.report import RevenueReport, TrainerPopularityReport
 from app.schemas.schedule import ScheduleCreate, ScheduleRead, ScheduleUpdate
-from app.schemas.subscription import SubscriptionFreezeRequest, SubscriptionPurchaseRequest, SubscriptionRead
+from app.schemas.subscription import (
+    SubscriptionFreezeRequest,
+    SubscriptionManagementIssueRequest,
+    SubscriptionManagementUpdate,
+    SubscriptionPurchaseRequest,
+    SubscriptionRead,
+)
 from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate, UserRead
 
 
@@ -105,12 +113,35 @@ def make_subscription() -> SimpleNamespace:
     return SimpleNamespace(
         id="subscription-1",
         user_id="user-1",
+        plan_id="plan-1",
         type="MONTHLY",
         start_date=now,
         end_date=now + timedelta(days=30),
         status="ACTIVE",
         total_visits=12,
         remaining_visits=11,
+        plan=make_membership_plan(),
+        restored_by=None,
+        restored_at=None,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def make_membership_plan() -> SimpleNamespace:
+    now = datetime.now(UTC)
+    return SimpleNamespace(
+        id="plan-1",
+        title="Місячний",
+        description="12 занять",
+        type="MONTHLY",
+        duration_days=30,
+        visits_limit=12,
+        price=990,
+        currency="UAH",
+        sort_order=10,
+        is_active=True,
+        is_public=True,
         created_at=now,
         updated_at=now,
     )
@@ -286,11 +317,29 @@ async def test_schedule_routes(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_subscription_booking_payment_report_public_and_health_routes(monkeypatch):
+    class FakeMembershipPlanService:
+        def __init__(self, db):
+            self.db = db
+
+        async def list_plans(self, active_only=False, public_only=False):
+            return [make_membership_plan()]
+
+        async def create_plan(self, payload):
+            return make_membership_plan()
+
+        async def update_plan(self, plan_id, payload):
+            plan = make_membership_plan()
+            plan.id = plan_id
+            return plan
+
+        async def delete_plan(self, plan_id):
+            return None
+
     class FakeSubscriptionService:
         def __init__(self, db):
             self.db = db
 
-        async def purchase(self, user_id, subscription_type):
+        async def purchase(self, user_id, subscription_type=None, plan_id=None):
             return make_subscription()
 
         async def freeze(self, user_id, subscription_id, days):
@@ -298,6 +347,21 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
 
         async def list_for_user(self, user_id):
             return [make_subscription()]
+
+        async def list_for_management(self, user_id=None, include_deleted=False):
+            return [make_subscription()]
+
+        async def update_for_management(self, actor_user_id, subscription_id, payload):
+            return make_subscription()
+
+        async def delete_for_management(self, actor_user_id, subscription_id):
+            return None
+
+        async def issue_for_management(self, actor_user_id, payload):
+            return make_subscription()
+
+        async def restore_for_management(self, actor_user_id, subscription_id):
+            return make_subscription()
 
     class FakeBookingService:
         def __init__(self, db):
@@ -355,6 +419,9 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
         async def club_stats(self):
             return {"clients_count": 10, "trainers_count": 2, "classes_next_7_days": 4, "active_subscriptions_count": 7}
 
+        async def membership_plans(self):
+            return [make_membership_plan()]
+
     class FakeConnection:
         async def execute(self, query):
             return 1
@@ -366,6 +433,7 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
         async def __aexit__(self, exc_type, exc, tb):
             return None
 
+    monkeypatch.setattr(subscriptions, "MembershipPlanService", FakeMembershipPlanService)
     monkeypatch.setattr(subscriptions, "SubscriptionService", FakeSubscriptionService)
     monkeypatch.setattr(bookings, "BookingService", FakeBookingService)
     monkeypatch.setattr(payments, "PaymentService", FakePaymentService)
@@ -382,7 +450,48 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
 
     assert isinstance(
         await subscriptions.purchase_subscription(
-            SubscriptionPurchaseRequest(type="MONTHLY"), client, None, object()
+            SubscriptionPurchaseRequest(plan_id="plan-1"), client, None, object()
+        ),
+        SubscriptionRead,
+    )
+    assert isinstance(
+        (await subscriptions.list_membership_plans(client, object()))[0],
+        MembershipPlanRead,
+    )
+    assert isinstance(
+        await subscriptions.create_membership_plan(
+            MembershipPlanCreate(
+                title="Новий план",
+                description="12 занять",
+                type="MONTHLY",
+                duration_days=30,
+                visits_limit=12,
+                price=990,
+                currency="UAH",
+                sort_order=10,
+                is_active=True,
+                is_public=True,
+            ),
+            admin,
+            object(),
+        ),
+        MembershipPlanRead,
+    )
+    assert isinstance(
+        await subscriptions.update_membership_plan(
+            "plan-1",
+            MembershipPlanUpdate(title="Оновлений план"),
+            admin,
+            object(),
+        ),
+        MembershipPlanRead,
+    )
+    assert (await subscriptions.delete_membership_plan("plan-1", admin, object())) is None
+    assert isinstance(
+        await subscriptions.issue_client_subscription(
+            SubscriptionManagementIssueRequest(user_id="user-1", plan_id="plan-1"),
+            admin,
+            object(),
         ),
         SubscriptionRead,
     )
@@ -393,6 +502,18 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
         SubscriptionRead,
     )
     assert len(await subscriptions.my_subscriptions(client, object())) == 1
+    assert len(await subscriptions.all_subscriptions(None, False, admin, object())) == 1
+    assert isinstance(
+        await subscriptions.update_client_subscription(
+            "subscription-1",
+            SubscriptionManagementUpdate(status="FROZEN"),
+            admin,
+            object(),
+        ),
+        SubscriptionRead,
+    )
+    assert (await subscriptions.delete_client_subscription("subscription-1", admin, object())) is None
+    assert isinstance(await subscriptions.restore_client_subscription("subscription-1", admin, object()), SubscriptionRead)
 
     assert isinstance(await bookings.create_booking("class-1", client, object()), BookingRead)
     assert isinstance(await bookings.cancel_booking("booking-1", client, object()), BookingRead)
@@ -407,5 +528,6 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
     assert (await reports.revenue(None, None, admin, object())).total_revenue == 2000
     assert len(await reports.trainer_popularity(admin, object())) == 1
     assert (await public.club_stats(object()))["clients_count"] == 10
+    assert isinstance((await public.public_membership_plans(object()))[0], MembershipPlanRead)
     assert await health.live() == {"status": "ok"}
     assert await health.ready() == {"status": "ready"}

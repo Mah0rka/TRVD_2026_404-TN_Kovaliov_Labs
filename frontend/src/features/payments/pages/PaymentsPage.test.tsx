@@ -55,8 +55,8 @@ describe("PaymentsPage", () => {
 
     renderWithProviders(<PaymentsPage />);
 
-    expect(await screen.findByText("Абонементи продаються зі сторінки тарифів")).toBeInTheDocument();
-    expect(await screen.findByText("UAH 990")).toBeInTheDocument();
+    expect(await screen.findByText("Нові покупки робляться зі сторінки абонементів")).toBeInTheDocument();
+    expect((await screen.findAllByText("UAH 990")).length).toBeGreaterThan(0);
     expect(getMyPaymentsMock).toHaveBeenCalled();
   });
 

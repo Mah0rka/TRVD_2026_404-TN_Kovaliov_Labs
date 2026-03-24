@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
@@ -19,6 +19,17 @@ export function PaymentsPage() {
         : getMyPayments()
   });
 
+  const paymentSummary = useMemo(() => {
+    const payments = paymentsQuery.data ?? [];
+    return {
+      total: payments.length,
+      success: payments.filter((payment) => payment.status === "SUCCESS").length,
+      revenue: payments
+        .filter((payment) => payment.status === "SUCCESS")
+        .reduce((sum, payment) => sum + payment.amount, 0)
+    };
+  }, [paymentsQuery.data]);
+
   return (
     <main className="screen">
       <section className="card schedule-card">
@@ -27,13 +38,28 @@ export function PaymentsPage() {
           <h1>{isManagement ? "Історія оплат клубу" : "Історія покупок"}</h1>
           <p className="muted">
             {isManagement
-              ? "Тут зібрані всі оплати за абонементи й продажі клубу."
-              : "У кабінеті лишилися тільки покупки абонементів. Нові оплати проходять зі сторінки абонементів."}
+              ? "Усі оплати за абонементи зібрані в одному табличному журналі."
+              : "Тут видно всі ваші придбані абонементи та дату кожної покупки."}
           </p>
         </div>
 
+        <div className="stats-grid compact-stats-grid">
+          <article className="stat-card">
+            <span className="stat-label">Усього оплат</span>
+            <strong className="stat-value">{paymentSummary.total}</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">Підтверджено</span>
+            <strong className="stat-value">{paymentSummary.success}</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">Сума підтверджених</span>
+            <strong className="stat-value">UAH {paymentSummary.revenue.toLocaleString("uk-UA")}</strong>
+          </article>
+        </div>
+
         {isManagement ? (
-          <div className="create-panel">
+          <div className="create-panel compact-filter-panel">
             <label>
               Статус
               <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
@@ -54,16 +80,11 @@ export function PaymentsPage() {
         ) : (
           <div className="surface-card dashboard-focus-card">
             <p className="service-meta">Тільки абонементи</p>
-            <h3>Абонементи продаються зі сторінки тарифів</h3>
-            <p>
-              Обери план, оформи покупку й повернись сюди, щоб побачити свою історію оплат.
-            </p>
+            <h3>Нові покупки робляться зі сторінки абонементів</h3>
+            <p>Тут лишається історія всіх уже оформлених покупок, а не касова форма.</p>
             <div className="dashboard-hero-actions">
               <Link className="secondary-button" to="/dashboard/subscriptions">
                 Відкрити абонементи
-              </Link>
-              <Link className="ghost-link" to="/dashboard">
-                На головну
               </Link>
             </div>
           </div>
@@ -76,33 +97,56 @@ export function PaymentsPage() {
           </p>
         ) : null}
 
-        <div className="schedule-grid">
-          {paymentsQuery.data?.length ? (
-            paymentsQuery.data.map((payment) => (
-              <article className="schedule-item" key={payment.id}>
-                <p className="eyebrow">{payment.status === "SUCCESS" ? "Підтверджено" : "Неуспішно"}</p>
-                <h2>
-                  {payment.currency} {payment.amount.toLocaleString("uk-UA")}
-                </h2>
-                <p className="muted">
-                  {payment.method === "CASH" ? "Метод: готівка" : "Метод: картка"}
-                </p>
-                {payment.user ? (
-                  <p className="muted">
-                    {payment.user.first_name} {payment.user.last_name}
-                  </p>
-                ) : (
-                  <p className="muted">Покупка абонемента</p>
-                )}
-                <p className="muted">{new Date(payment.created_at).toLocaleString("uk-UA")}</p>
+        <div className="surface-card table-card">
+          <div className="management-table">
+            <div className="management-table-head payments-table-layout">
+              <span>Сума</span>
+              <span>Метод</span>
+              <span>Статус</span>
+              <span>{isManagement ? "Учасник" : "Призначення"}</span>
+              <span>Дата</span>
+            </div>
+
+            {paymentsQuery.data?.length ? (
+              paymentsQuery.data.map((payment) => (
+                <article key={payment.id} className="management-table-row payments-table-layout">
+                  <div className="management-table-cell">
+                    <strong>
+                      {payment.currency} {payment.amount.toLocaleString("uk-UA")}
+                    </strong>
+                  </div>
+                  <div className="management-table-cell">
+                    <span>{payment.method === "CASH" ? "Готівка" : "Картка"}</span>
+                  </div>
+                  <div className="management-table-cell">
+                    <span className={payment.status === "SUCCESS" ? "status-pill success" : "status-pill warning"}>
+                      {payment.status === "SUCCESS" ? "Підтверджено" : "Неуспішно"}
+                    </span>
+                  </div>
+                  <div className="management-table-cell">
+                    {payment.user ? (
+                      <>
+                        <strong>
+                          {payment.user.first_name} {payment.user.last_name}
+                        </strong>
+                        <span className="muted">{payment.user.email}</span>
+                      </>
+                    ) : (
+                      <span>Покупка абонемента</span>
+                    )}
+                  </div>
+                  <div className="management-table-cell">
+                    <span>{new Date(payment.created_at).toLocaleString("uk-UA")}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <article className="management-table-empty">
+                <h3>Покупок ще немає</h3>
+                <p className="muted">Після першого придбаного абонемента тут з’явиться історія оплат.</p>
               </article>
-            ))
-          ) : (
-            <article className="schedule-item empty-card">
-              <h2>Покупок ще немає</h2>
-              <p className="muted">Після першого придбаного абонемента тут з’явиться історія оплат.</p>
-            </article>
-          )}
+            )}
+          </div>
         </div>
       </section>
     </main>

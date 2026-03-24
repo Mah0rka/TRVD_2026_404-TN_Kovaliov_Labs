@@ -105,16 +105,16 @@ export const appRouter = createBrowserRouter([
               {
                 path: "/dashboard/bookings",
                 lazy: loadBookingsPage
-              },
-              {
-                path: "/dashboard/subscriptions",
-                lazy: loadSubscriptionsPage
               }
             ]
           },
           {
             element: <RoleBoundary roles={clientAndManagementRoles} />,
             children: [
+              {
+                path: "/dashboard/subscriptions",
+                lazy: loadSubscriptionsPage
+              },
               {
                 path: "/dashboard/payments",
                 lazy: loadPaymentsPage

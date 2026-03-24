@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.membership_plan import MembershipPlan
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.user import User, UserRole
 from app.models.workout_class import WorkoutClass
@@ -31,7 +32,8 @@ class PublicService:
         )
         subscriptions_result = await self.session.execute(
             select(func.count(Subscription.id)).where(
-                Subscription.status == SubscriptionStatus.ACTIVE
+                Subscription.status == SubscriptionStatus.ACTIVE,
+                Subscription.deleted_at.is_(None),
             )
         )
 
@@ -41,3 +43,11 @@ class PublicService:
             classes_next_7_days=int(classes_result.scalar_one() or 0),
             active_subscriptions_count=int(subscriptions_result.scalar_one() or 0),
         )
+
+    async def membership_plans(self) -> list[MembershipPlan]:
+        result = await self.session.execute(
+            select(MembershipPlan)
+            .where(MembershipPlan.is_active.is_(True), MembershipPlan.is_public.is_(True))
+            .order_by(MembershipPlan.sort_order.asc(), MembershipPlan.created_at.asc())
+        )
+        return list(result.scalars().all())

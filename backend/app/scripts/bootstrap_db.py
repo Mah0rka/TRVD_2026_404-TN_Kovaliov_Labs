@@ -9,7 +9,7 @@ from app.core.database import engine
 
 logger = logging.getLogger(__name__)
 
-APP_TABLES = {"users", "workout_classes", "subscriptions", "payments", "bookings"}
+APP_TABLES = {"users", "workout_classes", "subscriptions", "payments", "bookings", "membership_plans"}
 
 
 async def ensure_migrations_applied() -> None:

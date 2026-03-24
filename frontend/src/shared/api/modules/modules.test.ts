@@ -9,11 +9,16 @@ vi.mock("../core/http", () => ({
 import {
   cancelBooking,
   createBooking,
+  deleteClientSubscription,
+  createMembershipPlan,
   createSchedule,
   createUser,
+  deleteMembershipPlan,
   freezeSubscription,
   getClubStats,
   getCurrentUser,
+  getManagedSubscriptions,
+  getPublicMembershipPlans,
   getMyBookings,
   getMyClasses,
   getMyPayments,
@@ -21,14 +26,19 @@ import {
   getRevenueReport,
   getScheduleAttendees,
   getSchedules,
+  getSubscriptionPlans,
   getSubscriptions,
   getTrainerPopularity,
   getUsers,
   login,
   logout,
   purchaseSubscription,
+  restoreClientSubscription,
   register,
   removeSchedule,
+  issueClientSubscription,
+  updateClientSubscription,
+  updateMembershipPlan,
   updateMyProfile,
   updateSchedule,
   updateUser
@@ -81,12 +91,51 @@ const attendee = {
 const subscription = {
   id: "subscription-1",
   user_id: "user-1",
+  plan_id: "plan-1",
   type: "MONTHLY" as const,
   start_date: "2026-03-23T00:00:00Z",
   end_date: "2026-04-23T00:00:00Z",
   status: "ACTIVE" as const,
   total_visits: null,
   remaining_visits: null,
+  user: currentUser,
+  plan: {
+    id: "plan-1",
+    title: "Місячний",
+    description: "12 занять",
+    type: "MONTHLY" as const,
+    duration_days: 30,
+    visits_limit: 12,
+    price: 990,
+    currency: "UAH",
+    sort_order: 10,
+    is_active: true,
+    is_public: true,
+    created_at: "2026-03-23T00:00:00Z",
+    updated_at: "2026-03-23T00:00:00Z"
+  },
+  last_modified_by: currentUser,
+  last_modified_at: "2026-03-23T00:00:00Z",
+  deleted_by: null,
+  deleted_at: null,
+  restored_by: null,
+  restored_at: null,
+  created_at: "2026-03-23T00:00:00Z",
+  updated_at: "2026-03-23T00:00:00Z"
+};
+
+const membershipPlan = {
+  id: "plan-1",
+  title: "Місячний",
+  description: "12 занять",
+  type: "MONTHLY" as const,
+  duration_days: 30,
+  visits_limit: 12,
+  price: 990,
+  currency: "UAH",
+  sort_order: 10,
+  is_active: true,
+  is_public: true,
   created_at: "2026-03-23T00:00:00Z",
   updated_at: "2026-03-23T00:00:00Z"
 };
@@ -219,11 +268,68 @@ describe("api modules", () => {
     requestMock.mockResolvedValueOnce([subscription]);
     await getSubscriptions();
 
+    requestMock.mockResolvedValueOnce([subscription]);
+    await getManagedSubscriptions({ includeDeleted: true });
+    expect(requestMock).toHaveBeenNthCalledWith(
+      5,
+      "/subscriptions?include_deleted=true",
+      { method: "GET" }
+    );
+
+    requestMock.mockResolvedValueOnce([membershipPlan]);
+    await getSubscriptionPlans();
+
     requestMock.mockResolvedValueOnce(subscription);
-    await purchaseSubscription("YEARLY");
+    await purchaseSubscription("plan-1");
+    expect(requestMock).toHaveBeenNthCalledWith(
+      7,
+      "/subscriptions/purchase",
+      {
+        method: "POST",
+        body: JSON.stringify({ plan_id: "plan-1" })
+      }
+    );
 
     requestMock.mockResolvedValueOnce(subscription);
     await freezeSubscription("subscription-1", 14);
+
+    requestMock.mockResolvedValueOnce(subscription);
+    await updateClientSubscription("subscription-1", {
+      status: "FROZEN",
+      remaining_visits: 5
+    });
+
+    requestMock.mockResolvedValueOnce(undefined);
+    await deleteClientSubscription("subscription-1");
+
+    requestMock.mockResolvedValueOnce(subscription);
+    await restoreClientSubscription("subscription-1");
+
+    requestMock.mockResolvedValueOnce(subscription);
+    await issueClientSubscription({
+      user_id: "user-1",
+      plan_id: "plan-1"
+    });
+
+    requestMock.mockResolvedValueOnce(membershipPlan);
+    await createMembershipPlan({
+      title: "Новий план",
+      description: "Опис",
+      type: "MONTHLY",
+      duration_days: 30,
+      visits_limit: 12,
+      price: 990,
+      currency: "UAH",
+      sort_order: 20,
+      is_active: true,
+      is_public: true
+    });
+
+    requestMock.mockResolvedValueOnce(membershipPlan);
+    await updateMembershipPlan("plan-1", { title: "Оновлений план" });
+
+    requestMock.mockResolvedValueOnce(undefined);
+    await deleteMembershipPlan("plan-1");
   });
 
   it("handles payments, reports and public module calls", async () => {
@@ -270,5 +376,8 @@ describe("api modules", () => {
       active_subscriptions_count: 8
     });
     await getClubStats();
+
+    requestMock.mockResolvedValueOnce([membershipPlan]);
+    await getPublicMembershipPlans();
   });
 });

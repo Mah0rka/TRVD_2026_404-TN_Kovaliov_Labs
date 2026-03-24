@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { useAuthStore } from "../../auth";
-import { getClubStats } from "../../../shared/api";
+import { getClubStats, getPublicMembershipPlans } from "../../../shared/api";
 
 const zones = [
   {
@@ -87,28 +87,6 @@ const reviews = [
   }
 ];
 
-const plans = [
-  {
-    name: "Start",
-    price: "990",
-    label: "12 класів / місяць",
-    features: ["групові тренування", "онлайн-запис"]
-  },
-  {
-    name: "Balance",
-    price: "1490",
-    label: "найпопулярніший",
-    featured: true,
-    features: ["безліміт на класи", "1 заморозка"]
-  },
-  {
-    name: "Personal",
-    price: "2190",
-    label: "з акцентом на результат",
-    features: ["2 персональні сесії", "план з тренером"]
-  }
-];
-
 const convenience = [
   "центр міста",
   "ранкові й вечірні слоти",
@@ -122,11 +100,16 @@ export function HomePage() {
     queryKey: ["club-stats"],
     queryFn: getClubStats
   });
+  const publicPlansQuery = useQuery({
+    queryKey: ["public-membership-plans"],
+    queryFn: getPublicMembershipPlans
+  });
   const primaryTarget = isAuthenticated ? "/dashboard" : "/login";
   const primaryLabel = isAuthenticated ? "Відкрити кабінет" : "Записатися на пробне";
   const secondaryLabel = isAuthenticated ? "Мій кабінет" : "Увійти";
   const greetingLabel = user?.first_name ? `Привіт, ${user.first_name}` : "Мій кабінет";
   const stats = statsQuery.data;
+  const publicPlans = publicPlansQuery.data ?? [];
   const heroStats = [
     { value: stats ? String(stats.clients_count) : "—", label: "учасників клубу" },
     { value: stats ? String(stats.trainers_count) : "—", label: "тренерів у команді" },
@@ -322,27 +305,38 @@ export function HomePage() {
         </div>
 
         <div className="pricing-showcase">
-          {plans.map((plan) => (
+          {publicPlans.slice(0, 3).map((plan, index) => (
             <article
-              key={plan.name}
-              className={plan.featured ? "pricing-panel featured" : "pricing-panel"}
+              key={plan.id}
+              className={index === 1 ? "pricing-panel featured" : "pricing-panel"}
             >
-              <p className="service-meta">{plan.label}</p>
-              <h3>{plan.name}</h3>
+              <p className="service-meta">
+                {plan.visits_limit ? `${plan.visits_limit} занять` : "безліміт"} · {plan.duration_days} днів
+              </p>
+              <h3>{plan.title}</h3>
               <div className="price-line">
-                <strong>₴{plan.price}</strong>
-                <span>/ місяць</span>
+                <strong>
+                  {plan.currency === "UAH" ? "₴" : `${plan.currency} `}
+                  {plan.price}
+                </strong>
+                <span>/ план</span>
               </div>
               <ul className="plan-list">
-                {plan.features.map((feature) => (
-                  <li key={feature}>{feature}</li>
-                ))}
+                <li>{plan.description ?? "Абонемент клубу з реальної системи."}</li>
+                <li>{plan.is_active ? "доступний до покупки" : "тимчасово недоступний"}</li>
               </ul>
               <Link className="primary-cta button-link" to={primaryTarget}>
                 {primaryLabel}
               </Link>
             </article>
           ))}
+          {!publicPlans.length ? (
+            <article className="pricing-panel">
+              <p className="service-meta">membership</p>
+              <h3>Абонементи скоро з’являться</h3>
+              <p>Менеджер клубу ще не відкрив публічні плани для сайту.</p>
+            </article>
+          ) : null}
         </div>
       </section>
 

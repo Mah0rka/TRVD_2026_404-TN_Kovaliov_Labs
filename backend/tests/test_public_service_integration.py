@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from app.models.membership_plan import MembershipPlan
 from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionType
 from app.models.user import User, UserRole
 from app.models.workout_class import WorkoutClass, WorkoutType
@@ -95,3 +96,53 @@ async def test_club_stats_returns_real_counts_from_database(db_session):
     assert stats.trainers_count == 1
     assert stats.classes_next_7_days == 1
     assert stats.active_subscriptions_count == 1
+
+
+@pytest.mark.asyncio
+async def test_public_membership_plans_return_only_active_public_ones(db_session):
+    db_session.add_all(
+        [
+            MembershipPlan(
+                title="Public plan",
+                description="Visible",
+                type=SubscriptionType.MONTHLY,
+                duration_days=30,
+                visits_limit=12,
+                price=990,
+                currency="UAH",
+                sort_order=10,
+                is_active=True,
+                is_public=True,
+            ),
+            MembershipPlan(
+                title="Private plan",
+                description="Hidden",
+                type=SubscriptionType.MONTHLY,
+                duration_days=30,
+                visits_limit=12,
+                price=1,
+                currency="UAH",
+                sort_order=20,
+                is_active=True,
+                is_public=False,
+            ),
+            MembershipPlan(
+                title="Inactive public",
+                description="Hidden",
+                type=SubscriptionType.YEARLY,
+                duration_days=365,
+                visits_limit=None,
+                price=14990,
+                currency="UAH",
+                sort_order=30,
+                is_active=False,
+                is_public=True,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    service = PublicService(db_session)
+    plans = await service.membership_plans()
+
+    assert [plan.title for plan in plans] == ["Public plan"]

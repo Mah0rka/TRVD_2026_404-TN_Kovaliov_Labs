@@ -27,7 +27,27 @@ class User(Base, TimestampMixin):
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="Subscription.user_id",
+    )
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
     classes = relationship("WorkoutClass", back_populates="trainer", cascade="all, delete-orphan")
+    subscription_edits = relationship(
+        "Subscription",
+        foreign_keys="Subscription.last_modified_by_id",
+        back_populates="last_modified_by",
+    )
+    subscription_deletions = relationship(
+        "Subscription",
+        foreign_keys="Subscription.deleted_by_id",
+        back_populates="deleted_by",
+    )
+    subscription_restorations = relationship(
+        "Subscription",
+        foreign_keys="Subscription.restored_by_id",
+        back_populates="restored_by",
+    )

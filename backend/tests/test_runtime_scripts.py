@@ -115,13 +115,15 @@ async def test_seed_helpers(monkeypatch):
     session = FakeSession()
     users_map = await seed_demo._ensure_users(session)
     assert set(users_map.keys()) == {"owner", "admin", "trainer", "client"}
+    plans_map = await seed_demo._ensure_membership_plans(session)
+    assert set(plans_map.keys()) == {"monthly", "yearly", "dropin", "private_comp"}
 
     await seed_demo._ensure_schedule(session, users_map["trainer"])
     assert len(session.added_all) == 2
 
-    await seed_demo._ensure_subscription(session, users_map["client"])
-    await seed_demo._ensure_payment(session, users_map["client"])
-    assert len(session.added) >= 6
+    await seed_demo._ensure_subscription(session, users_map["client"], plans_map["monthly"])
+    await seed_demo._ensure_payment(session, users_map["client"], plans_map["monthly"])
+    assert len(session.added) >= 9
 
 
 @pytest.mark.asyncio
