@@ -17,7 +17,7 @@ class BookingService:
         self.subscription_repository = SubscriptionRepository(session)
 
     async def create_booking(self, user_id: str, class_id: str) -> Booking:
-        async with self.session.begin():
+        try:
             workout_class = await self.session.get(WorkoutClass, class_id)
             if not workout_class:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workout class not found")
@@ -46,13 +46,17 @@ class BookingService:
                 self.session.add(booking)
                 await self.session.flush()
                 booking_id = booking.id
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
 
         created_booking = await self.booking_repository.get_by_id(booking_id)
         assert created_booking is not None
         return created_booking
 
     async def cancel_booking(self, user_id: str, booking_id: str) -> Booking:
-        async with self.session.begin():
+        try:
             booking = await self.booking_repository.get_by_id(booking_id)
             if not booking:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -78,6 +82,10 @@ class BookingService:
             active_subscription = await self.subscription_repository.get_active_by_user(user_id)
             if active_subscription and active_subscription.total_visits is not None:
                 active_subscription.remaining_visits = (active_subscription.remaining_visits or 0) + 1
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
 
         refreshed = await self.booking_repository.get_by_id(booking_id)
         assert refreshed is not None

@@ -575,15 +575,15 @@ export function UsersPage() {
 
             return (
               <article key={user.id} className="management-table-row users-table-layout">
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Учасник">
                   <strong>{user.first_name} {user.last_name}</strong>
                   <span className="muted">ID: {user.id.slice(0, 8)}</span>
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Контакти">
                   <span>{user.email}</span>
                   <span className="muted">{user.phone || "Телефон не вказано"}</span>
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Абонемент">
                   {userSubscription ? (
                     <>
                       <strong>{userSubscription.plan?.title ?? getSubscriptionStatusLabel(userSubscription.status)}</strong>
@@ -597,18 +597,18 @@ export function UsersPage() {
                     <span className="muted">Немає абонемента</span>
                   )}
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Доступ">
                   <span>{getAccessLabel(user.role)}</span>
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Статус">
                   <span className={user.is_verified ? "status-pill success" : "status-pill warning"}>
                     {user.is_verified ? "Підтверджено" : "Очікує"}
                   </span>
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Створено">
                   <span>{new Date(user.created_at).toLocaleDateString("uk-UA")}</span>
                 </div>
-                <div className="management-table-cell">
+                <div className="management-table-cell" data-label="Дії">
                   <button className="ghost-link" onClick={() => selectUser(user)}>Редагувати</button>
                 </div>
               </article>
@@ -787,7 +787,7 @@ export function UsersPage() {
                 </div>
                 {subscriptionsQuery.data?.map((subscription) => (
                   <article key={subscription.id} className="management-table-row subscriptions-table-layout">
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Абонемент">
                       <strong>{subscription.plan?.title ?? subscription.type}</strong>
                       <span className="muted">
                         {subscription.plan
@@ -795,22 +795,22 @@ export function UsersPage() {
                           : "План недоступний"}
                       </span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Період">
                       <span>{new Date(subscription.start_date).toLocaleDateString("uk-UA")}</span>
                       <span className="muted">{new Date(subscription.end_date).toLocaleDateString("uk-UA")}</span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Статус">
                       <span className={subscription.deleted_at ? "status-pill warning" : "status-pill success"}>
                         {subscription.deleted_at ? "Видалений" : getSubscriptionStatusLabel(subscription.status)}
                       </span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Відвідування">
                       <span>{subscription.remaining_visits ?? "∞"} / {subscription.total_visits ?? "∞"}</span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Аудит">
                       <span>{getAuditLabel(subscription)}</span>
                     </div>
-                    <div className="management-table-cell stacked-actions">
+                    <div className="management-table-cell stacked-actions" data-label="Дії">
                       {!subscription.deleted_at ? (
                         <>
                           <button className="ghost-link" onClick={() => startEditingSubscription(subscription)}>Редагувати абонемент</button>
@@ -905,18 +905,18 @@ export function UsersPage() {
                 </div>
                 {paymentsQuery.data?.map((payment) => (
                   <article key={payment.id} className="management-table-row payments-table-layout">
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Сума">
                       <strong>{payment.currency} {payment.amount.toLocaleString("uk-UA")}</strong>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Метод">
                       <span>{payment.method === "CASH" ? "Готівка" : "Картка"}</span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Статус">
                       <span className={payment.status === "SUCCESS" ? "status-pill success" : "status-pill warning"}>
                         {payment.status === "SUCCESS" ? "Підтверджено" : "Неуспішно"}
                       </span>
                     </div>
-                    <div className="management-table-cell">
+                    <div className="management-table-cell" data-label="Дата">
                       <span>{new Date(payment.created_at).toLocaleString("uk-UA")}</span>
                     </div>
                   </article>

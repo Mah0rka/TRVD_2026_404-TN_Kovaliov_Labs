@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
@@ -96,6 +97,7 @@ const convenience = [
 export function HomePage() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const statsQuery = useQuery({
     queryKey: ["club-stats"],
     queryFn: getClubStats
@@ -120,6 +122,31 @@ export function HomePage() {
     }
   ];
 
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  function closeMenu() {
+    setIsMenuOpen(false);
+  }
+
   return (
     <div className="marketing-page">
       <header className="marketing-header">
@@ -132,16 +159,16 @@ export function HomePage() {
         </div>
 
         <nav className="marketing-nav" aria-label="Основна навігація">
-          <a className="nav-pill" href="#classes">
+          <a className="nav-pill" href="#classes" onClick={closeMenu}>
             Classes
           </a>
-          <a className="nav-pill" href="#coaches">
+          <a className="nav-pill" href="#coaches" onClick={closeMenu}>
             Coaches
           </a>
-          <a className="nav-pill" href="#membership">
+          <a className="nav-pill" href="#membership" onClick={closeMenu}>
             Membership
           </a>
-          <a className="nav-pill" href="#location">
+          <a className="nav-pill" href="#location" onClick={closeMenu}>
             Location
           </a>
         </nav>
@@ -162,8 +189,67 @@ export function HomePage() {
               </Link>
             </>
           )}
+          <button
+            className="ghost-link marketing-menu-button"
+            type="button"
+            aria-label="Відкрити меню"
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen(true)}
+          >
+            ☰
+          </button>
         </div>
       </header>
+
+      {isMenuOpen ? (
+        <div className="marketing-drawer-overlay" role="presentation" onClick={closeMenu}>
+          <div className="marketing-drawer" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="marketing-drawer-header">
+              <div className="brand-lockup">
+                <div className="brand-badge">ML</div>
+                <div>
+                  <div className="brand-title">MotionLab</div>
+                  <div className="brand-subtitle">fitness club</div>
+                </div>
+              </div>
+              <button className="ghost-link mobile-close-button" type="button" aria-label="Закрити меню" onClick={closeMenu}>
+                ✕
+              </button>
+            </div>
+            <nav className="marketing-drawer-nav" aria-label="Мобільна навігація">
+              <a className="nav-pill" href="#classes" onClick={closeMenu}>
+                Classes
+              </a>
+              <a className="nav-pill" href="#coaches" onClick={closeMenu}>
+                Coaches
+              </a>
+              <a className="nav-pill" href="#membership" onClick={closeMenu}>
+                Membership
+              </a>
+              <a className="nav-pill" href="#location" onClick={closeMenu}>
+                Location
+              </a>
+            </nav>
+            <div className="marketing-drawer-actions">
+              {isAuthenticated ? (
+                <Link className="session-pill session-pill-link" to={primaryTarget} onClick={closeMenu}>
+                  <span className="session-pill-dot" />
+                  <span>{greetingLabel}</span>
+                </Link>
+              ) : (
+                <>
+                  <Link className="login-link" to={primaryTarget} onClick={closeMenu}>
+                    {secondaryLabel}
+                  </Link>
+                  <Link className="primary-cta button-link" to={primaryTarget} onClick={closeMenu}>
+                    {primaryLabel}
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="hero-section">
         <div className="hero-copy">

@@ -175,20 +175,20 @@ export function PaymentsPage() {
             {filteredPayments.length ? (
               filteredPayments.map((payment) => (
                 <article key={payment.id} className="management-table-row payments-table-layout">
-                  <div className="management-table-cell">
+                  <div className="management-table-cell" data-label="Сума">
                     <strong>
                       {payment.currency} {payment.amount.toLocaleString("uk-UA")}
                     </strong>
                   </div>
-                  <div className="management-table-cell">
+                  <div className="management-table-cell" data-label="Метод">
                     <span>{payment.method === "CASH" ? "Готівка" : "Картка"}</span>
                   </div>
-                  <div className="management-table-cell">
+                  <div className="management-table-cell" data-label="Статус">
                     <span className={payment.status === "SUCCESS" ? "status-pill success" : "status-pill warning"}>
                       {payment.status === "SUCCESS" ? "Підтверджено" : "Неуспішно"}
                     </span>
                   </div>
-                  <div className="management-table-cell">
+                  <div className="management-table-cell" data-label={isManagement ? "Учасник" : "Призначення"}>
                     {payment.user ? (
                       <>
                         <strong>
@@ -202,7 +202,7 @@ export function PaymentsPage() {
                       <span>Покупка абонемента</span>
                     )}
                   </div>
-                  <div className="management-table-cell">
+                  <div className="management-table-cell" data-label="Дата">
                     <span>{new Date(payment.created_at).toLocaleString("uk-UA")}</span>
                   </div>
                 </article>

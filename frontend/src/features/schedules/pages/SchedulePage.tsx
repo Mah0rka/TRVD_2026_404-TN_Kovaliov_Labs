@@ -202,6 +202,11 @@ export function SchedulePage() {
             {schedulesQuery.error instanceof Error ? schedulesQuery.error.message : "Не вдалося завантажити розклад."}
           </p>
         ) : null}
+        {bookMutation.isError ? (
+          <p className="error-banner">
+            {bookMutation.error instanceof Error ? bookMutation.error.message : "Не вдалося записатися на заняття."}
+          </p>
+        ) : null}
 
         <div className="schedule-grid">
           {filteredSchedules.length ? (

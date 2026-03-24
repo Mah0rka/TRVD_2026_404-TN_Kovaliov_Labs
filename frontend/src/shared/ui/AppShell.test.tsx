@@ -134,4 +134,46 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Огляд" })).not.toHaveClass("active");
     expect(container.querySelectorAll(".sidebar-nav .nav-link.active")).toHaveLength(1);
   });
+
+  it("opens and closes mobile drawer navigation", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      user: {
+        id: "owner-1",
+        email: "owner@example.com",
+        first_name: "Owner",
+        last_name: "Account",
+        role: "OWNER",
+        phone: null,
+        is_verified: true,
+        created_at: "2026-03-23T00:00:00Z",
+        updated_at: "2026-03-23T00:00:00Z"
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/dashboard"
+          element={
+            <AppShell>
+              <div>dashboard content</div>
+            </AppShell>
+          }
+        />
+      </Routes>,
+      { route: "/dashboard" }
+    );
+
+    await user.click(screen.getByRole("button", { name: "Відкрити меню" }));
+    expect(screen.getByRole("dialog", { name: "Навігація кабінету" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Закрити меню" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Навігація кабінету" })).not.toBeInTheDocument();
+    });
+  });
 });

@@ -375,6 +375,44 @@ a {
   font-size: 0.82rem;
 }
 
+.sidebar-desktop {
+  display: flex;
+}
+
+.mobile-menu-button,
+.mobile-close-button {
+  display: none;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  align-items: stretch;
+  justify-items: start;
+  background: rgba(8, 8, 8, 0.64);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-mobile-drawer {
+  width: min(86vw, 340px);
+  max-width: 340px;
+  height: 100vh;
+  box-shadow: 24px 0 46px rgba(0, 0, 0, 0.34);
+}
+
+.sidebar-mobile-brand {
+  justify-content: space-between;
+}
+
+.mobile-close-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 14px;
+}
+
 .shell-main {
   min-width: 0;
   height: 100vh;
@@ -390,6 +428,12 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+
+.topbar-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .topbar h1 {
@@ -857,6 +901,57 @@ a {
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.marketing-menu-button {
+  display: none;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 16px;
+}
+
+.marketing-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  padding: 16px;
+  background: rgba(8, 8, 8, 0.68);
+  backdrop-filter: blur(10px);
+}
+
+.marketing-drawer {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 360px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin-left: auto;
+  padding: 18px;
+  border-radius: 28px;
+  background: rgba(15, 15, 15, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
+}
+
+.marketing-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.marketing-drawer-nav,
+.marketing-drawer-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.marketing-drawer-nav .nav-pill,
+.marketing-drawer-actions .login-link,
+.marketing-drawer-actions .primary-cta,
+.marketing-drawer-actions .session-pill {
+  width: 100%;
 }
 
 .login-link {
@@ -1374,6 +1469,10 @@ a {
 .management-table-cell strong,
 .management-table-cell span {
   overflow-wrap: anywhere;
+}
+
+.management-table-cell::before {
+  content: none;
 }
 
 .management-table-empty {
@@ -1905,12 +2004,7 @@ a {
 
 @media (max-width: 1200px) {
   .app-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    grid-template-columns: minmax(220px, 260px) 1fr;
   }
 
   .dashboard-hero-panel {
@@ -1927,9 +2021,20 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .mobile-menu-button,
+  .mobile-close-button,
+  .marketing-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shell-main {
+    padding: 14px 16px 20px;
   }
 
   .dual-grid,
@@ -1948,8 +2053,42 @@ a {
 
   .users-table-layout,
   .subscriptions-table-layout,
-  .payments-table-layout {
+  .payments-table-layout,
+  .management-table-row {
     grid-template-columns: 1fr;
+  }
+
+  .management-table-row {
+    gap: 12px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .management-table-cell {
+    gap: 6px;
+  }
+
+  .management-table-cell::before {
+    content: attr(data-label);
+    color: rgba(255, 255, 255, 0.46);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .management-table-cell[data-label="Дії"] button,
+  .stacked-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-scroll-shell {
+    overflow-x: visible;
+  }
+
+  .table-scroll-shell .management-table {
+    min-width: 0;
   }
 
   .compact-stats-grid,
@@ -1969,11 +2108,17 @@ a {
 
   .marketing-header {
     grid-template-columns: 1fr auto;
+    padding: 14px 16px;
   }
 
   .marketing-nav {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
+    display: none;
+  }
+
+  .marketing-actions .login-link,
+  .marketing-actions .primary-cta,
+  .marketing-actions .session-pill {
+    display: none;
   }
 
   .dashboard-hero-panel {
@@ -2007,6 +2152,8 @@ a {
       "copy"
       "stage"
       "actions";
+    gap: 18px;
+    padding-top: 18px;
   }
 
   .class-menu {
@@ -2015,10 +2162,11 @@ a {
 
   .hero-stage {
     min-height: auto;
+    grid-template-columns: 1fr 1fr;
   }
 
   .hero-main-shot {
-    min-height: 380px;
+    min-height: 360px;
   }
 
   .cta-cluster {
@@ -2034,6 +2182,15 @@ a {
 
   .topbar {
     align-items: start;
+  }
+
+  .topbar-title-group {
+    width: 100%;
+    align-items: center;
+  }
+
+  .topbar-title-group > div {
+    min-width: 0;
   }
 
   .dashboard-hero-actions {
@@ -2056,18 +2213,13 @@ a {
 
   .marketing-header {
     position: static;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     border-radius: 22px;
     padding: 16px;
   }
 
-  .marketing-nav {
-    justify-content: flex-start;
-  }
-
   .marketing-actions {
-    display: grid;
-    grid-template-columns: 1fr;
+    justify-content: flex-end;
   }
 
   .primary-cta,
@@ -2095,7 +2247,7 @@ a {
   .hero-title,
   .location-copy h2 {
     max-width: none;
-    font-size: 2.7rem;
+    font-size: 2.45rem;
   }
 
   .hero-proof {
@@ -2104,6 +2256,12 @@ a {
 
   .hero-stage {
     grid-template-columns: 1fr;
+  }
+
+  .hero-side-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .schedule-create-panel {
@@ -2128,11 +2286,29 @@ a {
   .participant-modal-toolbar {
     align-items: stretch;
     flex-direction: column;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: -4px -4px 0;
+    padding: 4px 4px 12px;
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(20, 20, 20, 0.88));
   }
 
   .confirm-modal-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .marketing-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .marketing-actions .login-link,
+  .marketing-actions .primary-cta,
+  .marketing-actions .session-pill {
+    display: none;
   }
 
   .dashboard-hero-card,
@@ -2149,8 +2325,18 @@ a {
     min-height: 320px;
   }
 
+  .modal-panel,
+  .participant-modal,
+  .confirm-modal {
+    width: 100%;
+    max-width: none;
+    min-height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 24px;
+  }
+
   .hero-side-stack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     grid-template-rows: none;
   }
 

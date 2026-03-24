@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { screen, waitFor, within } from "@testing-library/react";
 import { vi } from "vitest";
 
 import { HomePage } from "./HomePage";
@@ -80,5 +81,23 @@ describe("HomePage", () => {
       "href",
       "/dashboard"
     );
+  });
+
+  it("opens and closes mobile marketing navigation drawer", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({ user: null, isAuthenticated: false, isReady: true });
+
+    renderWithProviders(<HomePage />);
+
+    await user.click(await screen.findByRole("button", { name: "Відкрити меню" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "Classes" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Закрити меню" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
   });
 });

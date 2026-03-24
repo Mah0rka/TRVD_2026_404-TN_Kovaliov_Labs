@@ -100,6 +100,33 @@ describe("SchedulePage", () => {
     });
   });
 
+  it("shows booking error if request fails", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      user: {
+        id: "client-1",
+        email: "client@example.com",
+        first_name: "Client",
+        last_name: "User",
+        role: "CLIENT",
+        phone: null,
+        is_verified: true,
+        created_at: start,
+        updated_at: start
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+    getSchedulesMock.mockResolvedValue([scheduleFixture()]);
+    createBookingMock.mockRejectedValue(new Error("Не вдалося записатися на заняття."));
+
+    renderWithProviders(<SchedulePage />);
+
+    await user.click(await screen.findByRole("button", { name: "Записатись" }));
+
+    expect(await screen.findByText("Не вдалося записатися на заняття.")).toBeInTheDocument();
+  });
+
   it("lets admin create and remove schedules", async () => {
     const user = userEvent.setup();
     useAuthStore.setState({
