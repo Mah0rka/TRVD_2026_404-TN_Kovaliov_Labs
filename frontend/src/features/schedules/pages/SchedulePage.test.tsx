@@ -7,7 +7,10 @@ import { renderWithProviders } from "../../../test/utils";
 import { SchedulePage } from "./SchedulePage";
 
 const createBookingMock = vi.fn();
+const createPaidBookingCheckoutMock = vi.fn();
+const confirmPaidBookingMock = vi.fn();
 const createScheduleMock = vi.fn();
+const getMyPaymentsMock = vi.fn();
 const getScheduleAttendeesMock = vi.fn();
 const getSchedulesMock = vi.fn();
 const getUsersMock = vi.fn();
@@ -18,7 +21,10 @@ vi.mock("../../../shared/api", async () => {
   return {
     ...actual,
     createBooking: (...args: unknown[]) => createBookingMock(...args),
+    createPaidBookingCheckout: (...args: unknown[]) => createPaidBookingCheckoutMock(...args),
+    confirmPaidBooking: (...args: unknown[]) => confirmPaidBookingMock(...args),
     createSchedule: (...args: unknown[]) => createScheduleMock(...args),
+    getMyPayments: () => getMyPaymentsMock(),
     getScheduleAttendees: (...args: unknown[]) => getScheduleAttendeesMock(...args),
     getSchedules: () => getSchedulesMock(),
     getUsers: (...args: unknown[]) => getUsersMock(...args),
@@ -39,6 +45,8 @@ function scheduleFixture(overrides: Record<string, unknown> = {}) {
     end_time: end,
     capacity: 10,
     type: "GROUP" as const,
+    is_paid_extra: false,
+    extra_price: null,
     trainer: { id: "trainer-1", first_name: "Ira", last_name: "Coach" },
     bookings: [{ id: "booking-1", user_id: "client-1", status: "CONFIRMED" as const }],
     created_at: start,
@@ -50,11 +58,15 @@ function scheduleFixture(overrides: Record<string, unknown> = {}) {
 describe("SchedulePage", () => {
   beforeEach(() => {
     createBookingMock.mockReset();
+    createPaidBookingCheckoutMock.mockReset();
+    confirmPaidBookingMock.mockReset();
     createScheduleMock.mockReset();
+    getMyPaymentsMock.mockReset();
     getScheduleAttendeesMock.mockReset();
     getSchedulesMock.mockReset();
     getUsersMock.mockReset();
     removeScheduleMock.mockReset();
+    getMyPaymentsMock.mockResolvedValue([]);
   });
 
   it("lets client filter and book schedules", async () => {
@@ -75,7 +87,9 @@ describe("SchedulePage", () => {
       isReady: true
     });
     getSchedulesMock.mockResolvedValue([
-      scheduleFixture(),
+      scheduleFixture({
+        bookings: [{ id: "booking-other", user_id: "other-user", status: "CONFIRMED" as const }]
+      }),
       scheduleFixture({
         id: "schedule-2",
         title: "Personal Flow",
@@ -117,7 +131,11 @@ describe("SchedulePage", () => {
       isAuthenticated: true,
       isReady: true
     });
-    getSchedulesMock.mockResolvedValue([scheduleFixture()]);
+    getSchedulesMock.mockResolvedValue([
+      scheduleFixture({
+        bookings: [{ id: "booking-other", user_id: "other-user", status: "CONFIRMED" as const }]
+      })
+    ]);
     createBookingMock.mockRejectedValue(new Error("Не вдалося записатися на заняття."));
 
     renderWithProviders(<SchedulePage />);
@@ -125,6 +143,152 @@ describe("SchedulePage", () => {
     await user.click(await screen.findByRole("button", { name: "Записатись" }));
 
     expect(await screen.findByText("Не вдалося записатися на заняття.")).toBeInTheDocument();
+  });
+
+  it("creates and confirms extra payment for paid personal session", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      user: {
+        id: "client-1",
+        email: "client@example.com",
+        first_name: "Client",
+        last_name: "User",
+        role: "CLIENT",
+        phone: null,
+        is_verified: true,
+        created_at: start,
+        updated_at: start
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+    getSchedulesMock.mockResolvedValue([
+      scheduleFixture({
+        id: "schedule-paid",
+        title: "Paid Personal",
+        type: "PERSONAL",
+        bookings: [],
+        is_paid_extra: true,
+        extra_price: 450
+      })
+    ]);
+    createPaidBookingCheckoutMock.mockResolvedValue({
+      id: "payment-1",
+      user_id: "client-1",
+      amount: 450,
+      currency: "UAH",
+      status: "PENDING",
+      method: "CARD",
+      purpose: "BOOKING_EXTRA",
+      description: "Доплата за заняття: Paid Personal",
+      booking_class_id: "schedule-paid",
+      user: null,
+      created_at: start,
+      updated_at: start
+    });
+    confirmPaidBookingMock.mockResolvedValue({
+      id: "booking-paid",
+      user_id: "client-1",
+      class_id: "schedule-paid",
+      status: "CONFIRMED",
+      created_at: start,
+      updated_at: start,
+      workout_class: {
+        id: "schedule-paid",
+        title: "Paid Personal",
+        trainer_id: "trainer-1",
+        start_time: start,
+        end_time: end,
+        capacity: 1,
+        is_paid_extra: true,
+        extra_price: 450,
+        trainer: { id: "trainer-1", first_name: "Ira", last_name: "Coach" }
+      }
+    });
+
+    renderWithProviders(<SchedulePage />);
+
+    await user.click(await screen.findByRole("button", { name: "Створити доплату" }));
+    expect(await screen.findByText("Крок 2. Підтвердьте оплату")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Підтвердити оплату і запис" }));
+
+    await waitFor(() => {
+      expect(createPaidBookingCheckoutMock.mock.calls[0]?.[0]).toBe("schedule-paid");
+      expect(confirmPaidBookingMock.mock.calls[0]?.[0]).toBe("payment-1");
+    });
+  });
+
+  it("restores pending extra payment from payment history after reload", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      user: {
+        id: "client-1",
+        email: "client@example.com",
+        first_name: "Client",
+        last_name: "User",
+        role: "CLIENT",
+        phone: null,
+        is_verified: true,
+        created_at: start,
+        updated_at: start
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+    getSchedulesMock.mockResolvedValue([
+      scheduleFixture({
+        id: "schedule-paid",
+        title: "Paid Personal",
+        type: "PERSONAL",
+        bookings: [],
+        is_paid_extra: true,
+        extra_price: 450
+      })
+    ]);
+    getMyPaymentsMock.mockResolvedValue([
+      {
+        id: "payment-restore",
+        user_id: "client-1",
+        amount: 450,
+        currency: "UAH",
+        status: "PENDING",
+        method: "CARD",
+        purpose: "BOOKING_EXTRA",
+        description: "Доплата за заняття: Paid Personal",
+        booking_class_id: "schedule-paid",
+        user: null,
+        created_at: start,
+        updated_at: start
+      }
+    ]);
+    confirmPaidBookingMock.mockResolvedValue({
+      id: "booking-paid",
+      user_id: "client-1",
+      class_id: "schedule-paid",
+      status: "CONFIRMED",
+      created_at: start,
+      updated_at: start,
+      workout_class: {
+        id: "schedule-paid",
+        title: "Paid Personal",
+        trainer_id: "trainer-1",
+        start_time: start,
+        end_time: end,
+        capacity: 1,
+        is_paid_extra: true,
+        extra_price: 450,
+        trainer: { id: "trainer-1", first_name: "Ira", last_name: "Coach" }
+      }
+    });
+
+    renderWithProviders(<SchedulePage />);
+
+    expect(await screen.findByText("Крок 2. Підтвердьте оплату")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Підтвердити оплату і запис" }));
+
+    await waitFor(() => {
+      expect(confirmPaidBookingMock.mock.calls[0]?.[0]).toBe("payment-restore");
+    });
   });
 
   it("lets admin create and remove schedules", async () => {
@@ -180,7 +344,9 @@ describe("SchedulePage", () => {
         startTime: "2026-03-24T10:00",
         endTime: "2026-03-24T11:00",
         capacity: 8,
-        trainerId: "trainer-1"
+        trainerId: "trainer-1",
+        isPaidExtra: false,
+        extraPrice: 0
       });
     });
 

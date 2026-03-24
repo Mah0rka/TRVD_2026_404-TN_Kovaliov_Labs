@@ -28,7 +28,7 @@ describe("BookingsPage", () => {
 
     renderWithProviders(<BookingsPage />);
 
-    expect(await screen.findByText("Поки що без бронювань")).toBeInTheDocument();
+    expect(await screen.findByText("Поки що без активних записів")).toBeInTheDocument();
   });
 
   it("renders bookings and cancels confirmed one", async () => {
@@ -48,6 +48,8 @@ describe("BookingsPage", () => {
           start_time: "2026-03-25T08:00:00Z",
           end_time: "2026-03-25T09:00:00Z",
           capacity: 12,
+          is_paid_extra: false,
+          extra_price: null,
           trainer: {
             id: "trainer-1",
             first_name: "Ira",
@@ -68,5 +70,44 @@ describe("BookingsPage", () => {
       expect(cancelBookingMock).toHaveBeenCalled();
       expect(cancelBookingMock.mock.calls[0]?.[0]).toBe("booking-1");
     });
+  });
+
+  it("moves cancelled bookings to history tab instead of active list", async () => {
+    const user = userEvent.setup();
+    getMyBookingsMock.mockResolvedValue([
+      {
+        id: "booking-cancelled",
+        user_id: "client-1",
+        class_id: "class-2",
+        status: "CANCELLED",
+        created_at: "2026-03-23T00:00:00Z",
+        updated_at: "2026-03-23T00:00:00Z",
+        workout_class: {
+          id: "class-2",
+          title: "Cancelled Flow",
+          trainer_id: "trainer-1",
+          start_time: "2026-03-26T18:00:00Z",
+          end_time: "2026-03-26T19:00:00Z",
+          capacity: 1,
+          is_paid_extra: true,
+          extra_price: 450,
+          trainer: {
+            id: "trainer-1",
+            first_name: "Ira",
+            last_name: "Coach"
+          }
+        }
+      }
+    ]);
+
+    renderWithProviders(<BookingsPage />);
+
+    expect(await screen.findByText("Поки що без активних записів")).toBeInTheDocument();
+    expect(screen.queryByText("Cancelled Flow")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Історія" }));
+
+    expect(await screen.findByText("Cancelled Flow")).toBeInTheDocument();
+    expect(screen.getByText("Скасовано")).toBeInTheDocument();
   });
 });

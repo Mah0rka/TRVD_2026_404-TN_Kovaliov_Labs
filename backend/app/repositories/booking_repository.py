@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -53,5 +55,25 @@ class BookingRepository:
             .where(Booking.class_id == class_id, Booking.status == BookingStatus.CONFIRMED)
             .options(selectinload(Booking.user), selectinload(Booking.workout_class))
             .order_by(Booking.created_at.asc())
+        )
+        return list(result.scalars().all())
+
+    async def list_confirmed_for_user_between(
+        self,
+        user_id: str,
+        start_datetime: datetime,
+        end_datetime: datetime,
+    ) -> list[Booking]:
+        result = await self.session.execute(
+            select(Booking)
+            .join(Booking.workout_class)
+            .where(
+                Booking.user_id == user_id,
+                Booking.status == BookingStatus.CONFIRMED,
+                WorkoutClass.start_time >= start_datetime,
+                WorkoutClass.start_time < end_datetime,
+            )
+            .options(selectinload(Booking.workout_class))
+            .order_by(WorkoutClass.start_time.asc())
         )
         return list(result.scalars().all())

@@ -8,7 +8,9 @@ vi.mock("../core/http", () => ({
 
 import {
   cancelBooking,
+  confirmPaidBooking,
   createBooking,
+  createPaidBookingCheckout,
   deleteClientSubscription,
   deleteUser,
   createMembershipPlan,
@@ -66,6 +68,8 @@ const schedule = {
   end_time: "2026-03-23T11:00:00Z",
   capacity: 12,
   type: "GROUP" as const,
+  is_paid_extra: false,
+  extra_price: null,
   trainer: {
     id: "trainer-1",
     first_name: "Ira",
@@ -155,6 +159,8 @@ const booking = {
     start_time: "2026-03-23T10:00:00Z",
     end_time: "2026-03-23T11:00:00Z",
     capacity: 12,
+    is_paid_extra: false,
+    extra_price: null,
     trainer: {
       id: "trainer-1",
       first_name: "Ira",
@@ -170,6 +176,9 @@ const payment = {
   currency: "UAH",
   status: "SUCCESS",
   method: "CARD",
+  purpose: "SUBSCRIPTION",
+  description: "Покупка абонемента: Місячний",
+  booking_class_id: null,
   user: currentUser,
   created_at: "2026-03-23T00:00:00Z",
   updated_at: "2026-03-23T00:00:00Z"
@@ -249,7 +258,9 @@ describe("api modules", () => {
       startTime: "2026-03-23T10:00:00Z",
       endTime: "2026-03-23T11:00:00Z",
       capacity: 12,
-      trainerId: "trainer-1"
+      trainerId: "trainer-1",
+      isPaidExtra: false,
+      extraPrice: null
     });
 
     requestMock.mockResolvedValueOnce(schedule);
@@ -266,6 +277,12 @@ describe("api modules", () => {
     requestMock.mockResolvedValueOnce(booking);
     await createBooking("schedule-1");
 
+    requestMock.mockResolvedValueOnce({ ...payment, status: "PENDING", purpose: "BOOKING_EXTRA", booking_class_id: "schedule-1" });
+    await createPaidBookingCheckout("schedule-1");
+
+    requestMock.mockResolvedValueOnce(booking);
+    await confirmPaidBooking("payment-1");
+
     requestMock.mockResolvedValueOnce(booking);
     await cancelBooking("booking-1");
 
@@ -275,7 +292,7 @@ describe("api modules", () => {
     requestMock.mockResolvedValueOnce([subscription]);
     await getManagedSubscriptions({ includeDeleted: true });
     expect(requestMock).toHaveBeenNthCalledWith(
-      5,
+      7,
       "/subscriptions?include_deleted=true",
       { method: "GET" }
     );
@@ -286,7 +303,7 @@ describe("api modules", () => {
     requestMock.mockResolvedValueOnce(subscription);
     await purchaseSubscription("plan-1");
     expect(requestMock).toHaveBeenNthCalledWith(
-      7,
+      9,
       "/subscriptions/purchase",
       {
         method: "POST",

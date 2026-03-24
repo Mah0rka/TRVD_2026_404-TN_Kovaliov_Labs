@@ -62,12 +62,12 @@ class PaymentService:
             method=normalized_method,
             status="SUCCESS",
             currency=plan.currency,
+            purpose="SUBSCRIPTION",
+            description=f"Покупка абонемента: {plan.title}",
         )
 
     async def list_for_user(self, user_id: str) -> list[Payment]:
-        payments = await self.repository.list_by_user(user_id)
-        allowed_amounts = set(SUBSCRIPTION_PRICES.values())
-        return [payment for payment in payments if payment.amount in allowed_amounts]
+        return await self.repository.list_by_user(user_id)
 
     async def list_all(
         self,

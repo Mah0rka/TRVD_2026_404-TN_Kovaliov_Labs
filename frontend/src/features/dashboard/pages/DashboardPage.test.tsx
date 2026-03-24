@@ -38,6 +38,8 @@ function makeSchedule(overrides: Record<string, unknown> = {}) {
     end_time: later,
     capacity: 12,
     type: "GROUP" as const,
+    is_paid_extra: false,
+    extra_price: null,
     trainer: {
       id: "trainer-1",
       first_name: "Alex",
@@ -93,6 +95,8 @@ describe("DashboardPage", () => {
           start_time: now,
           end_time: later,
           capacity: 12,
+          is_paid_extra: false,
+          extra_price: null,
           trainer: {
             id: "trainer-1",
             first_name: "Alex",

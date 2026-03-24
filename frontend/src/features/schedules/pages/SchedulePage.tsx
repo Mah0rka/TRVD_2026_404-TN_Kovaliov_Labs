@@ -2,8 +2,11 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  confirmPaidBooking,
   createBooking,
+  createPaidBookingCheckout,
   createSchedule,
+  getMyPayments,
   getScheduleAttendees,
   getSchedules,
   getUsers,
@@ -22,13 +25,16 @@ export function SchedulePage() {
   const [filter, setFilter] = useState<(typeof classTypes)[number]>("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedAttendeesClassId, setSelectedAttendeesClassId] = useState<string | null>(null);
+  const [pendingCheckout, setPendingCheckout] = useState<Record<string, { paymentId: string; amount: number }>>({});
   const [form, setForm] = useState({
     title: "",
     type: "GROUP" as "GROUP" | "PERSONAL",
     startTime: "",
     endTime: "",
     capacity: 10,
-    trainerId: ""
+    trainerId: "",
+    isPaidExtra: false,
+    extraPrice: 0
   });
 
   const schedulesQuery = useQuery({
@@ -42,6 +48,12 @@ export function SchedulePage() {
     enabled: Boolean(selectedAttendeesClassId)
   });
 
+  const myPaymentsQuery = useQuery({
+    queryKey: ["my-payments"],
+    queryFn: getMyPayments,
+    enabled: isClient
+  });
+
   const trainersQuery = useQuery({
     queryKey: ["schedule-trainers"],
     queryFn: () => getUsers("TRAINER"),
@@ -53,7 +65,16 @@ export function SchedulePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
       setShowCreate(false);
-      setForm({ title: "", type: "GROUP", startTime: "", endTime: "", capacity: 10, trainerId: "" });
+      setForm({
+        title: "",
+        type: "GROUP",
+        startTime: "",
+        endTime: "",
+        capacity: 10,
+        trainerId: "",
+        isPaidExtra: false,
+        extraPrice: 0
+      });
     }
   });
 
@@ -74,6 +95,35 @@ export function SchedulePage() {
     }
   });
 
+  const paidCheckoutMutation = useMutation({
+    mutationFn: createPaidBookingCheckout,
+    onSuccess: (payment, classId) => {
+      setPendingCheckout((current) => ({
+        ...current,
+        [classId]: {
+          paymentId: payment.id,
+          amount: payment.amount
+        }
+      }));
+      queryClient.invalidateQueries({ queryKey: ["my-payments"] });
+    }
+  });
+
+  const confirmPaidMutation = useMutation({
+    mutationFn: confirmPaidBooking,
+    onSuccess: (booking) => {
+      setPendingCheckout((current) => {
+        const next = { ...current };
+        delete next[booking.class_id];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-payments"] });
+    }
+  });
+
   const filteredSchedules = useMemo(() => {
     if (!schedulesQuery.data) {
       return [];
@@ -81,6 +131,30 @@ export function SchedulePage() {
 
     return schedulesQuery.data.filter((schedule) => filter === "ALL" || schedule.type === filter);
   }, [filter, schedulesQuery.data]);
+
+  const pendingCheckoutMap = useMemo(() => {
+    const persistedPending = (myPaymentsQuery.data ?? []).reduce<Record<string, { paymentId: string; amount: number }>>(
+      (accumulator, payment) => {
+        if (
+          payment.purpose === "BOOKING_EXTRA" &&
+          payment.status === "PENDING" &&
+          payment.booking_class_id
+        ) {
+          accumulator[payment.booking_class_id] = {
+            paymentId: payment.id,
+            amount: Number(payment.amount)
+          };
+        }
+        return accumulator;
+      },
+      {}
+    );
+
+    return {
+      ...persistedPending,
+      ...pendingCheckout
+    };
+  }, [myPaymentsQuery.data, pendingCheckout]);
 
   return (
     <main className="screen">
@@ -162,6 +236,36 @@ export function SchedulePage() {
                 }
               />
             </label>
+            <label className="create-panel-field">
+              Формат оплати
+              <select
+                value={form.isPaidExtra ? "PAID_EXTRA" : "FREE"}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    isPaidExtra: event.target.value === "PAID_EXTRA",
+                    extraPrice: event.target.value === "PAID_EXTRA" ? current.extraPrice || 0 : 0
+                  }))
+                }
+              >
+                <option value="FREE">Входить в абонемент</option>
+                <option value="PAID_EXTRA">Платне додатково до абонемента</option>
+              </select>
+            </label>
+            {form.isPaidExtra ? (
+              <label className="create-panel-field">
+                Додаткова вартість
+                <input
+                  type="number"
+                  min={1}
+                  step="0.01"
+                  value={form.extraPrice}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, extraPrice: Number(event.target.value) }))
+                  }
+                />
+              </label>
+            ) : null}
             {isAdmin ? (
               <label className="create-panel-field">
                 Тренер
@@ -184,14 +288,15 @@ export function SchedulePage() {
               className="secondary-button create-panel-action"
               onClick={() => createMutation.mutate(form)}
               disabled={
-                !form.title ||
-                !form.startTime ||
-                !form.endTime ||
-                createMutation.isPending ||
-                (isAdmin && !form.trainerId)
-              }
-            >
-              {createMutation.isPending ? "Створення..." : "Створити заняття"}
+              !form.title ||
+              !form.startTime ||
+              !form.endTime ||
+              createMutation.isPending ||
+              (isAdmin && !form.trainerId) ||
+              (form.isPaidExtra && form.extraPrice <= 0)
+            }
+          >
+            {createMutation.isPending ? "Створення..." : "Створити заняття"}
             </button>
           </div>
         ) : null}
@@ -207,11 +312,25 @@ export function SchedulePage() {
             {bookMutation.error instanceof Error ? bookMutation.error.message : "Не вдалося записатися на заняття."}
           </p>
         ) : null}
+        {paidCheckoutMutation.isError ? (
+          <p className="error-banner">
+            {paidCheckoutMutation.error instanceof Error ? paidCheckoutMutation.error.message : "Не вдалося створити доплату."}
+          </p>
+        ) : null}
+        {confirmPaidMutation.isError ? (
+          <p className="error-banner">
+            {confirmPaidMutation.error instanceof Error ? confirmPaidMutation.error.message : "Не вдалося підтвердити оплату заняття."}
+          </p>
+        ) : null}
 
         <div className="schedule-grid">
           {filteredSchedules.length ? (
             filteredSchedules.map((schedule) => {
               const confirmedBookings = schedule.bookings.filter((booking) => booking.status === "CONFIRMED").length;
+              const pendingPayment = pendingCheckoutMap[schedule.id];
+              const isAlreadyBooked = schedule.bookings.some(
+                (booking) => booking.user_id === user?.id && booking.status === "CONFIRMED"
+              );
               return (
                 <article className="schedule-item" key={schedule.id}>
                   <div className="schedule-item-header">
@@ -233,6 +352,11 @@ export function SchedulePage() {
                     {new Date(schedule.start_time).toLocaleString("uk-UA")} -{" "}
                     {new Date(schedule.end_time).toLocaleString("uk-UA")}
                   </p>
+                  <p className="muted">
+                    {schedule.is_paid_extra
+                      ? `Додатково платне заняття · ${schedule.extra_price ?? 0} UAH`
+                      : "Входить у дію абонемента"}
+                  </p>
                   <dl className="details compact-details">
                     <div>
                       <dt>Тренер</dt>
@@ -249,13 +373,31 @@ export function SchedulePage() {
                   </dl>
                   <div className="actions-row">
                     {isClient ? (
-                      <button
-                        className="secondary-button"
-                        onClick={() => bookMutation.mutate(schedule.id)}
-                        disabled={bookMutation.isPending}
-                      >
-                        {bookMutation.isPending ? "Бронювання..." : "Записатись"}
-                      </button>
+                      isAlreadyBooked ? (
+                        <button className="secondary-button" disabled>
+                          Ви записані
+                        </button>
+                      ) : schedule.is_paid_extra ? (
+                        <button
+                          className="secondary-button"
+                          onClick={() => paidCheckoutMutation.mutate(schedule.id)}
+                          disabled={paidCheckoutMutation.isPending || Boolean(pendingPayment)}
+                        >
+                          {paidCheckoutMutation.isPending
+                            ? "Створення доплати..."
+                            : pendingPayment
+                              ? "Доплату створено"
+                              : "Створити доплату"}
+                        </button>
+                      ) : (
+                        <button
+                          className="secondary-button"
+                          onClick={() => bookMutation.mutate(schedule.id)}
+                          disabled={bookMutation.isPending}
+                        >
+                          {bookMutation.isPending ? "Бронювання..." : "Записатись"}
+                        </button>
+                      )
                     ) : null}
                     {canViewAttendees && confirmedBookings > 0 ? (
                       <button
@@ -268,6 +410,27 @@ export function SchedulePage() {
                       </button>
                     ) : null}
                   </div>
+                  {schedule.type === "PERSONAL" ? (
+                    <p className="muted">Персональне заняття з тренером {schedule.is_paid_extra ? "оплачується додатково до абонемента." : "входить в абонемент."}</p>
+                  ) : null}
+                  {schedule.is_paid_extra && pendingPayment ? (
+                    <div className="surface-card schedule-payment-card">
+                      <p className="eyebrow">Доплата створена</p>
+                      <h3>Крок 2. Підтвердьте оплату</h3>
+                      <p className="muted">
+                        Сума доплати: UAH {pendingPayment.amount.toLocaleString("uk-UA")}. Після підтвердження оплати вас буде остаточно записано на заняття.
+                      </p>
+                      <div className="actions-row">
+                        <button
+                          className="secondary-button"
+                          onClick={() => confirmPaidMutation.mutate(pendingPayment.paymentId)}
+                          disabled={confirmPaidMutation.isPending}
+                        >
+                          {confirmPaidMutation.isPending ? "Підтвердження..." : "Підтвердити оплату і запис"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {selectedAttendeesClassId === schedule.id ? (
                     <div className="attendees-list">

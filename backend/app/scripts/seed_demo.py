@@ -176,32 +176,40 @@ async def _migrate_user_relations(session, source_user: User, target_user: User)
 
 
 async def _ensure_schedule(session, trainer: User) -> None:
-    result = await session.execute(select(WorkoutClass).limit(1))
-    if result.scalar_one_or_none():
-        return
-
     first_start = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(days=1, hours=8)
     second_start = first_start + timedelta(days=1)
-    session.add_all(
-        [
-            WorkoutClass(
-                title="Morning Mobility",
-                trainer_id=trainer.id,
-                start_time=first_start,
-                end_time=first_start + timedelta(hours=1),
-                capacity=12,
-                type=WorkoutType.GROUP,
-            ),
-            WorkoutClass(
-                title="Personal Strength Session",
-                trainer_id=trainer.id,
-                start_time=second_start,
-                end_time=second_start + timedelta(hours=1),
-                capacity=1,
-                type=WorkoutType.PERSONAL,
-            ),
-        ]
-    )
+    definitions = {
+        "Morning Mobility": {
+            "trainer_id": trainer.id,
+            "start_time": first_start,
+            "end_time": first_start + timedelta(hours=1),
+            "capacity": 12,
+            "type": WorkoutType.GROUP,
+            "is_paid_extra": False,
+            "extra_price": None,
+        },
+        "Personal Strength Session": {
+            "trainer_id": trainer.id,
+            "start_time": second_start,
+            "end_time": second_start + timedelta(hours=1),
+            "capacity": 1,
+            "type": WorkoutType.PERSONAL,
+            "is_paid_extra": True,
+            "extra_price": Decimal("450.00"),
+        },
+    }
+
+    for title, payload in definitions.items():
+        result = await session.execute(select(WorkoutClass).where(WorkoutClass.title == title))
+        workout_class = result.scalar_one_or_none()
+        if not workout_class:
+            session.add(WorkoutClass(title=title, **payload))
+            continue
+
+        for field, value in payload.items():
+            setattr(workout_class, field, value)
+
+    await session.flush()
 
 
 async def _ensure_subscription(session, client: User, plan: MembershipPlan) -> None:

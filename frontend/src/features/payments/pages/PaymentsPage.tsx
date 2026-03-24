@@ -55,6 +55,12 @@ export function PaymentsPage() {
     });
   }, [paymentsQuery.data, searchTerm]);
 
+  function getPaymentStatusLabel(status: string): string {
+    if (status === "SUCCESS") return "Підтверджено";
+    if (status === "PENDING") return "Очікує підтвердження";
+    return "Неуспішно";
+  }
+
   return (
     <main className="screen">
       <section className="card schedule-card">
@@ -63,8 +69,8 @@ export function PaymentsPage() {
           <h1>{isManagement ? "Історія оплат клубу" : "Історія покупок"}</h1>
           <p className="muted">
             {isManagement
-              ? "Усі оплати за абонементи зібрані в одному табличному журналі."
-              : "Тут видно всі ваші придбані абонементи та дату кожної покупки."}
+              ? "Усі оплати за абонементи та платні заняття зібрані в одному табличному журналі."
+              : "Тут видно всі ваші покупки абонементів і підтверджені доплати за платні заняття."}
           </p>
         </div>
 
@@ -98,6 +104,7 @@ export function PaymentsPage() {
                     >
                       <option value="">Усі</option>
                       <option value="SUCCESS">Підтверджено</option>
+                      <option value="PENDING">Очікує підтвердження</option>
                       <option value="FAILED">Неуспішно</option>
                     </select>
                     <span className="toolbar-select-caret" aria-hidden="true">
@@ -184,8 +191,16 @@ export function PaymentsPage() {
                     <span>{payment.method === "CASH" ? "Готівка" : "Картка"}</span>
                   </div>
                   <div className="management-table-cell" data-label="Статус">
-                    <span className={payment.status === "SUCCESS" ? "status-pill success" : "status-pill warning"}>
-                      {payment.status === "SUCCESS" ? "Підтверджено" : "Неуспішно"}
+                    <span
+                      className={
+                        payment.status === "SUCCESS"
+                          ? "status-pill success"
+                          : payment.status === "PENDING"
+                            ? "status-pill"
+                            : "status-pill warning"
+                      }
+                    >
+                      {getPaymentStatusLabel(payment.status)}
                     </span>
                   </div>
                   <div className="management-table-cell" data-label={isManagement ? "Учасник" : "Призначення"}>
@@ -197,9 +212,10 @@ export function PaymentsPage() {
                         <span className="muted">
                           {payment.user.phone ? `${payment.user.email} · ${payment.user.phone}` : payment.user.email}
                         </span>
+                        {payment.description ? <span className="muted">{payment.description}</span> : null}
                       </>
                     ) : (
-                      <span>Покупка абонемента</span>
+                      <span>{payment.description ?? "Покупка абонемента"}</span>
                     )}
                   </div>
                   <div className="management-table-cell" data-label="Дата">

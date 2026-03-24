@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -15,6 +16,8 @@ class BookingClassSummary(BaseModel):
     start_time: datetime
     end_time: datetime
     capacity: int
+    is_paid_extra: bool
+    extra_price: Decimal | None
     trainer: TrainerSummary
 
 

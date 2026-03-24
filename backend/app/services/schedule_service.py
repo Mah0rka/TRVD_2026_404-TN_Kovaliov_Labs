@@ -17,7 +17,8 @@ class ScheduleService:
 
     async def create_schedule(self, payload: ScheduleCreate, current_user: User) -> WorkoutClass:
         if payload.end_time <= payload.start_time:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Час завершення має бути пізніше за час початку")
+        self._validate_pricing(payload.is_paid_extra, payload.extra_price)
 
         workout_class = WorkoutClass(
             title=payload.title.strip(),
@@ -26,6 +27,8 @@ class ScheduleService:
             end_time=payload.end_time,
             capacity=payload.capacity,
             trainer_id=payload.trainer_id or current_user.id,
+            is_paid_extra=payload.is_paid_extra,
+            extra_price=payload.extra_price if payload.is_paid_extra else None,
         )
         created = await self.repository.create(workout_class)
         refreshed = await self.repository.get_by_id(created.id)
@@ -48,7 +51,11 @@ class ScheduleService:
             setattr(workout_class, field_name, value)
 
         if workout_class.end_time <= workout_class.start_time:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Час завершення має бути пізніше за час початку")
+
+        self._validate_pricing(workout_class.is_paid_extra, workout_class.extra_price)
+        if not workout_class.is_paid_extra:
+            workout_class.extra_price = None
 
         await self.repository.commit()
         refreshed = await self.repository.get_by_id(class_id)
@@ -68,6 +75,15 @@ class ScheduleService:
 
         allowed_roles = {UserRole.ADMIN, UserRole.OWNER}
         if current_user.role not in allowed_roles and workout_class.trainer_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостатньо прав доступу")
 
         return await self.booking_repository.list_attendees_for_class(class_id)
+
+    @staticmethod
+    def _validate_pricing(is_paid_extra: bool, extra_price) -> None:
+        if is_paid_extra:
+            if extra_price is None or extra_price <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Для платного заняття потрібно вказати додаткову вартість",
+                )

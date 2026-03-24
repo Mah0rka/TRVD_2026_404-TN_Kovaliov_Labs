@@ -17,5 +17,8 @@ class Payment(Base, TimestampMixin):
     currency: Mapped[str] = mapped_column(String(8), default="UAH")
     status: Mapped[str] = mapped_column(String(32))
     method: Mapped[str] = mapped_column(String(32))
+    purpose: Mapped[str] = mapped_column(String(32), default="SUBSCRIPTION")
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    booking_class_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     user = relationship("User", back_populates="payments")

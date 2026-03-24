@@ -20,6 +20,9 @@ class PaymentRead(BaseModel):
     currency: str
     status: str
     method: str
+    purpose: str
+    description: str | None = None
+    booking_class_id: str | None = None
     user: UserRead | None = None
     created_at: datetime
     updated_at: datetime

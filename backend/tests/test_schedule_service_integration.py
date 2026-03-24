@@ -39,6 +39,8 @@ async def test_create_schedule_uses_current_trainer_when_trainer_id_missing(db_s
     assert created.title == "Morning Burn"
     assert created.trainer_id == trainer.id
     assert created.capacity == 14
+    assert created.is_paid_extra is False
+    assert created.extra_price is None
 
 
 @pytest.mark.asyncio
@@ -74,7 +76,7 @@ async def test_update_schedule_rejects_invalid_time_range(db_session):
         )
 
     assert error.value.status_code == 400
-    assert error.value.detail == "End time must be after start time"
+    assert error.value.detail == "Час завершення має бути пізніше за час початку"
 
 
 @pytest.mark.asyncio
@@ -132,4 +134,4 @@ async def test_list_attendees_allows_trainer_and_blocks_other_roles(db_session):
         await service.list_attendees(workout_class.id, stranger)
 
     assert error.value.status_code == 403
-    assert error.value.detail == "Insufficient permissions"
+    assert error.value.detail == "Недостатньо прав доступу"

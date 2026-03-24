@@ -17,6 +17,26 @@ class PaymentRepository:
         await self.session.refresh(payment)
         return payment
 
+    async def get_by_id(self, payment_id: str) -> Payment | None:
+        result = await self.session.execute(
+            select(Payment).where(Payment.id == payment_id).options(selectinload(Payment.user))
+        )
+        return result.scalar_one_or_none()
+
+    async def get_pending_booking_payment(self, user_id: str, class_id: str) -> Payment | None:
+        result = await self.session.execute(
+            select(Payment)
+            .where(
+                Payment.user_id == user_id,
+                Payment.booking_class_id == class_id,
+                Payment.purpose == "BOOKING_EXTRA",
+                Payment.status == "PENDING",
+            )
+            .order_by(Payment.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_by_user(self, user_id: str) -> list[Payment]:
         result = await self.session.execute(
             select(Payment)

@@ -27,6 +27,8 @@ export const scheduleSchema = z.object({
   end_time: z.string(),
   capacity: z.number(),
   type: z.enum(["GROUP", "PERSONAL"]),
+  is_paid_extra: z.boolean(),
+  extra_price: z.coerce.number().nullable(),
   trainer: z.object({
     id: z.string(),
     first_name: z.string(),
@@ -125,6 +127,8 @@ export const bookingSchema = z.object({
     start_time: z.string(),
     end_time: z.string(),
     capacity: z.number(),
+    is_paid_extra: z.boolean(),
+    extra_price: z.coerce.number().nullable(),
     trainer: z.object({
       id: z.string(),
       first_name: z.string(),
@@ -140,6 +144,9 @@ export const paymentSchema = z.object({
   currency: z.string(),
   status: z.string(),
   method: z.string(),
+  purpose: z.string(),
+  description: z.string().nullable().optional(),
+  booking_class_id: z.string().nullable().optional(),
   user: userSchema.optional().nullable(),
   created_at: z.string(),
   updated_at: z.string()

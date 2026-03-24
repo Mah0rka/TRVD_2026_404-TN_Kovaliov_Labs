@@ -26,6 +26,8 @@ export async function createSchedule(input: {
   endTime: string;
   capacity: number;
   trainerId?: string;
+  isPaidExtra: boolean;
+  extraPrice?: number | null;
 }): Promise<Schedule> {
   const data = await request<unknown>("/schedules", {
     method: "POST",
@@ -44,6 +46,8 @@ export async function updateSchedule(
     endTime: string;
     capacity: number;
     trainerId?: string;
+    isPaidExtra: boolean;
+    extraPrice?: number | null;
   }>
 ): Promise<Schedule> {
   const data = await request<unknown>(`/schedules/${id}`, {

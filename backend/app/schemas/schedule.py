@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.booking import BookingStatus
@@ -13,6 +15,8 @@ class ScheduleCreate(BaseModel):
     end_time: datetime = Field(alias="endTime")
     capacity: int = Field(ge=1, le=100)
     trainer_id: str | None = Field(default=None, alias="trainerId")
+    is_paid_extra: bool = Field(default=False, alias="isPaidExtra")
+    extra_price: Decimal | None = Field(default=None, alias="extraPrice")
 
 
 class ScheduleUpdate(BaseModel):
@@ -22,6 +26,8 @@ class ScheduleUpdate(BaseModel):
     end_time: datetime | None = Field(default=None, alias="endTime")
     capacity: int | None = Field(default=None, ge=1, le=100)
     trainer_id: str | None = Field(default=None, alias="trainerId")
+    is_paid_extra: bool | None = Field(default=None, alias="isPaidExtra")
+    extra_price: Decimal | None = Field(default=None, alias="extraPrice")
 
 
 class TrainerSummary(BaseModel):
@@ -70,6 +76,8 @@ class ScheduleRead(BaseModel):
     end_time: datetime
     capacity: int
     type: WorkoutType
+    is_paid_extra: bool
+    extra_price: Decimal | None
     trainer: TrainerSummary
     bookings: list[BookingSummary] = []
     created_at: datetime
