@@ -2,7 +2,7 @@
 
 Вебзастосунок для керування фітнес-клубом з окремими модулями `backend` і `frontend`.
 Проєкт покриває сценарії автентифікації, ролей доступу, розкладу занять, бронювань,
-абонементів, платежів, звітів і фонових задач.
+абонементів, платежів, звітів, підтвердження завершених занять і фонових задач.
 
 ## Структура репозиторію
 
@@ -53,8 +53,8 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
 
 ## Документація
 
-- [Backend Guide](Docs/backend.md)
-- [Frontend Guide](Docs/frontend.md)
+- [Backend Guide](backend/Docs/backend.md)
+- [Frontend Guide](frontend/Docs/frontend.md)
 - [Lab Reports Index](labs/README.md)
 
 ## Ліцензія

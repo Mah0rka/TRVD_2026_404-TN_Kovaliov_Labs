@@ -62,7 +62,7 @@ async def attendees(
     attendees = await service.list_attendees(class_id, current_user)
     return [ScheduleAttendeeRead.model_validate(item) for item in attendees]
 
-
+# Дає тренеру або менеджменту зафіксувати завершення заняття й службовий коментар.
 @router.patch("/{class_id}/complete", response_model=ScheduleRead)
 async def complete_schedule(
     class_id: str,

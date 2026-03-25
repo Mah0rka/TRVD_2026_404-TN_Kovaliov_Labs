@@ -21,4 +21,4 @@
 | 2 | вибір стеку, C4-архітектура, ER-модель |
 | 3 | backend, DAL, service layer, REST API, DTO |
 | 4 | auth, JWT cookies, CSRF, RBAC, rate limit |
-| 5 | frontend SPA, protected routes, CRUD UI, інтеграція з API |
+| 5 | frontend SPA, protected routes, CRUD UI, інтеграція з API, role-based сторінка класів |
