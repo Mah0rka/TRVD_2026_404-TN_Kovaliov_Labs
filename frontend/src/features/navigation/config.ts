@@ -6,7 +6,7 @@ import {
   clientAndManagementRoles,
   clientRoles,
   managementRoles,
-  trainerRoles
+  trainerAndManagementRoles
 } from "../auth/lib/roles";
 
 export type NavigationItem = {
@@ -22,7 +22,7 @@ export const navigationItems: NavigationItem[] = [
   { to: "/dashboard/bookings", label: "Мої записи", roles: clientRoles },
   { to: "/dashboard/subscriptions", label: "Абонементи", roles: clientAndManagementRoles },
   { to: "/dashboard/payments", label: "Історія оплат", roles: clientAndManagementRoles },
-  { to: "/dashboard/my-classes", label: "Мої класи", roles: trainerRoles },
+  { to: "/dashboard/my-classes", label: "Класи", roles: trainerAndManagementRoles },
   { to: "/dashboard/users", label: "Учасники", roles: managementRoles },
   { to: "/dashboard/reports", label: "Аналітика", roles: managementRoles }
 ];

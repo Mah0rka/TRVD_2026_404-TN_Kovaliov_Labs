@@ -11,7 +11,7 @@ import {
   ProtectedLayout,
   PublicOnlyLayout,
   RoleBoundary,
-  trainerRoles
+  trainerAndManagementRoles
 } from "../features/auth";
 
 // Ліниво підвантажує головну сторінку застосунку.
@@ -135,7 +135,7 @@ export const appRouter = createBrowserRouter([
             ]
           },
           {
-            element: <RoleBoundary roles={trainerRoles} />,
+            element: <RoleBoundary roles={trainerAndManagementRoles} />,
             children: [
               {
                 path: "/dashboard/my-classes",

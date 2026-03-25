@@ -7,6 +7,7 @@ import {
   clientAndManagementRoles,
   clientRoles,
   managementRoles,
+  trainerAndManagementRoles,
   trainerRoles,
   userHasRole
 } from "./lib/roles";
@@ -24,6 +25,7 @@ describe("features/auth barrel", () => {
     expect(authExports.allRoles).toBe(allRoles);
     expect(authExports.clientRoles).toBe(clientRoles);
     expect(authExports.managementRoles).toBe(managementRoles);
+    expect(authExports.trainerAndManagementRoles).toBe(trainerAndManagementRoles);
     expect(authExports.trainerRoles).toBe(trainerRoles);
     expect(authExports.clientAndManagementRoles).toBe(clientAndManagementRoles);
     expect(authExports.userHasRole).toBe(userHasRole);

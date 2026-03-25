@@ -187,7 +187,7 @@ describe("DashboardPage", () => {
 
     expect(await screen.findByText("Сьогоднішній графік і команда вже під рукою")).toBeInTheDocument();
     expect(await screen.findByText("Найближчий клас")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Мої класи" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Класи" })).toHaveAttribute(
       "href",
       "/dashboard/my-classes"
     );

@@ -36,6 +36,16 @@ export const scheduleSchema = z.object({
     first_name: z.string(),
     last_name: z.string()
   }),
+  completed_at: z.string().nullable().optional(),
+  completion_comment: z.string().nullable().optional(),
+  completed_by: z
+    .object({
+      id: z.string(),
+      first_name: z.string(),
+      last_name: z.string()
+    })
+    .nullable()
+    .optional(),
   bookings: z.array(
     z.object({
       id: z.string(),

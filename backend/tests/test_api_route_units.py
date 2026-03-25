@@ -16,7 +16,7 @@ from app.schemas.membership_plan import MembershipPlanRead
 from app.schemas.membership_plan import MembershipPlanCreate, MembershipPlanUpdate
 from app.schemas.payment import PaymentCreateRequest
 from app.schemas.report import RevenueReport, TrainerPopularityReport
-from app.schemas.schedule import ScheduleCreate, ScheduleRead, ScheduleUpdate
+from app.schemas.schedule import ScheduleCompleteRequest, ScheduleCreate, ScheduleRead, ScheduleUpdate
 from app.schemas.subscription import (
     SubscriptionFreezeRequest,
     SubscriptionManagementIssueRequest,
@@ -75,6 +75,9 @@ def make_schedule() -> SimpleNamespace:
         is_paid_extra=False,
         extra_price=None,
         trainer=trainer,
+        completed_at=None,
+        completion_comment=None,
+        completed_by=None,
         bookings=[booking],
         created_at=start_time,
         updated_at=start_time,
@@ -321,6 +324,14 @@ async def test_schedule_routes(monkeypatch):
         async def list_attendees(self, class_id, current_user):
             return [make_attendee()]
 
+        # Перевіряє, що complete schedule працює коректно.
+        async def confirm_completion(self, class_id, payload, current_user):
+            schedule = make_schedule()
+            schedule.completed_at = datetime.now(UTC)
+            schedule.completion_comment = payload.comment
+            schedule.completed_by = make_user(UserRole.TRAINER)
+            return schedule
+
         # Перевіряє, що update schedule працює коректно.
         async def update_schedule(self, class_id, payload):
             return make_schedule()
@@ -348,6 +359,14 @@ async def test_schedule_routes(monkeypatch):
     assert len(await schedules.list_schedules(make_user(), object())) == 1
     assert len(await schedules.my_classes(make_user(UserRole.TRAINER), object())) == 1
     assert len(await schedules.attendees("class-1", make_user(UserRole.TRAINER), object())) == 1
+    completed = await schedules.complete_schedule(
+        "class-1",
+        ScheduleCompleteRequest(comment="Class completed"),
+        make_user(UserRole.TRAINER),
+        object(),
+    )
+    assert isinstance(completed, ScheduleRead)
+    assert completed.completion_comment == "Class completed"
     assert isinstance(await schedules.update_schedule("class-1", ScheduleUpdate(title="Updated"), admin, object()), ScheduleRead)
     assert (await schedules.delete_schedule("class-1", admin, object())).status_code == 204
 

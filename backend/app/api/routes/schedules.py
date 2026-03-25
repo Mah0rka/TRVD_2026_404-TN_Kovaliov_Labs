@@ -5,7 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db_session, require_roles
 from app.models.user import User, UserRole
-from app.schemas.schedule import ScheduleAttendeeRead, ScheduleCreate, ScheduleRead, ScheduleUpdate
+from app.schemas.schedule import (
+    ScheduleAttendeeRead,
+    ScheduleCompleteRequest,
+    ScheduleCreate,
+    ScheduleRead,
+    ScheduleUpdate,
+)
 from app.services.schedule_service import ScheduleService
 
 router = APIRouter()
@@ -55,6 +61,18 @@ async def attendees(
     service = ScheduleService(db)
     attendees = await service.list_attendees(class_id, current_user)
     return [ScheduleAttendeeRead.model_validate(item) for item in attendees]
+
+
+@router.patch("/{class_id}/complete", response_model=ScheduleRead)
+async def complete_schedule(
+    class_id: str,
+    payload: ScheduleCompleteRequest,
+    current_user: User = Depends(require_roles(UserRole.TRAINER, UserRole.ADMIN, UserRole.OWNER)),
+    db: AsyncSession = Depends(get_db_session),
+) -> ScheduleRead:
+    service = ScheduleService(db)
+    schedule = await service.confirm_completion(class_id, payload, current_user)
+    return ScheduleRead.model_validate(schedule)
 
 
 # Оновлює schedule.

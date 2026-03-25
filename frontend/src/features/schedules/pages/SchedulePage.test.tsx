@@ -72,6 +72,10 @@ describe("SchedulePage", () => {
     getMyPaymentsMock.mockResolvedValue([]);
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("lets client filter and book schedules", async () => {
     const user = userEvent.setup();
     useAuthStore.setState({
@@ -398,5 +402,49 @@ describe("SchedulePage", () => {
 
     expect(await screen.findByText("Client User")).toBeInTheDocument();
     expect(getScheduleAttendeesMock).toHaveBeenCalledWith("schedule-1");
+  });
+
+  it("hides schedules that have already started", async () => {
+    const startedAt = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const endsLater = new Date(Date.now() + 20 * 60 * 1000).toISOString();
+    const futureStart = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const futureEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+    useAuthStore.setState({
+      user: {
+        id: "client-1",
+        email: "client@example.com",
+        first_name: "Client",
+        last_name: "User",
+        role: "CLIENT",
+        phone: null,
+        is_verified: true,
+        created_at: start,
+        updated_at: start
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+    getSchedulesMock.mockResolvedValue([
+      scheduleFixture({
+        id: "schedule-past",
+        title: "Past Session",
+        start_time: startedAt,
+        end_time: endsLater,
+        bookings: []
+      }),
+      scheduleFixture({
+        id: "schedule-future",
+        title: "Future Session",
+        start_time: futureStart,
+        end_time: futureEnd,
+        bookings: []
+      })
+    ]);
+
+    renderWithProviders(<SchedulePage />);
+
+    expect(await screen.findByText("Future Session")).toBeInTheDocument();
+    expect(screen.queryByText("Past Session")).not.toBeInTheDocument();
   });
 });

@@ -24,6 +24,20 @@ export async function getScheduleAttendees(classId: string): Promise<ScheduleAtt
   return z.array(scheduleAttendeeSchema).parse(data);
 }
 
+// Підтверджує завершення заняття та зберігає коментар.
+export async function completeSchedule(
+  classId: string,
+  input: {
+    comment?: string | null;
+  }
+): Promise<Schedule> {
+  const data = await request<unknown>(`/schedules/${classId}/complete`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+  return scheduleSchema.parse(data);
+}
+
 // Створює нове заняття через API.
 export async function createSchedule(input: {
   title: string;

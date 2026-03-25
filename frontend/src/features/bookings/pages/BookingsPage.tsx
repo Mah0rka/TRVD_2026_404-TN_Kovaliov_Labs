@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { cancelBooking, getMyBookings } from "../../../shared/api";
+import { hasSessionEnded } from "../../../shared/lib/sessionTime";
 
 // Показує бронювання поточного користувача та їх статуси.
 export function BookingsPage() {
@@ -28,17 +29,24 @@ export function BookingsPage() {
     const bookings = bookingsQuery.data ?? [];
 
     if (view === "ACTIVE") {
-      return bookings.filter((booking) => booking.status === "CONFIRMED");
+      return bookings.filter(
+        (booking) =>
+          booking.status === "CONFIRMED" &&
+          !hasSessionEnded(booking.workout_class.end_time)
+      );
     }
 
-    return bookings.filter((booking) => booking.status !== "CONFIRMED");
+    return bookings.filter(
+      (booking) =>
+        booking.status !== "CONFIRMED" ||
+        hasSessionEnded(booking.workout_class.end_time)
+    );
   }, [bookingsQuery.data, view]);
 
   return (
     <main className="screen">
       <section className="card schedule-card">
         <div className="heading-group">
-          <p className="eyebrow">Bookings</p>
           <h1>Мої записи</h1>
           <p className="muted">
             {view === "ACTIVE"

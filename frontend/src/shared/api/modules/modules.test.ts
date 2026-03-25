@@ -10,6 +10,7 @@ vi.mock("../core/http", () => ({
 
 import {
   cancelBooking,
+  completeSchedule,
   confirmPaidBooking,
   createBooking,
   createPaidBookingCheckout,
@@ -77,6 +78,9 @@ const schedule = {
     first_name: "Ira",
     last_name: "Coach"
   },
+  completed_at: null,
+  completion_comment: null,
+  completed_by: null,
   bookings: [{ id: "booking-1", user_id: "user-1", status: "CONFIRMED" as const }],
   created_at: "2026-03-23T00:00:00Z",
   updated_at: "2026-03-23T00:00:00Z"
@@ -252,6 +256,9 @@ describe("api modules", () => {
 
     requestMock.mockResolvedValueOnce([attendee]);
     await getScheduleAttendees("schedule-1");
+
+    requestMock.mockResolvedValueOnce(schedule);
+    await completeSchedule("schedule-1", { comment: "Completed successfully" });
 
     requestMock.mockResolvedValueOnce(schedule);
     await createSchedule({

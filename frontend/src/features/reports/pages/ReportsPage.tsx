@@ -28,7 +28,6 @@ export function ReportsPage() {
     <main className="screen">
       <section className="card schedule-card">
         <div className="heading-group">
-          <p className="eyebrow">Insights</p>
           <h1>Аналітика клубу</h1>
           <p className="muted">Тут видно виручку, динаміку оплат і найпопулярніші напрями тренувань.</p>
         </div>

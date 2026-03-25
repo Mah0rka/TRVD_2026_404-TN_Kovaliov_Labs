@@ -202,7 +202,6 @@ export function SubscriptionsPage() {
     <main className="screen">
       <section className="card schedule-card">
         <div className="heading-group">
-          <p className="eyebrow">Абонементи</p>
           <h1>{isManagement ? "Плани абонементів клубу" : "Абонементи клубу"}</h1>
           <p className="muted">
             {isManagement

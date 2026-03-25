@@ -37,7 +37,12 @@ class User(Base, TimestampMixin):
     )
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
-    classes = relationship("WorkoutClass", back_populates="trainer", cascade="all, delete-orphan")
+    classes = relationship(
+        "WorkoutClass",
+        back_populates="trainer",
+        cascade="all, delete-orphan",
+        foreign_keys="WorkoutClass.trainer_id",
+    )
     subscription_edits = relationship(
         "Subscription",
         foreign_keys="Subscription.last_modified_by_id",

@@ -17,7 +17,6 @@ export function AppShell({ children }: PropsWithChildren) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const visibleItems = navigationItems.filter((item) => userHasRole(user, item.roles));
-  const currentItem = visibleItems.find((item) => item.to === location.pathname);
   const formattedDate = new Intl.DateTimeFormat("uk-UA", {
     day: "numeric",
     month: "long"
@@ -146,8 +145,6 @@ export function AppShell({ children }: PropsWithChildren) {
             >
               ☰
             </button>
-            <p className="eyebrow">Клубний простір</p>
-            <h1>{currentItem?.label ?? "Клубний кабінет"}</h1>
           </div>
           <div className="topbar-actions">
             <Link className="ghost-link topbar-home-link" to="/">

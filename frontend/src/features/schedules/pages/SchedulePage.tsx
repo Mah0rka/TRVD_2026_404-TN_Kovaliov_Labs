@@ -14,6 +14,7 @@ import {
   getUsers,
   removeSchedule
 } from "../../../shared/api";
+import { hasSessionStarted } from "../../../shared/lib/sessionTime";
 import { useAuthStore } from "../../auth";
 
 const classTypes = ["ALL", "GROUP", "PERSONAL"] as const;
@@ -132,7 +133,11 @@ export function SchedulePage() {
       return [];
     }
 
-    return schedulesQuery.data.filter((schedule) => filter === "ALL" || schedule.type === filter);
+    return schedulesQuery.data.filter(
+      (schedule) =>
+        !hasSessionStarted(schedule.start_time) &&
+        (filter === "ALL" || schedule.type === filter)
+    );
   }, [filter, schedulesQuery.data]);
 
   const pendingCheckoutMap = useMemo(() => {
@@ -164,7 +169,6 @@ export function SchedulePage() {
       <section className="card schedule-card">
         <div className="heading-row">
           <div className="heading-group">
-            <p className="eyebrow">Schedules</p>
             <h1>Розклад занять</h1>
             <p className="muted">Один контур розкладу для клієнта, тренера і адміністрації.</p>
           </div>

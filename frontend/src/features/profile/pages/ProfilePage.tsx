@@ -59,8 +59,7 @@ export function ProfilePage() {
   return (
     <section className="panel-stack">
       <div className="panel-heading">
-        <p className="eyebrow">Profile</p>
-        <h2>Мій профіль</h2>
+        <h2>Профіль</h2>
         <p className="muted">Тут зібрані ваші контакти та особисті дані для клубного кабінету.</p>
       </div>
 

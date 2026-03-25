@@ -31,6 +31,13 @@ class WorkoutClass(Base, TimestampMixin):
     type: Mapped[WorkoutType] = mapped_column(Enum(WorkoutType, name="workout_type"))
     is_paid_extra: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     extra_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completion_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    completed_by_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
-    trainer = relationship("User", back_populates="classes")
+    trainer = relationship("User", back_populates="classes", foreign_keys=[trainer_id])
     bookings = relationship("Booking", back_populates="workout_class", cascade="all, delete-orphan")
+    completed_by = relationship("User", foreign_keys=[completed_by_id])

@@ -40,6 +40,10 @@ class TrainerSummary(BaseModel):
     last_name: str
 
 
+class ScheduleCompleteRequest(BaseModel):
+    comment: str | None = Field(default=None, max_length=2000)
+
+
 class BookingSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,6 +85,9 @@ class ScheduleRead(BaseModel):
     is_paid_extra: bool
     extra_price: Decimal | None
     trainer: TrainerSummary
+    completed_at: datetime | None = None
+    completion_comment: str | None = None
+    completed_by: TrainerSummary | None = None
     bookings: list[BookingSummary] = []
     created_at: datetime
     updated_at: datetime

@@ -25,6 +25,7 @@ class ScheduleRepository:
             select(WorkoutClass)
             .options(
                 selectinload(WorkoutClass.trainer),
+                selectinload(WorkoutClass.completed_by),
                 selectinload(WorkoutClass.bookings),
             )
             .order_by(WorkoutClass.start_time.asc())
@@ -36,7 +37,11 @@ class ScheduleRepository:
         result = await self.session.execute(
             select(WorkoutClass)
             .where(WorkoutClass.trainer_id == trainer_id)
-            .options(selectinload(WorkoutClass.trainer), selectinload(WorkoutClass.bookings))
+            .options(
+                selectinload(WorkoutClass.trainer),
+                selectinload(WorkoutClass.completed_by),
+                selectinload(WorkoutClass.bookings),
+            )
             .order_by(WorkoutClass.start_time.asc())
         )
         return list(result.scalars().all())
@@ -46,7 +51,11 @@ class ScheduleRepository:
         result = await self.session.execute(
             select(WorkoutClass)
             .where(WorkoutClass.id == class_id)
-            .options(selectinload(WorkoutClass.trainer), selectinload(WorkoutClass.bookings))
+            .options(
+                selectinload(WorkoutClass.trainer),
+                selectinload(WorkoutClass.completed_by),
+                selectinload(WorkoutClass.bookings),
+            )
         )
         return result.scalar_one_or_none()
 

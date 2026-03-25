@@ -1,5 +1,7 @@
 # Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
+from datetime import UTC, datetime
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +10,7 @@ from app.models.user import User
 from app.models.workout_class import WorkoutClass
 from app.repositories.booking_repository import BookingRepository
 from app.repositories.schedule_repository import ScheduleRepository
-from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
+from app.schemas.schedule import ScheduleCompleteRequest, ScheduleCreate, ScheduleUpdate
 
 
 class ScheduleService:
@@ -75,6 +77,41 @@ class ScheduleService:
         if not workout_class:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
         await self.repository.delete(workout_class)
+
+    # Підтверджує, що завершене заняття фактично відбулося.
+    async def confirm_completion(
+        self,
+        class_id: str,
+        payload: ScheduleCompleteRequest,
+        current_user: User,
+    ) -> WorkoutClass:
+        workout_class = await self.repository.get_by_id(class_id)
+        if not workout_class:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
+
+        allowed_roles = {UserRole.ADMIN, UserRole.OWNER}
+        if current_user.role not in allowed_roles and workout_class.trainer_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостатньо прав доступу")
+
+        now = datetime.now(UTC)
+        class_end = workout_class.end_time
+        if class_end.tzinfo is None:
+            class_end = class_end.replace(tzinfo=UTC)
+        if class_end > now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Заняття можна підтвердити лише після завершення",
+            )
+
+        workout_class.completed_at = workout_class.completed_at or now
+        workout_class.completed_by = current_user
+        comment = payload.comment.strip() if payload.comment else None
+        workout_class.completion_comment = comment or None
+        await self.repository.commit()
+
+        refreshed = await self.repository.get_by_id(class_id)
+        assert refreshed is not None
+        return refreshed
 
     # Повертає список attendees.
     async def list_attendees(self, class_id: str, current_user: User):

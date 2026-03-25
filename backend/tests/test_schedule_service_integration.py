@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from app.models.booking import Booking, BookingStatus
 from app.models.user import User, UserRole
 from app.models.workout_class import WorkoutClass, WorkoutType
-from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
+from app.schemas.schedule import ScheduleCompleteRequest, ScheduleCreate, ScheduleUpdate
 from app.services.schedule_service import ScheduleService
 
 
@@ -140,3 +140,73 @@ async def test_list_attendees_allows_trainer_and_blocks_other_roles(db_session):
 
     assert error.value.status_code == 403
     assert error.value.detail == "Недостатньо прав доступу"
+
+
+# Перевіряє, що завершене заняття може підтвердити тренер з коментарем.
+@pytest.mark.asyncio
+async def test_confirm_completion_sets_comment_and_actor(db_session):
+    trainer = User(
+        email="completion-trainer@example.com",
+        password_hash="hash",
+        first_name="Trainer",
+        last_name="Done",
+        role=UserRole.TRAINER,
+        is_verified=True,
+    )
+    workout_class = WorkoutClass(
+        title="Completed Class",
+        trainer=trainer,
+        start_time=datetime.now(UTC) - timedelta(hours=2),
+        end_time=datetime.now(UTC) - timedelta(hours=1),
+        capacity=8,
+        type=WorkoutType.GROUP,
+    )
+    db_session.add_all([trainer, workout_class])
+    await db_session.commit()
+
+    service = ScheduleService(db_session)
+    completed = await service.confirm_completion(
+        workout_class.id,
+        ScheduleCompleteRequest(comment="Група відпрацювала весь план."),
+        trainer,
+    )
+
+    assert completed.completed_at is not None
+    assert completed.completed_by is not None
+    assert completed.completed_by.id == trainer.id
+    assert completed.completion_comment == "Група відпрацювала весь план."
+
+
+# Перевіряє, що завершення не можна підтвердити до фактичного кінця заняття.
+@pytest.mark.asyncio
+async def test_confirm_completion_rejects_active_class(db_session):
+    trainer = User(
+        email="completion-early@example.com",
+        password_hash="hash",
+        first_name="Trainer",
+        last_name="Early",
+        role=UserRole.TRAINER,
+        is_verified=True,
+    )
+    workout_class = WorkoutClass(
+        title="Still Running",
+        trainer=trainer,
+        start_time=datetime.now(UTC) - timedelta(minutes=15),
+        end_time=datetime.now(UTC) + timedelta(minutes=45),
+        capacity=8,
+        type=WorkoutType.GROUP,
+    )
+    db_session.add_all([trainer, workout_class])
+    await db_session.commit()
+
+    service = ScheduleService(db_session)
+
+    with pytest.raises(HTTPException) as error:
+        await service.confirm_completion(
+            workout_class.id,
+            ScheduleCompleteRequest(comment="Too early"),
+            trainer,
+        )
+
+    assert error.value.status_code == 400
+    assert error.value.detail == "Заняття можна підтвердити лише після завершення"

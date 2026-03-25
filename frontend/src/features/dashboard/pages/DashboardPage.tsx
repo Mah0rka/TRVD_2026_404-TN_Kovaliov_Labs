@@ -131,7 +131,7 @@ export function DashboardPage() {
   const heroPrimary = isClient
     ? { to: "/dashboard/schedule", label: "Відкрити розклад" }
     : isTrainer
-      ? { to: "/dashboard/my-classes", label: "Мої класи" }
+      ? { to: "/dashboard/my-classes", label: "Класи" }
       : { to: "/dashboard/reports", label: "Відкрити аналітику" };
 
   const heroSecondary = isClient
@@ -300,7 +300,7 @@ export function DashboardPage() {
       ? [
         {
           label: "Тренерський день",
-          title: "Мої класи",
+          title: "Класи",
           description: "Учасники, час і фокус на найближчі заняття без зайвої метушні.",
           to: "/dashboard/my-classes",
             badge: `${upcomingMyClasses.length} попереду`,

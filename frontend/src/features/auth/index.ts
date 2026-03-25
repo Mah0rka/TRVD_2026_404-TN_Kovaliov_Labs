@@ -6,6 +6,7 @@ export {
   clientAndManagementRoles,
   clientRoles,
   managementRoles,
+  trainerAndManagementRoles,
   trainerRoles,
   userHasRole
 } from "./lib/roles";

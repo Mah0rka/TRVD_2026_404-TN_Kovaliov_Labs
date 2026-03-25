@@ -453,7 +453,6 @@ export function UsersPage() {
   return (
     <section className="panel-stack">
       <div className="panel-heading">
-        <p className="eyebrow">Users</p>
         <h2>Учасники клубу</h2>
         <p className="muted">
           Повна картка учасника, історія оплат, придбані абонементи та всі дії менеджера в одному місці.
@@ -531,11 +530,11 @@ export function UsersPage() {
         ) : null}
       </div>
 
-      <div className="surface-card table-card">
-        <div className="table-header">
+      <div className="surface-card table-card users-table-card">
+        <div className="table-header users-table-header">
           <h3>Список користувачів</h3>
-          <div className="table-toolbar">
-            <div className="table-toolbar-fields">
+          <div className="table-toolbar users-table-toolbar">
+            <div className="table-toolbar-fields users-table-toolbar-fields">
               <label className="toolbar-field">
                 <span className="toolbar-label">Фільтр списку</span>
                 <span className="toolbar-select-shell">

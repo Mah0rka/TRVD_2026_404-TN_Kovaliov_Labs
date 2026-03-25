@@ -25,6 +25,10 @@ describe("BookingsPage", () => {
     cancelBookingMock.mockReset();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders empty state", async () => {
     getMyBookingsMock.mockResolvedValue([]);
 
@@ -35,6 +39,8 @@ describe("BookingsPage", () => {
 
   it("renders bookings and cancels confirmed one", async () => {
     const user = userEvent.setup();
+    const futureStart = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const futureEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     getMyBookingsMock.mockResolvedValue([
       {
         id: "booking-1",
@@ -47,8 +53,8 @@ describe("BookingsPage", () => {
           id: "class-1",
           title: "Morning Burn",
           trainer_id: "trainer-1",
-          start_time: "2026-03-25T08:00:00Z",
-          end_time: "2026-03-25T09:00:00Z",
+          start_time: futureStart,
+          end_time: futureEnd,
           capacity: 12,
           is_paid_extra: false,
           extra_price: null,
@@ -111,5 +117,46 @@ describe("BookingsPage", () => {
 
     expect(await screen.findByText("Cancelled Flow")).toBeInTheDocument();
     expect(screen.getByText("Скасовано")).toBeInTheDocument();
+  });
+
+  it("moves finished confirmed bookings to history tab", async () => {
+    const user = userEvent.setup();
+    const pastStart = new Date(Date.now() - 11 * 60 * 1000).toISOString();
+    const pastEnd = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    getMyBookingsMock.mockResolvedValue([
+      {
+        id: "booking-finished",
+        user_id: "client-1",
+        class_id: "class-3",
+        status: "CONFIRMED",
+        created_at: "2026-03-25T17:00:00Z",
+        updated_at: "2026-03-25T17:00:00Z",
+        workout_class: {
+          id: "class-3",
+          title: "Finished Session",
+          trainer_id: "trainer-1",
+          start_time: pastStart,
+          end_time: pastEnd,
+          capacity: 1,
+          is_paid_extra: false,
+          extra_price: null,
+          trainer: {
+            id: "trainer-1",
+            first_name: "Ira",
+            last_name: "Coach"
+          }
+        }
+      }
+    ]);
+
+    renderWithProviders(<BookingsPage />);
+
+    expect(await screen.findByText("Поки що без активних записів")).toBeInTheDocument();
+    expect(screen.queryByText("Finished Session")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Історія" }));
+
+    expect(await screen.findByText("Finished Session")).toBeInTheDocument();
+    expect(screen.getByText("Підтверджено")).toBeInTheDocument();
   });
 });

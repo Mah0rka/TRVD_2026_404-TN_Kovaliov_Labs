@@ -69,7 +69,6 @@ export function PaymentsPage() {
     <main className="screen">
       <section className="card schedule-card">
         <div className="heading-group">
-          <p className="eyebrow">Покупки</p>
           <h1>{isManagement ? "Історія оплат клубу" : "Історія покупок"}</h1>
           <p className="muted">
             {isManagement
