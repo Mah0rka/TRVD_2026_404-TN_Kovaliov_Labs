@@ -1,4 +1,4 @@
-// Коротко: компонент керує UI-логікою для модуля каркаса застосунку.
+// Компонент формує спільні елементи інтерфейсу для різних сторінок.
 
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -6,7 +6,9 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore, userHasRole } from "../../features/auth";
 import { navigationItems } from "../../features/navigation/config";
 import { logout } from "../api";
+import { BrandSignature } from "./BrandSignature";
 
+// Будує каркас dashboard-інтерфейсу з навігацією та контентом.
 export function AppShell({ children }: PropsWithChildren) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,21 +48,19 @@ export function AppShell({ children }: PropsWithChildren) {
     };
   }, [isMobileMenuOpen]);
 
+  // Виконує logout із хедера та очищає auth-стан на клієнті.
   async function handleLogout() {
     await logout().catch(() => undefined);
     clearAuth();
     navigate("/login", { replace: true });
   }
 
+  // Формує список пунктів навігації для desktop і mobile режимів.
   function renderNavigationContent(isMobile = false) {
     return (
       <>
         <div className={isMobile ? "brand-lockup sidebar-mobile-brand" : "brand-lockup"}>
-          <div className="brand-badge">ML</div>
-          <div>
-            <div className="brand-title">MotionLab</div>
-            <div className="brand-subtitle">клубний кабінет</div>
-          </div>
+          <BrandSignature subtitle="клубний кабінет" />
           {isMobile ? (
             <button
               className="ghost-link mobile-close-button"

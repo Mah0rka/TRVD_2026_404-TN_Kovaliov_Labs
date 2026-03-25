@@ -1,0 +1,128 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: fcms-app:prod
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      ADMIN_IDLE_TIMEOUT_MINUTES: ${ADMIN_IDLE_TIMEOUT_MINUTES}
+      SECURE_COOKIES: ${SECURE_COOKIES}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      RUN_DB_MIGRATIONS: ${RUN_DB_MIGRATIONS}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA}
+      SERVE_FRONTEND: ${SERVE_FRONTEND}
+      FRONTEND_DIST_PATH: ${FRONTEND_DIST_PATH}
+      UVICORN_HOST: ${UVICORN_HOST}
+      UVICORN_PORT: ${UVICORN_PORT}
+      UVICORN_RELOAD: ${UVICORN_RELOAD}
+      UVICORN_WORKERS: ${UVICORN_WORKERS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  backend-worker:
+    image: fcms-app:prod
+    command: /app/scripts/start-worker.sh
+    environment:
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      ADMIN_IDLE_TIMEOUT_MINUTES: ${ADMIN_IDLE_TIMEOUT_MINUTES}
+      SECURE_COOKIES: ${SECURE_COOKIES}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      RUN_DB_MIGRATIONS: ${RUN_DB_MIGRATIONS}
+      SEED_DEMO_DATA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend-beat:
+    image: fcms-app:prod
+    command: /app/scripts/start-beat.sh
+    environment:
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      ADMIN_IDLE_TIMEOUT_MINUTES: ${ADMIN_IDLE_TIMEOUT_MINUTES}
+      SECURE_COOKIES: ${SECURE_COOKIES}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      RUN_DB_MIGRATIONS: ${RUN_DB_MIGRATIONS}
+      SEED_DEMO_DATA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:

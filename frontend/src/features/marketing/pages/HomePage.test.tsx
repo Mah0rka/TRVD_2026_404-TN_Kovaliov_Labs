@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля головної сторінки.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -60,6 +60,79 @@ describe("HomePage", () => {
     expect(primaryLinks[0]).toHaveAttribute("href", "/login");
   });
 
+  it("shows every active public plan on the landing page", async () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false, isReady: true });
+    getPublicMembershipPlansMock.mockResolvedValue([
+      {
+        id: "plan-1",
+        title: "Місячний",
+        description: "12 занять",
+        type: "MONTHLY",
+        duration_days: 30,
+        visits_limit: 12,
+        price: 990,
+        currency: "UAH",
+        sort_order: 10,
+        is_active: true,
+        is_public: true,
+        created_at: "2026-03-01T00:00:00Z",
+        updated_at: "2026-03-01T00:00:00Z"
+      },
+      {
+        id: "plan-2",
+        title: "Річний",
+        description: "Безліміт",
+        type: "YEARLY",
+        duration_days: 365,
+        visits_limit: null,
+        price: 14900,
+        currency: "UAH",
+        sort_order: 20,
+        is_active: true,
+        is_public: true,
+        created_at: "2026-03-01T00:00:00Z",
+        updated_at: "2026-03-01T00:00:00Z"
+      },
+      {
+        id: "plan-3",
+        title: "Разове",
+        description: "1 візит",
+        type: "PAY_AS_YOU_GO",
+        duration_days: 30,
+        visits_limit: 1,
+        price: 190,
+        currency: "UAH",
+        sort_order: 30,
+        is_active: true,
+        is_public: true,
+        created_at: "2026-03-01T00:00:00Z",
+        updated_at: "2026-03-01T00:00:00Z"
+      },
+      {
+        id: "plan-4",
+        title: "Новий публічний",
+        description: "Новий план для лендингу",
+        type: "MONTHLY",
+        duration_days: 30,
+        visits_limit: 12,
+        price: 990433,
+        currency: "UAH",
+        sort_order: 100,
+        is_active: true,
+        is_public: true,
+        created_at: "2026-03-01T00:00:00Z",
+        updated_at: "2026-03-01T00:00:00Z"
+      }
+    ]);
+
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText("Новий публічний")).toBeInTheDocument();
+    expect(screen.getByText("Місячний")).toBeInTheDocument();
+    expect(screen.getByText("Річний")).toBeInTheDocument();
+    expect(screen.getByText("Разове")).toBeInTheDocument();
+  });
+
   it("shows greeting and dashboard link for authenticated users", async () => {
     useAuthStore.setState({
       user: {
@@ -94,7 +167,7 @@ describe("HomePage", () => {
     await user.click(await screen.findByRole("button", { name: "Відкрити меню" }));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByRole("link", { name: "Classes" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "Заняття" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Закрити меню" }));
 

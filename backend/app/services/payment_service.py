@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля платежів.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -21,15 +21,18 @@ ALLOWED_PAYMENT_METHODS = {"CARD", "CASH"}
 
 
 class PaymentService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.repository = PaymentRepository(session)
 
+    # Працює з checkout-сценарієм платежів.
     async def checkout(self, user_id: str, amount: Decimal, method: str) -> Payment:
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail="Direct top-up is disabled. Purchase a subscription instead.",
         )
 
+    # Формує subscription payment.
     def build_subscription_payment(
         self,
         user_id: str,
@@ -48,6 +51,7 @@ class PaymentService:
             currency="UAH",
         )
 
+    # Формує plan payment.
     def build_plan_payment(
         self,
         user_id: str,
@@ -68,9 +72,11 @@ class PaymentService:
             description=f"Покупка абонемента: {plan.title}",
         )
 
+    # Повертає список for user.
     async def list_for_user(self, user_id: str) -> list[Payment]:
         return await self.repository.list_by_user(user_id)
 
+    # Повертає список all.
     async def list_all(
         self,
         user_id: str | None = None,

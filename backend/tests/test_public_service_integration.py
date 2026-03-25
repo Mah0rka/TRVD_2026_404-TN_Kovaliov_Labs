@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля публічних даних.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 
@@ -11,6 +11,7 @@ from app.models.workout_class import WorkoutClass, WorkoutType
 from app.services.public_service import PublicService
 
 
+# Перевіряє, що club stats returns real counts from database працює коректно.
 @pytest.mark.asyncio
 async def test_club_stats_returns_real_counts_from_database(db_session):
     trainer = User(
@@ -100,6 +101,7 @@ async def test_club_stats_returns_real_counts_from_database(db_session):
     assert stats.active_subscriptions_count == 1
 
 
+# Перевіряє, що public membership plans return only active public ones працює коректно.
 @pytest.mark.asyncio
 async def test_public_membership_plans_return_only_active_public_ones(db_session):
     db_session.add_all(

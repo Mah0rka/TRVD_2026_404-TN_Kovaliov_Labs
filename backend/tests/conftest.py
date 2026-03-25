@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля conftest.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from collections.abc import AsyncIterator
 
@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.models import Base
 
 
+# Перевіряє, що db session працює коректно.
 @pytest_asyncio.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)

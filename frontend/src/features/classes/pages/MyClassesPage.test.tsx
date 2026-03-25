@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля занять тренера.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/react";

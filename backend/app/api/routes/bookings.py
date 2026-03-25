@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля бронювань.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ from app.services.booking_service import BookingService
 router = APIRouter()
 
 
+# Створює бронювання заняття для клієнта.
 @router.post("/{class_id}", response_model=BookingRead)
 async def create_booking(
     class_id: str,
@@ -23,6 +24,7 @@ async def create_booking(
     return BookingRead.model_validate(booking)
 
 
+# Запускає оплату додаткового платного бронювання.
 @router.post("/{class_id}/checkout", response_model=PaymentRead)
 async def create_paid_booking_checkout(
     class_id: str,
@@ -34,6 +36,7 @@ async def create_paid_booking_checkout(
     return PaymentRead.model_validate(payment)
 
 
+# Підтверджує платіж і завершує створення платного бронювання.
 @router.post("/payments/{payment_id}/confirm", response_model=BookingRead)
 async def confirm_paid_booking(
     payment_id: str,
@@ -45,6 +48,7 @@ async def confirm_paid_booking(
     return BookingRead.model_validate(booking)
 
 
+# Скасовує бронювання з урахуванням правил повернення візиту.
 @router.patch("/{booking_id}/cancel", response_model=BookingRead)
 async def cancel_booking(
     booking_id: str,
@@ -56,6 +60,7 @@ async def cancel_booking(
     return BookingRead.model_validate(booking)
 
 
+# Повертає бронювання поточного користувача.
 @router.get("/my-bookings", response_model=list[BookingRead])
 async def my_bookings(
     current_user: User = Depends(require_roles(UserRole.CLIENT)),

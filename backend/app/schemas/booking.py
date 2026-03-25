@@ -1,4 +1,4 @@
-# Коротко: схеми описують DTO та валідацію для модуля бронювань.
+# Схеми задають валідацію вхідних даних і формат відповідей API.
 
 from datetime import datetime
 from decimal import Decimal

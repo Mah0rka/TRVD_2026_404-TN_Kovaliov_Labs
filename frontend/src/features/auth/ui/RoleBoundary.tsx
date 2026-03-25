@@ -1,4 +1,4 @@
-// Коротко: компонент керує UI-логікою для модуля рольового доступу.
+// Компонент інкапсулює частину UI-логіки конкретної фічі.
 
 import { Navigate, Outlet } from "react-router-dom";
 
@@ -6,6 +6,7 @@ import type { UserRole } from "../../../shared/api";
 import { userHasRole } from "../lib/roles";
 import { useAuthStore } from "../model/store";
 
+// Ховає маршрути й контент від користувачів без потрібної ролі.
 export function RoleBoundary({ roles }: { roles: UserRole[] }) {
   const user = useAuthStore((state) => state.user);
 

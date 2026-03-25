@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля Redis.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 from redis.asyncio import Redis
 
@@ -7,6 +7,7 @@ from app.core.config import settings
 _redis_client: Redis | None = None
 
 
+# Повертає клієнт Redis для сесій, кешу та лімітів.
 def get_redis() -> Redis:
     global _redis_client
     if _redis_client is None:

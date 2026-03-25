@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля runtime scripts.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -12,6 +12,7 @@ from app.models.subscription import Subscription, SubscriptionStatus, Subscripti
 from app.tasks import celery_app
 
 
+# Перевіряє, що run alembic command працює коректно.
 def test_run_alembic_command(monkeypatch):
     monkeypatch.setattr(bootstrap_db.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(returncode=0))
     bootstrap_db._run_alembic_command("upgrade", "head")
@@ -21,24 +22,30 @@ def test_run_alembic_command(monkeypatch):
         bootstrap_db._run_alembic_command("upgrade", "head")
 
 
+# Перевіряє, що ensure migrations applied працює коректно.
 @pytest.mark.asyncio
 async def test_ensure_migrations_applied(monkeypatch):
     commands = []
 
     class FakeConnection:
+        # Перевіряє, що init працює коректно.
         def __init__(self, table_names):
             self.table_names = table_names
 
+        # Перевіряє, що run sync працює коректно.
         async def run_sync(self, fn):
             return self.table_names
 
     class FakeBegin:
+        # Перевіряє, що init працює коректно.
         def __init__(self, table_names):
             self.table_names = table_names
 
+        # Перевіряє, що aenter працює коректно.
         async def __aenter__(self):
             return FakeConnection(self.table_names)
 
+        # Перевіряє, що aexit працює коректно.
         async def __aexit__(self, exc_type, exc, tb):
             return None
 
@@ -52,9 +59,11 @@ async def test_ensure_migrations_applied(monkeypatch):
     assert commands[-1] == ("upgrade", "head")
 
 
+# Перевіряє, що script main wrappers працює коректно.
 def test_script_main_wrappers(monkeypatch):
     called = []
 
+    # Перевіряє, що fake run працює коректно.
     def fake_run(coro):
         called.append(coro.cr_code.co_name)
         coro.close()
@@ -73,44 +82,56 @@ def test_script_main_wrappers(monkeypatch):
     assert celery_app.ping() == "pong"
 
 
+# Перевіряє, що seed helpers працює коректно.
 @pytest.mark.asyncio
 async def test_seed_helpers(monkeypatch):
     monkeypatch.setattr(seed_demo, "hash_password", lambda value: "hashed")
 
     class FakeScalarResult:
+        # Перевіряє, що init працює коректно.
         def __init__(self, item=None):
             self.item = item
 
+        # Перевіряє, що scalar one or none працює коректно.
         def scalar_one_or_none(self):
             return self.item
 
+        # Перевіряє, що first працює коректно.
         def first(self):
             return self.item
 
     class FakeExecuteResult:
+        # Перевіряє, що init працює коректно.
         def __init__(self, item=None):
             self.item = item
 
+        # Перевіряє, що scalar one or none працює коректно.
         def scalar_one_or_none(self):
             return self.item
 
+        # Перевіряє, що scalars працює коректно.
         def scalars(self):
             return FakeScalarResult(self.item)
 
     class FakeSession:
+        # Перевіряє, що init працює коректно.
         def __init__(self):
             self.added = []
             self.added_all = []
 
+        # Перевіряє, що execute працює коректно.
         async def execute(self, statement):
             return FakeExecuteResult(None)
 
+        # Перевіряє, що add працює коректно.
         def add(self, item):
             self.added.append(item)
 
+        # Перевіряє, що add all працює коректно.
         def add_all(self, items):
             self.added_all.extend(items)
 
+        # Перевіряє, що flush працює коректно.
         async def flush(self):
             return None
 
@@ -128,6 +149,7 @@ async def test_seed_helpers(monkeypatch):
     assert len(session.added) >= 9
 
 
+# Перевіряє, що reconcile legacy demo users moves relations and deletes legacy працює коректно.
 @pytest.mark.asyncio
 async def test_reconcile_legacy_demo_users_moves_relations_and_deletes_legacy():
     now = datetime.now(UTC)
@@ -153,27 +175,34 @@ async def test_reconcile_legacy_demo_users_moves_relations_and_deletes_legacy():
     workout_class = SimpleNamespace(trainer_id="trainer-old")
 
     class FakeScalarResult:
+        # Перевіряє, що init працює коректно.
         def __init__(self, items):
             self.items = items
 
+        # Перевіряє, що all працює коректно.
         def all(self):
             return self.items
 
     class FakeExecuteResult:
+        # Перевіряє, що init працює коректно.
         def __init__(self, one=None, many=None):
             self.one = one
             self.many = many or []
 
+        # Перевіряє, що scalar one or none працює коректно.
         def scalar_one_or_none(self):
             return self.one
 
+        # Перевіряє, що scalars працює коректно.
         def scalars(self):
             return FakeScalarResult(self.many)
 
     class FakeSession:
+        # Перевіряє, що init працює коректно.
         def __init__(self):
             self.deleted = []
 
+        # Перевіряє, що execute працює коректно.
         async def execute(self, statement):
             compiled = str(statement.compile(compile_kwargs={"literal_binds": True}))
             if "users.email = 'client@fcms.local'" in compiled:
@@ -192,9 +221,11 @@ async def test_reconcile_legacy_demo_users_moves_relations_and_deletes_legacy():
                 return FakeExecuteResult(many=[workout_class])
             return FakeExecuteResult(one=None, many=[])
 
+        # Перевіряє, що delete працює коректно.
         async def delete(self, item):
             self.deleted.append(item.email)
 
+        # Перевіряє, що flush працює коректно.
         async def flush(self):
             return None
 

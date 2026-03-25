@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля панелі керування.
+// Збирає основні показники й персональні дані на дашборді.
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import {
 } from "../../../shared/api";
 import { useAuthStore } from "../../auth";
 
+// Форматує дату для відображення в дашборді.
 function formatSessionDate(iso: string): string {
   return new Intl.DateTimeFormat("uk-UA", {
     day: "numeric",
@@ -22,6 +23,7 @@ function formatSessionDate(iso: string): string {
   }).format(new Date(iso));
 }
 
+// Повертає коротку назву типу абонемента для UI.
 function getSubscriptionLabel(type: "MONTHLY" | "YEARLY" | "PAY_AS_YOU_GO"): string {
   if (type === "MONTHLY") {
     return "місячний";
@@ -34,6 +36,7 @@ function getSubscriptionLabel(type: "MONTHLY" | "YEARLY" | "PAY_AS_YOU_GO"): str
   return "поразовий";
 }
 
+// Показує оглядові віджети, профіль і найближчі активності користувача.
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const role = user?.role;

@@ -1,4 +1,4 @@
-# Коротко: middleware виконує службову логіку для модуля CSRF-захисту.
+# Middleware обробляє службові перевірки перед виконанням маршруту.
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -9,6 +9,7 @@ from app.core.request_context import generate_request_id, set_request_id
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
+    # Обслуговує сценарій dispatch.
     async def dispatch(self, request: Request, call_next):
         request_id = getattr(request.state, "request_id", None)
         if not request_id:

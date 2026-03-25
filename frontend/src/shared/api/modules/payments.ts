@@ -1,4 +1,4 @@
-// Коротко: модуль виконує API-запити для модуля платежів.
+// Модуль містить виклики API для конкретної предметної області.
 
 import { z } from "zod";
 
@@ -6,11 +6,13 @@ import type { Payment } from "../core/contracts";
 import { paymentSchema } from "../core/contracts";
 import { request } from "../core/http";
 
+// Отримує платежі поточного користувача.
 export async function getMyPayments(): Promise<Payment[]> {
   const data = await request<unknown>("/payments/my-payments", { method: "GET" });
   return z.array(paymentSchema).parse(data);
 }
 
+// Отримує платежі з фільтрами для адміністративного перегляду.
 export async function getPayments(filters?: {
   userId?: string;
   status?: string;

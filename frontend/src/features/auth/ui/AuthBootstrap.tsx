@@ -1,4 +1,4 @@
-// Коротко: компонент керує UI-логікою для модуля відновлення сесії.
+// Компонент інкапсулює частину UI-логіки конкретної фічі.
 
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
@@ -10,6 +10,7 @@ import { hasSessionHint } from "../lib/session";
 import { useAuthStore } from "../model/store";
 import { FullScreenState } from "./FullScreenState";
 
+// Відновлює сесію під час старту застосунку та синхронізує auth-стан.
 export function AuthBootstrap() {
   const setUser = useAuthStore((state) => state.setUser);
   const setReady = useAuthStore((state) => state.setReady);

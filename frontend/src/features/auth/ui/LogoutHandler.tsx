@@ -1,4 +1,4 @@
-// Коротко: компонент керує UI-логікою для модуля виходу користувача.
+// Компонент інкапсулює частину UI-логіки конкретної фічі.
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { logout } from "../../../shared/api";
 import { useAuthStore } from "../model/store";
 import { FullScreenState } from "./FullScreenState";
 
+// Виконує вихід і перенаправляє користувача зі сторінки logout.
 export function LogoutHandler() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const navigate = useNavigate();

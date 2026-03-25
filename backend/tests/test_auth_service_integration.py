@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля автентифікації.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from types import SimpleNamespace
 
@@ -13,19 +13,24 @@ from app.services.auth_service import AuthService
 
 
 class FakeRedis:
+    # Перевіряє, що init працює коректно.
     def __init__(self) -> None:
         self.storage: dict[str, str] = {}
 
+    # Перевіряє, що set працює коректно.
     async def set(self, key: str, value: str, ex: int | None = None) -> None:
         self.storage[key] = value
 
+    # Перевіряє, що get працює коректно.
     async def get(self, key: str) -> str | None:
         return self.storage.get(key)
 
+    # Перевіряє, що delete працює коректно.
     async def delete(self, key: str) -> None:
         self.storage.pop(key, None)
 
 
+# Перевіряє, що fake redis працює коректно.
 @pytest.fixture
 def fake_redis(monkeypatch: pytest.MonkeyPatch) -> FakeRedis:
     redis = FakeRedis()
@@ -33,8 +38,9 @@ def fake_redis(monkeypatch: pytest.MonkeyPatch) -> FakeRedis:
     return redis
 
 
+# Перевіряє, що register creates first owner and stores session працює коректно.
 @pytest.mark.asyncio
-async def test_register_creates_client_and_stores_session(db_session, fake_redis: FakeRedis):
+async def test_register_creates_first_owner_and_stores_session(db_session, fake_redis: FakeRedis):
     service = AuthService(db_session)
 
     result = await service.register(
@@ -48,7 +54,7 @@ async def test_register_creates_client_and_stores_session(db_session, fake_redis
 
     user = result.public_payload.user
     assert user.email == "newclient@example.com"
-    assert user.role == UserRole.CLIENT
+    assert user.role == UserRole.OWNER
     assert user.first_name == "New"
     assert user.last_name == "Client"
 
@@ -65,6 +71,33 @@ async def test_register_creates_client_and_stores_session(db_session, fake_redis
     assert fake_redis.storage[settings.session_key(access_payload["sid"])] == user.id
 
 
+# Перевіряє, що second registration creates client працює коректно.
+@pytest.mark.asyncio
+async def test_second_registration_creates_client(db_session, fake_redis: FakeRedis):
+    service = AuthService(db_session)
+
+    first = await service.register(
+        RegisterRequest(
+            email="owner@example.com",
+            password="Password123!",
+            first_name="Owner",
+            last_name="User",
+        )
+    )
+    second = await service.register(
+        RegisterRequest(
+            email="client@example.com",
+            password="Password123!",
+            first_name="Client",
+            last_name="User",
+        )
+    )
+
+    assert first.public_payload.user.role == UserRole.OWNER
+    assert second.public_payload.user.role == UserRole.CLIENT
+
+
+# Перевіряє, що login rejects invalid password працює коректно.
 @pytest.mark.asyncio
 async def test_login_rejects_invalid_password(db_session, fake_redis: FakeRedis):
     service = AuthService(db_session)
@@ -86,6 +119,7 @@ async def test_login_rejects_invalid_password(db_session, fake_redis: FakeRedis)
     assert error.value.detail == "Invalid credentials"
 
 
+# Перевіряє, що refresh rotates session and invalidates previous one працює коректно.
 @pytest.mark.asyncio
 async def test_refresh_rotates_session_and_invalidates_previous_one(db_session, fake_redis: FakeRedis):
     service = AuthService(db_session)
@@ -115,6 +149,7 @@ async def test_refresh_rotates_session_and_invalidates_previous_one(db_session, 
     assert fake_redis.storage[settings.session_key(new_payload["sid"])] == old_payload["sub"]
 
 
+# Перевіряє, що logout deletes session from refresh cookie працює коректно.
 @pytest.mark.asyncio
 async def test_logout_deletes_session_from_refresh_cookie(db_session, fake_redis: FakeRedis):
     admin = User(

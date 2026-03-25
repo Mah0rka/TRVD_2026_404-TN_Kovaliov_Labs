@@ -1,4 +1,4 @@
-// Коротко: допоміжний модуль містить утиліти для ролей доступу.
+// Модуль містить допоміжну логіку для конкретної фічі.
 
 import type { CurrentUser, UserRole } from "../../../shared/api";
 
@@ -10,6 +10,7 @@ export const trainerRoles: UserRole[] = ["TRAINER"];
 export const managementRoles: UserRole[] = ["ADMIN", "OWNER"];
 export const clientAndManagementRoles: UserRole[] = ["CLIENT", "ADMIN", "OWNER"];
 
+// Перевіряє, чи входить роль користувача до дозволеного набору.
 export function userHasRole(
   user: RoleAwareUser | null | undefined,
   roles: readonly UserRole[]

@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля панелі керування.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import { screen } from "@testing-library/react";
 import { vi } from "vitest";
@@ -30,6 +30,7 @@ vi.mock("../../../shared/api", async () => {
 const now = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 const later = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
+// Створює тестове заняття з можливістю локальних перевизначень.
 function makeSchedule(overrides: Record<string, unknown> = {}) {
   return {
     id: "schedule-1",

@@ -1,4 +1,4 @@
-# Коротко: схеми описують DTO та валідацію для модуля планів абонементів.
+# Схеми задають валідацію вхідних даних і формат відповідей API.
 
 from datetime import datetime
 from decimal import Decimal

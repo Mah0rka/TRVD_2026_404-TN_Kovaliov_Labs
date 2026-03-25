@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля виходу користувача.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";

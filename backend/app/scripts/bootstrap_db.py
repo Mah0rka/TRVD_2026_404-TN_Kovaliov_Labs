@@ -1,4 +1,4 @@
-# Коротко: скрипт підтримує службові операції для модуля ініціалізації бази даних.
+# Скрипт автоматизує підготовку локального середовища або даних.
 
 import asyncio
 import logging
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 APP_TABLES = {"users", "workout_classes", "subscriptions", "payments", "bookings", "membership_plans"}
 
 
+# Перевіряє стан схеми й застосовує потрібні міграції.
 async def ensure_migrations_applied() -> None:
     async with engine.begin() as connection:
         table_names = set(await connection.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names()))
@@ -27,12 +28,14 @@ async def ensure_migrations_applied() -> None:
     _run_alembic_command("upgrade", "head")
 
 
+# Запускає команду Alembic та перевіряє її результат.
 def _run_alembic_command(*args: str) -> None:
     result = subprocess.run(["alembic", *args], check=False)
     if result.returncode != 0:
         raise SystemExit(result.returncode)
 
 
+# Запускає основний сценарій файла.
 def main() -> None:
     asyncio.run(ensure_migrations_applied())
 

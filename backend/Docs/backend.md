@@ -60,7 +60,7 @@ API відповідає за безпечну cookie-based автентифік
 
 ## Автентифікація та безпека
 
-1. `register` створює користувача з хешем пароля `Argon2`.
+1. `register` створює першого користувача як `OWNER`, а всіх наступних як `CLIENT`, з хешем пароля `Argon2`.
 2. `login` видає `access` і `refresh` JWT у `HttpOnly` cookies.
 3. `refresh` ротуює refresh session і перевидає пару токенів.
 4. Redis зберігає активні сесії та idle-timeout для `ADMIN`/`OWNER`.
@@ -81,6 +81,16 @@ API відповідає за безпечну cookie-based автентифік
 ```bash
 docker compose up --build backend backend-worker backend-beat postgres redis
 ```
+
+### Продакшн без Nginx
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
+```
+
+- `Dockerfile.prod` збирає фронтенд і копіює `dist` у продовий образ.
+- `FastAPI` віддає SPA зі змінної `FRONTEND_DIST_PATH`, тому окремий `Nginx` не потрібен.
+- перший акаунт у порожній базі автоматично отримує роль `OWNER`.
 
 ### Локально без Docker
 

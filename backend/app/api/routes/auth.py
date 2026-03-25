@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля автентифікації.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from app.services.auth_service import AuthService
 router = APIRouter()
 
 
+# Реєструє користувача та запускає видачу сесійних cookies.
 @router.post("/register", response_model=AuthPayload, status_code=status.HTTP_201_CREATED)
 async def register(
     request: Request,
@@ -30,6 +31,7 @@ async def register(
     return auth_payload.public_payload
 
 
+# Перевіряє облікові дані й відкриває нову користувацьку сесію.
 @router.post("/login", response_model=AuthPayload)
 async def login(
     request: Request,
@@ -46,6 +48,7 @@ async def login(
     return auth_payload.public_payload
 
 
+# Оновлює сесію за refresh token і перевидає auth cookies.
 @router.post("/refresh", response_model=RefreshResponse)
 async def refresh(
     request: Request,
@@ -61,6 +64,7 @@ async def refresh(
     return RefreshResponse(user=auth_payload.public_payload.user)
 
 
+# Закриває активну сесію та очищає cookies авторизації.
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     request: Request,
@@ -73,6 +77,7 @@ async def logout(
     return response
 
 
+# Повертає профіль поточного авторизованого користувача.
 @router.get("/me", response_model=UserRead)
 async def me(current_user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(current_user)

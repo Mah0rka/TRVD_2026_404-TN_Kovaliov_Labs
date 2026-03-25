@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля відновлення сесії.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import type { ReactNode } from "react";
 import { screen, waitFor } from "@testing-library/react";
@@ -78,6 +78,7 @@ describe("AuthBootstrap", () => {
   });
 });
 
+// Рендерить компонент у тесті з наперед створеним QueryClient.
 function renderWithProvidersWithQuery(queryClient: ReturnType<typeof createTestQueryClient>, ui: ReactNode) {
   return renderWithProvidersNode(
     <MemoryRouter initialEntries={["/"]}>
@@ -86,6 +87,7 @@ function renderWithProvidersWithQuery(queryClient: ReturnType<typeof createTestQ
   );
 }
 
+// Рендерить компонент у тесті з базовими провайдерами.
 function renderWithProvidersNode(ui: ReactNode) {
   return render(ui);
 }

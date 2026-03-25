@@ -1,10 +1,11 @@
-// Коротко: сторінка відображає інтерфейс для модуля бронювань користувача.
+// Показує історію та статуси бронювань поточного користувача.
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { cancelBooking, getMyBookings } from "../../../shared/api";
 
+// Показує бронювання поточного користувача та їх статуси.
 export function BookingsPage() {
   const queryClient = useQueryClient();
   const [view, setView] = useState<"ACTIVE" | "HISTORY">("ACTIVE");

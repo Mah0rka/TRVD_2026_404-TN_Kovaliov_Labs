@@ -1,9 +1,10 @@
-// Коротко: модуль виконує API-запити для модуля автентифікації.
+// Модуль містить виклики API для конкретної предметної області.
 
 import type { CurrentUser } from "../core/contracts";
 import { authResponseSchema, userSchema } from "../core/contracts";
 import { request } from "../core/http";
 
+// Перевіряє облікові дані й відкриває нову користувацьку сесію.
 export async function login(email: string, password: string): Promise<CurrentUser> {
   const data = await request<unknown>(
     "/auth/login",
@@ -17,6 +18,7 @@ export async function login(email: string, password: string): Promise<CurrentUse
   return authResponseSchema.parse(data).user;
 }
 
+// Реєструє користувача та запускає видачу сесійних cookies.
 export async function register(input: {
   email: string;
   password: string;
@@ -35,11 +37,13 @@ export async function register(input: {
   return authResponseSchema.parse(data).user;
 }
 
+// Отримує профіль користувача для відновлення сесії.
 export async function getCurrentUser(): Promise<CurrentUser> {
   const data = await request<unknown>("/auth/me", { method: "GET" });
   return userSchema.parse(data);
 }
 
+// Закриває активну сесію та очищає cookies авторизації.
 export async function logout(): Promise<void> {
   await request("/auth/logout", { method: "POST" }, { retryOnAuth: false });
 }

@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля розкладу.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,11 +12,13 @@ from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
 
 
 class ScheduleService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = ScheduleRepository(session)
         self.booking_repository = BookingRepository(session)
 
+    # Створює schedule.
     async def create_schedule(self, payload: ScheduleCreate, current_user: User) -> WorkoutClass:
         if payload.end_time <= payload.start_time:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Час завершення має бути пізніше за час початку")
@@ -37,12 +39,15 @@ class ScheduleService:
         assert refreshed is not None
         return refreshed
 
+    # Повертає список schedules.
     async def list_schedules(self) -> list[WorkoutClass]:
         return await self.repository.list_all()
 
+    # Повертає список my classes.
     async def list_my_classes(self, trainer_id: str) -> list[WorkoutClass]:
         return await self.repository.list_by_trainer(trainer_id)
 
+    # Оновлює schedule.
     async def update_schedule(self, class_id: str, payload: ScheduleUpdate) -> WorkoutClass:
         workout_class = await self.repository.get_by_id(class_id)
         if not workout_class:
@@ -64,12 +69,14 @@ class ScheduleService:
         assert refreshed is not None
         return refreshed
 
+    # Видаляє schedule.
     async def delete_schedule(self, class_id: str) -> None:
         workout_class = await self.repository.get_by_id(class_id)
         if not workout_class:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
         await self.repository.delete(workout_class)
 
+    # Повертає список attendees.
     async def list_attendees(self, class_id: str, current_user: User):
         workout_class = await self.repository.get_by_id(class_id)
         if not workout_class:
@@ -81,6 +88,7 @@ class ScheduleService:
 
         return await self.booking_repository.list_attendees_for_class(class_id)
 
+    # Перевіряє pricing.
     @staticmethod
     def _validate_pricing(is_paid_extra: bool, extra_price) -> None:
         if is_paid_extra:

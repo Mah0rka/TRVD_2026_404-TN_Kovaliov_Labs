@@ -1,4 +1,4 @@
-// Коротко: ядро API містить базову логіку для HTTP-клієнта.
+// Модуль описує базову логіку клієнтського API-шару.
 
 const configuredBaseUrl = import.meta.env.VITE_API_URL?.trim() ?? "";
 const API_BASE_URL =
@@ -13,6 +13,7 @@ export class ApiError extends Error {
   status: number;
   requestId?: string;
 
+  // Ініціалізує об'єкт помилки з HTTP-статусом і request id.
   constructor(message: string, status: number, requestId?: string) {
     super(message);
     this.name = "ApiError";
@@ -21,6 +22,7 @@ export class ApiError extends Error {
   }
 }
 
+// Зчитує CSRF token з cookies браузера.
 function readCsrfToken(): string | null {
   const cookie = document.cookie
     .split("; ")
@@ -29,6 +31,7 @@ function readCsrfToken(): string | null {
   return cookie ? decodeURIComponent(cookie.split("=")[1]) : null;
 }
 
+// Готує заголовки запиту та додає CSRF token для mutating-викликів.
 function buildHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
 
@@ -46,6 +49,7 @@ function buildHeaders(init?: RequestInit): Headers {
   return headers;
 }
 
+// Пробує оновити авторизаційну сесію через refresh endpoint.
 async function refreshSession(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -64,12 +68,14 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise;
 }
 
+// Сповіщає застосунок про завершення сесії користувача.
 function notifyAuthExpired() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
   }
 }
 
+// Виконує HTTP-запит, обробляє 401 і піднімає типізовану помилку API.
 export async function request<T>(
   path: string,
   init?: RequestInit,

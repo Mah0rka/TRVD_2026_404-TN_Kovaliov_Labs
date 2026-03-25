@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля абонементів користувача.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";

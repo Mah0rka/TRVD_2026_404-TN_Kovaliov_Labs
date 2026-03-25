@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля користувачів.
+# Тести перевіряють ключові сценарії цього модуля.
 
 import pytest
 from fastapi import HTTPException
@@ -8,6 +8,7 @@ from app.services.user_service import UserService
 from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate
 
 
+# Перевіряє, що user service can create filter and update users працює коректно.
 @pytest.mark.asyncio
 async def test_user_service_can_create_filter_and_update_users(db_session):
     service = UserService(db_session)
@@ -54,6 +55,7 @@ async def test_user_service_can_create_filter_and_update_users(db_session):
     assert updated_trainer.phone == "+380509990000"
 
 
+# Перевіряє, що user service can delete user but not self or last owner працює коректно.
 @pytest.mark.asyncio
 async def test_user_service_can_delete_user_but_not_self_or_last_owner(db_session):
     service = UserService(db_session)

@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля бронювань.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 
@@ -12,6 +12,7 @@ from app.models.workout_class import WorkoutClass, WorkoutType
 from app.services.booking_service import BookingService
 
 
+# Перевіряє, що create booking decrements remaining visits працює коректно.
 @pytest.mark.asyncio
 async def test_create_booking_decrements_remaining_visits(db_session):
     trainer = User(
@@ -63,6 +64,7 @@ async def test_create_booking_decrements_remaining_visits(db_session):
     assert subscription.remaining_visits == 11
 
 
+# Перевіряє, що cancel booking returns visit for limited subscription працює коректно.
 @pytest.mark.asyncio
 async def test_cancel_booking_returns_visit_for_limited_subscription(db_session):
     trainer = User(
@@ -117,6 +119,7 @@ async def test_cancel_booking_returns_visit_for_limited_subscription(db_session)
     assert subscription.remaining_visits == 5
 
 
+# Перевіряє, що create booking requires active subscription працює коректно.
 @pytest.mark.asyncio
 async def test_create_booking_requires_active_subscription(db_session):
     trainer = User(
@@ -159,6 +162,7 @@ async def test_create_booking_requires_active_subscription(db_session):
     assert error.value.detail == "Для запису на заняття потрібен активний абонемент"
 
 
+# Перевіряє, що create booking works when session already has active transaction працює коректно.
 @pytest.mark.asyncio
 async def test_create_booking_works_when_session_already_has_active_transaction(db_session):
     trainer = User(
@@ -215,6 +219,7 @@ async def test_create_booking_works_when_session_already_has_active_transaction(
     assert subscription.remaining_visits == 7
 
 
+# Перевіряє, що free booking blocks second free class on same day працює коректно.
 @pytest.mark.asyncio
 async def test_free_booking_blocks_second_free_class_on_same_day(db_session):
     trainer = User(
@@ -277,6 +282,7 @@ async def test_free_booking_blocks_second_free_class_on_same_day(db_session):
     assert error.value.detail == "На один день можна записатися лише на одне безкоштовне заняття"
 
 
+# Перевіряє, що paid booking is allowed as additional booking on same day працює коректно.
 @pytest.mark.asyncio
 async def test_paid_booking_is_allowed_as_additional_booking_on_same_day(db_session):
     trainer = User(
@@ -341,6 +347,7 @@ async def test_paid_booking_is_allowed_as_additional_booking_on_same_day(db_sess
     assert subscription.remaining_visits == 11
 
 
+# Перевіряє, що paid booking requires checkout confirmation flow працює коректно.
 @pytest.mark.asyncio
 async def test_paid_booking_requires_checkout_confirmation_flow(db_session):
     trainer = User(
@@ -404,6 +411,7 @@ async def test_paid_booking_requires_checkout_confirmation_flow(db_session):
     assert subscription.remaining_visits == 6
 
 
+# Перевіряє, що cancelling paid booking does not restore subscription visit працює коректно.
 @pytest.mark.asyncio
 async def test_cancelling_paid_booking_does_not_restore_subscription_visit(db_session):
     trainer = User(
@@ -459,6 +467,7 @@ async def test_cancelling_paid_booking_does_not_restore_subscription_visit(db_se
     assert subscription.remaining_visits == 4
 
 
+# Перевіряє, що free booking can be cancelled one hour before start працює коректно.
 @pytest.mark.asyncio
 async def test_free_booking_can_be_cancelled_one_hour_before_start(db_session):
     trainer = User(

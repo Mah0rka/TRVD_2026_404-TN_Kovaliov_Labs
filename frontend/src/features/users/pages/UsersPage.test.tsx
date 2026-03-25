@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля керування користувачами.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";

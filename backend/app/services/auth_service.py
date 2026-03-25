@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля автентифікації.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from secrets import token_urlsafe
 from uuid import uuid4
@@ -25,29 +25,41 @@ from app.schemas.user import UserRead
 
 
 class AuthService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = UserRepository(session)
         self.redis = get_redis()
 
+    # Реєструє користувача та запускає видачу сесійних cookies.
     async def register(self, payload: RegisterRequest, request: Request | None = None) -> AuthResult:
         existing_user = await self.repository.get_by_email(payload.email)
         if existing_user:
             log_audit_event("auth.register", "failed", email=payload.email.lower(), reason="email_exists")
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
+        users_count = await self.repository.count_all()
+        assigned_role = UserRole.OWNER if users_count == 0 else UserRole.CLIENT
+
         user = User(
             email=payload.email.lower(),
             password_hash=hash_password(payload.password),
             first_name=payload.first_name.strip(),
             last_name=payload.last_name.strip(),
-            role=UserRole.CLIENT,
+            role=assigned_role,
             is_verified=False,
         )
         created_user = await self.repository.create(user)
-        log_audit_event("auth.register", "success", email=created_user.email, user_id=created_user.id)
+        log_audit_event(
+            "auth.register",
+            "success",
+            email=created_user.email,
+            user_id=created_user.id,
+            assigned_role=created_user.role.value,
+        )
         return await self._issue_auth_payload(created_user)
 
+    # Перевіряє облікові дані й відкриває нову користувацьку сесію.
     async def login(self, payload: LoginRequest, request: Request | None = None) -> AuthResult:
         user = await self.repository.get_by_email(payload.email)
         if not user or not verify_password(payload.password, user.password_hash):
@@ -57,6 +69,7 @@ class AuthService:
         log_audit_event("auth.login", "success", email=user.email, user_id=user.id)
         return auth_result
 
+    # Оновлює сесію за refresh token і перевидає auth cookies.
     async def refresh(self, request: Request) -> AuthResult:
         refresh_token = request.cookies.get(settings.refresh_cookie_name)
         if not refresh_token:
@@ -94,6 +107,7 @@ class AuthService:
         log_audit_event("auth.refresh", "success", user_id=user.id, session_id=session_id)
         return auth_result
 
+    # Закриває активну сесію та очищає cookies авторизації.
     async def logout(self, request: Request) -> None:
         access_token = request.cookies.get(settings.access_cookie_name)
         payload = None
@@ -119,6 +133,7 @@ class AuthService:
             await self.redis.delete(settings.session_key(session_id))
         log_audit_event("auth.logout", "success", user_id=payload.get("sub"), session_id=session_id)
 
+    # Оформлює auth payload.
     async def _issue_auth_payload(self, user: User) -> AuthResult:
         session_id = str(uuid4())
         session_ttl = (

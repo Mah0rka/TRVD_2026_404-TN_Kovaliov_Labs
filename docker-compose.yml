@@ -38,6 +38,8 @@ services:
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
       - RUN_DB_MIGRATIONS=true
       - SEED_DEMO_DATA=true
+      - SERVE_FRONTEND=false
+      - UVICORN_RELOAD=true
       - PYTHONPATH=/app
     depends_on:
       - postgres

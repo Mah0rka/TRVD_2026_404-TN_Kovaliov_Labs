@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля керування користувачами.
+// Дає адміністрації інструменти для керування користувачами та їх підписками.
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ import { useAuthStore } from "../../auth/model/store";
 
 const roles: UserRole[] = ["CLIENT", "TRAINER", "ADMIN", "OWNER"];
 
+// Повертає локалізовану назву ролі користувача.
 function getAccessLabel(role: UserRole): string {
   if (role === "CLIENT") return "Клієнт";
   if (role === "TRAINER") return "Тренер";
@@ -31,18 +32,21 @@ function getAccessLabel(role: UserRole): string {
   return "Власник";
 }
 
+// Повертає локалізований статус абонемента.
 function getSubscriptionStatusLabel(status: Subscription["status"]): string {
   if (status === "ACTIVE") return "Активний";
   if (status === "FROZEN") return "На паузі";
   return "Завершений";
 }
 
+// Повертає локалізовану назву типу абонемента.
 function getPlanTypeLabel(type: MembershipPlan["type"]): string {
   if (type === "MONTHLY") return "Місячний";
   if (type === "YEARLY") return "Річний";
   return "Разовий";
 }
 
+// Формує підпис для останньої менеджерської дії над абонементом.
 function getAuditLabel(subscription: Subscription): string {
   if (subscription.restored_by && subscription.restored_at) {
     return `Відновив ${subscription.restored_by.first_name} ${subscription.restored_by.last_name} · ${new Date(subscription.restored_at).toLocaleString("uk-UA")}`;
@@ -56,6 +60,7 @@ function getAuditLabel(subscription: Subscription): string {
   return "Без змін менеджером";
 }
 
+// Обчислює пріоритет сортування абонемента для списку.
 function getSubscriptionPriority(subscription: Subscription): number {
   if (subscription.deleted_at) return 0;
   if (subscription.status === "ACTIVE") return 4;
@@ -64,6 +69,7 @@ function getSubscriptionPriority(subscription: Subscription): number {
   return 1;
 }
 
+// Готує пошуковий рядок для фільтрації користувача.
 function getUserSearchValue(user: CurrentUser): string {
   return [
     user.first_name,
@@ -75,6 +81,7 @@ function getUserSearchValue(user: CurrentUser): string {
     .toLocaleLowerCase("uk-UA");
 }
 
+// Повертає початковий стан форми створення користувача.
 function emptyCreateForm() {
   return {
     email: "",
@@ -87,6 +94,7 @@ function emptyCreateForm() {
   };
 }
 
+// Повертає початковий стан форми редагування користувача.
 function emptyEditForm() {
   return {
     first_name: "",
@@ -97,6 +105,7 @@ function emptyEditForm() {
   };
 }
 
+// Повертає початковий стан форми ручної видачі абонемента.
 function emptyIssueForm() {
   return {
     plan_id: "",
@@ -108,6 +117,7 @@ function emptyIssueForm() {
   };
 }
 
+// Повертає початковий стан форми редагування абонемента.
 function emptySubscriptionEditForm() {
   return {
     plan_id: "",
@@ -123,6 +133,7 @@ type DestructiveConfirmation =
   | { kind: "user"; user: CurrentUser }
   | { kind: "subscription"; subscription: Subscription };
 
+// Дає менеджеру інструменти для роботи з користувачами та підписками.
 export function UsersPage() {
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
@@ -334,6 +345,7 @@ export function UsersPage() {
     }
   }, [authUser]);
 
+  // Перемикає фокус інтерфейсу на вибраного користувача.
   function selectUser(user: CurrentUser) {
     setSelectedUser(user);
     setEditForm({
@@ -348,6 +360,7 @@ export function UsersPage() {
     setSubscriptionEditForm(emptySubscriptionEditForm());
   }
 
+  // Заповнює форму редагування даними вибраного абонемента.
   function startEditingSubscription(subscription: Subscription) {
     setEditingSubscriptionId(subscription.id);
     setSubscriptionEditForm({
@@ -360,21 +373,25 @@ export function UsersPage() {
     });
   }
 
+  // Відкриває підтвердження видалення користувача.
   function openUserDeleteConfirmation(user: CurrentUser) {
     setConfirmationInput("");
     setConfirmationState({ kind: "user", user });
   }
 
+  // Відкриває підтвердження видалення абонемента.
   function openSubscriptionDeleteConfirmation(subscription: Subscription) {
     setConfirmationInput("");
     setConfirmationState({ kind: "subscription", subscription });
   }
 
+  // Закриває модальне вікно підтвердження та очищає його стан.
   function closeConfirmationModal() {
     setConfirmationState(null);
     setConfirmationInput("");
   }
 
+  // Збирає payload для ручної видачі абонемента.
   function buildIssuePayload() {
     return {
       user_id: selectedUser?.id ?? "",
@@ -387,6 +404,7 @@ export function UsersPage() {
     };
   }
 
+  // Збирає payload для оновлення існуючого абонемента.
   function buildSubscriptionUpdatePayload() {
     return {
       plan_id: subscriptionEditForm.plan_id || undefined,

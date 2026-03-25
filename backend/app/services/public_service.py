@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля публічних даних.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from datetime import UTC, datetime, timedelta
 
@@ -13,9 +13,11 @@ from app.schemas.public import ClubStats
 
 
 class PublicService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    # Повертає публічну статистику клубу для головної сторінки.
     async def club_stats(self) -> ClubStats:
         now = datetime.now(UTC)
         week_ahead = now + timedelta(days=7)
@@ -46,6 +48,7 @@ class PublicService:
             active_subscriptions_count=int(subscriptions_result.scalar_one() or 0),
         )
 
+    # Обслуговує сценарій membership plans.
     async def membership_plans(self) -> list[MembershipPlan]:
         result = await self.session.execute(
             select(MembershipPlan)

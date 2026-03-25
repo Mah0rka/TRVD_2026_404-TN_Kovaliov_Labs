@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля профілю користувача.
+// Дозволяє переглядати й оновлювати профіль користувача.
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ const profileSchema = z.object({
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
+// Дає змогу користувачу змінити власні контактні дані.
 export function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
@@ -41,6 +42,7 @@ export function ProfilePage() {
     }
   });
 
+  // Обробляє відправку форми редагування профілю.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 

@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля api route units.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -27,6 +27,7 @@ from app.schemas.subscription import (
 from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate, UserRead
 
 
+# Перевіряє, що make request працює коректно.
 def make_request(path: str = "/", method: str = "GET") -> Request:
     return Request(
         {
@@ -41,6 +42,7 @@ def make_request(path: str = "/", method: str = "GET") -> Request:
     )
 
 
+# Перевіряє, що make user працює коректно.
 def make_user(role: UserRole = UserRole.CLIENT) -> SimpleNamespace:
     now = datetime.now(UTC)
     return SimpleNamespace(
@@ -56,6 +58,7 @@ def make_user(role: UserRole = UserRole.CLIENT) -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make schedule працює коректно.
 def make_schedule() -> SimpleNamespace:
     start_time = datetime.now(UTC) + timedelta(days=1)
     trainer = make_user(UserRole.TRAINER)
@@ -78,6 +81,7 @@ def make_schedule() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make booking працює коректно.
 def make_booking() -> SimpleNamespace:
     trainer = make_user(UserRole.TRAINER)
     now = datetime.now(UTC)
@@ -102,6 +106,7 @@ def make_booking() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make attendee працює коректно.
 def make_attendee() -> SimpleNamespace:
     now = datetime.now(UTC)
     user = make_user()
@@ -114,6 +119,7 @@ def make_attendee() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make subscription працює коректно.
 def make_subscription() -> SimpleNamespace:
     now = datetime.now(UTC)
     return SimpleNamespace(
@@ -134,6 +140,7 @@ def make_subscription() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make membership plan працює коректно.
 def make_membership_plan() -> SimpleNamespace:
     now = datetime.now(UTC)
     return SimpleNamespace(
@@ -153,6 +160,7 @@ def make_membership_plan() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що make payment працює коректно.
 def make_payment() -> SimpleNamespace:
     now = datetime.now(UTC)
     return SimpleNamespace(
@@ -171,6 +179,7 @@ def make_payment() -> SimpleNamespace:
     )
 
 
+# Перевіряє, що auth routes працює коректно.
 @pytest.mark.asyncio
 async def test_auth_routes(monkeypatch):
     captured = {}
@@ -180,21 +189,26 @@ async def test_auth_routes(monkeypatch):
     )
 
     class FakeAuthService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Реєструє користувача та запускає видачу сесійних cookies.
         async def register(self, payload, request):
             captured["register"] = (payload, request.url.path)
             return auth_result
 
+        # Перевіряє облікові дані й відкриває нову користувацьку сесію.
         async def login(self, payload, request):
             captured["login"] = (payload, request.url.path)
             return auth_result
 
+        # Оновлює сесію за refresh token і перевидає auth cookies.
         async def refresh(self, request):
             captured["refresh"] = request.url.path
             return auth_result
 
+        # Закриває активну сесію та очищає cookies авторизації.
         async def logout(self, request):
             captured["logout"] = request.url.path
 
@@ -226,21 +240,27 @@ async def test_auth_routes(monkeypatch):
     assert me_result.role == UserRole.CLIENT
 
 
+# Перевіряє, що user routes працює коректно.
 @pytest.mark.asyncio
 async def test_user_routes(monkeypatch):
     class FakeUserService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Оновлює особисті дані поточного користувача.
         async def update_profile(self, current_user, payload):
             return current_user
 
+        # Повертає список користувачів з необовʼязковою фільтрацією за роллю.
         async def list_users(self, role):
             return [make_user(role or UserRole.CLIENT)]
 
+        # Створює користувача з адмінського інтерфейсу.
         async def create_user(self, payload):
             return make_user(payload.role)
 
+        # Оновлює профіль користувача з адмінського інтерфейсу.
         async def update_user(self, user_id, payload):
             user = make_user(payload.role or UserRole.CLIENT)
             user.id = user_id
@@ -277,27 +297,35 @@ async def test_user_routes(monkeypatch):
     assert updated.id == "user-2"
 
 
+# Перевіряє, що schedule routes працює коректно.
 @pytest.mark.asyncio
 async def test_schedule_routes(monkeypatch):
     class FakeScheduleService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Перевіряє, що create schedule працює коректно.
         async def create_schedule(self, payload, current_user):
             return make_schedule()
 
+        # Перевіряє, що list schedules працює коректно.
         async def list_schedules(self):
             return [make_schedule()]
 
+        # Перевіряє, що list my classes працює коректно.
         async def list_my_classes(self, user_id):
             return [make_schedule()]
 
+        # Перевіряє, що list attendees працює коректно.
         async def list_attendees(self, class_id, current_user):
             return [make_attendee()]
 
+        # Перевіряє, що update schedule працює коректно.
         async def update_schedule(self, class_id, payload):
             return make_schedule()
 
+        # Перевіряє, що delete schedule працює коректно.
         async def delete_schedule(self, class_id):
             return None
 
@@ -324,84 +352,109 @@ async def test_schedule_routes(monkeypatch):
     assert (await schedules.delete_schedule("class-1", admin, object())).status_code == 204
 
 
+# Перевіряє, що subscription booking payment report public and health routes працює коректно.
 @pytest.mark.asyncio
 async def test_subscription_booking_payment_report_public_and_health_routes(monkeypatch):
     class FakeMembershipPlanService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Перевіряє, що list plans працює коректно.
         async def list_plans(self, active_only=False, public_only=False):
             return [make_membership_plan()]
 
+        # Перевіряє, що create plan працює коректно.
         async def create_plan(self, payload):
             return make_membership_plan()
 
+        # Перевіряє, що update plan працює коректно.
         async def update_plan(self, plan_id, payload):
             plan = make_membership_plan()
             plan.id = plan_id
             return plan
 
+        # Перевіряє, що delete plan працює коректно.
         async def delete_plan(self, plan_id):
             return None
 
     class FakeSubscriptionService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Перевіряє, що purchase працює коректно.
         async def purchase(self, user_id, subscription_type=None, plan_id=None):
             return make_subscription()
 
+        # Перевіряє, що freeze працює коректно.
         async def freeze(self, user_id, subscription_id, days):
             return make_subscription()
 
+        # Перевіряє, що list for user працює коректно.
         async def list_for_user(self, user_id):
             return [make_subscription()]
 
+        # Перевіряє, що list for management працює коректно.
         async def list_for_management(self, user_id=None, include_deleted=False):
             return [make_subscription()]
 
+        # Перевіряє, що update for management працює коректно.
         async def update_for_management(self, actor_user_id, subscription_id, payload):
             return make_subscription()
 
+        # Перевіряє, що delete for management працює коректно.
         async def delete_for_management(self, actor_user_id, subscription_id):
             return None
 
+        # Перевіряє, що issue for management працює коректно.
         async def issue_for_management(self, actor_user_id, payload):
             return make_subscription()
 
+        # Перевіряє, що restore for management працює коректно.
         async def restore_for_management(self, actor_user_id, subscription_id):
             return make_subscription()
 
     class FakeBookingService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Створює бронювання заняття для клієнта.
         async def create_booking(self, user_id, class_id):
             return make_booking()
 
+        # Скасовує бронювання з урахуванням правил повернення візиту.
         async def cancel_booking(self, user_id, booking_id):
             return make_booking()
 
+        # Перевіряє, що list for user працює коректно.
         async def list_for_user(self, user_id):
             return [make_booking()]
 
     class FakePaymentService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Працює з checkout-сценарієм платежів.
         async def checkout(self, user_id, amount, method):
             return make_payment()
 
+        # Перевіряє, що list for user працює коректно.
         async def list_for_user(self, user_id):
             return [make_payment()]
 
+        # Перевіряє, що list all працює коректно.
         async def list_all(self, user_id, status_filter, method, start_date, end_date):
             return [make_payment()]
 
     class FakeReportService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Перевіряє, що revenue report працює коректно.
         async def revenue_report(self, start_date, end_date):
             return RevenueReport(
                 period={"startDate": start_date.isoformat(), "endDate": end_date.isoformat()},
@@ -410,6 +463,7 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
                 currency="UAH",
             )
 
+        # Повертає статистику популярності тренерів.
         async def trainer_popularity(self):
             return [
                 TrainerPopularityReport(
@@ -422,23 +476,29 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
             ]
 
     class FakePublicService:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Повертає публічну статистику клубу для головної сторінки.
         async def club_stats(self):
             return {"clients_count": 10, "trainers_count": 2, "classes_next_7_days": 4, "active_subscriptions_count": 7}
 
+        # Перевіряє, що membership plans працює коректно.
         async def membership_plans(self):
             return [make_membership_plan()]
 
     class FakeConnection:
+        # Перевіряє, що execute працює коректно.
         async def execute(self, query):
             return 1
 
     class FakeBegin:
+        # Перевіряє, що aenter працює коректно.
         async def __aenter__(self):
             return FakeConnection()
 
+        # Перевіряє, що aexit працює коректно.
         async def __aexit__(self, exc_type, exc, tb):
             return None
 
@@ -448,6 +508,7 @@ async def test_subscription_booking_payment_report_public_and_health_routes(monk
     monkeypatch.setattr(payments, "PaymentService", FakePaymentService)
     monkeypatch.setattr(reports, "ReportService", FakeReportService)
     monkeypatch.setattr(public, "PublicService", FakePublicService)
+    # Повертає просту відповідь для перевірки доступності worker-команди.
     async def ping():
         return None
 

@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля абонементів.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +20,7 @@ from app.services.subscription_service import SubscriptionService
 router = APIRouter()
 
 
+# Повертає список планів абонементів з урахуванням ролі доступу.
 @router.get("/plans", response_model=list[MembershipPlanRead])
 async def list_membership_plans(
     current_user: User = Depends(require_roles(UserRole.CLIENT, UserRole.ADMIN, UserRole.OWNER)),
@@ -33,6 +34,7 @@ async def list_membership_plans(
     return [MembershipPlanRead.model_validate(item) for item in plans]
 
 
+# Створює новий план абонемента для адміністрації.
 @router.post("/plans", response_model=MembershipPlanRead)
 async def create_membership_plan(
     payload: MembershipPlanCreate,
@@ -44,6 +46,7 @@ async def create_membership_plan(
     return MembershipPlanRead.model_validate(plan)
 
 
+# Оновлює дані існуючого плану абонемента.
 @router.patch("/plans/{plan_id}", response_model=MembershipPlanRead)
 async def update_membership_plan(
     plan_id: str,
@@ -56,6 +59,7 @@ async def update_membership_plan(
     return MembershipPlanRead.model_validate(plan)
 
 
+# Видаляє план абонемента, якщо це дозволено правилами.
 @router.delete("/plans/{plan_id}", status_code=204)
 async def delete_membership_plan(
     plan_id: str,
@@ -66,6 +70,7 @@ async def delete_membership_plan(
     await service.delete_plan(plan_id)
 
 
+# Оформлює купівлю абонемента для поточного користувача.
 @router.post("/purchase", response_model=SubscriptionRead)
 async def purchase_subscription(
     payload: SubscriptionPurchaseRequest,
@@ -88,6 +93,7 @@ async def purchase_subscription(
     return SubscriptionRead.model_validate(subscription)
 
 
+# Повертає список абонементів для адміністративного перегляду.
 @router.get("", response_model=list[SubscriptionRead])
 async def all_subscriptions(
     user_id: str | None = None,
@@ -100,6 +106,7 @@ async def all_subscriptions(
     return [SubscriptionRead.model_validate(item) for item in subscriptions]
 
 
+# Оновлює клієнтський абонемент у management-сценарії.
 @router.patch("/{subscription_id}", response_model=SubscriptionRead)
 async def update_client_subscription(
     subscription_id: str,
@@ -112,6 +119,7 @@ async def update_client_subscription(
     return SubscriptionRead.model_validate(subscription)
 
 
+# Позначає абонемент як видалений у management-сценарії.
 @router.delete("/{subscription_id}", status_code=204)
 async def delete_client_subscription(
     subscription_id: str,
@@ -122,6 +130,7 @@ async def delete_client_subscription(
     await service.delete_for_management(current_user.id, subscription_id)
 
 
+# Видає абонемент клієнту вручну від імені менеджера.
 @router.post("/issue", response_model=SubscriptionRead)
 async def issue_client_subscription(
     payload: SubscriptionManagementIssueRequest,
@@ -133,6 +142,7 @@ async def issue_client_subscription(
     return SubscriptionRead.model_validate(subscription)
 
 
+# Відновлює раніше видалений абонемент.
 @router.post("/{subscription_id}/restore", response_model=SubscriptionRead)
 async def restore_client_subscription(
     subscription_id: str,
@@ -144,6 +154,7 @@ async def restore_client_subscription(
     return SubscriptionRead.model_validate(subscription)
 
 
+# Ставить активний абонемент на паузу на вказаний строк.
 @router.patch("/{subscription_id}/freeze", response_model=SubscriptionRead)
 async def freeze_subscription(
     subscription_id: str,
@@ -163,6 +174,7 @@ async def freeze_subscription(
     return SubscriptionRead.model_validate(subscription)
 
 
+# Повертає абонементи поточного користувача.
 @router.get("/my-subscriptions", response_model=list[SubscriptionRead])
 async def my_subscriptions(
     current_user: User = Depends(require_roles(UserRole.CLIENT)),

@@ -1,4 +1,4 @@
-// Коротко: модуль виконує API-запити для модуля абонементів.
+// Модуль містить виклики API для конкретної предметної області.
 
 import { z } from "zod";
 
@@ -6,11 +6,13 @@ import type { MembershipPlan, Subscription } from "../core/contracts";
 import { membershipPlanSchema, subscriptionSchema } from "../core/contracts";
 import { request } from "../core/http";
 
+// Отримує абонементи поточного користувача.
 export async function getSubscriptions(): Promise<Subscription[]> {
   const data = await request<unknown>("/subscriptions/my-subscriptions", { method: "GET" });
   return z.array(subscriptionSchema).parse(data);
 }
 
+// Отримує абонементи для management-перегляду з фільтрами.
 export async function getManagedSubscriptions(input?: {
   userId?: string;
   includeDeleted?: boolean;
@@ -29,11 +31,13 @@ export async function getManagedSubscriptions(input?: {
   return z.array(subscriptionSchema).parse(data);
 }
 
+// Отримує список доступних планів абонементів.
 export async function getSubscriptionPlans(): Promise<MembershipPlan[]> {
   const data = await request<unknown>("/subscriptions/plans", { method: "GET" });
   return z.array(membershipPlanSchema).parse(data);
 }
 
+// Оформлює купівлю вибраного плану абонемента.
 export async function purchaseSubscription(planId: string): Promise<Subscription> {
   const data = await request<unknown>("/subscriptions/purchase", {
     method: "POST",
@@ -43,6 +47,7 @@ export async function purchaseSubscription(planId: string): Promise<Subscription
   return subscriptionSchema.parse(data);
 }
 
+// Надсилає запит на заморозку абонемента.
 export async function freezeSubscription(id: string, days: number): Promise<Subscription> {
   const data = await request<unknown>(`/subscriptions/${id}/freeze`, {
     method: "PATCH",
@@ -52,6 +57,7 @@ export async function freezeSubscription(id: string, days: number): Promise<Subs
   return subscriptionSchema.parse(data);
 }
 
+// Оновлює абонемент у management-сценарії через API.
 export async function updateClientSubscription(
   id: string,
   payload: {
@@ -71,12 +77,14 @@ export async function updateClientSubscription(
   return subscriptionSchema.parse(data);
 }
 
+// Видаляє абонемент у management-сценарії через API.
 export async function deleteClientSubscription(id: string): Promise<void> {
   await request<void>(`/subscriptions/${id}`, {
     method: "DELETE"
   });
 }
 
+// Відновлює видалений абонемент через API.
 export async function restoreClientSubscription(id: string): Promise<Subscription> {
   const data = await request<unknown>(`/subscriptions/${id}/restore`, {
     method: "POST"
@@ -85,6 +93,7 @@ export async function restoreClientSubscription(id: string): Promise<Subscriptio
   return subscriptionSchema.parse(data);
 }
 
+// Видає абонемент клієнту вручну через API.
 export async function issueClientSubscription(input: {
   user_id: string;
   plan_id: string;
@@ -102,6 +111,7 @@ export async function issueClientSubscription(input: {
   return subscriptionSchema.parse(data);
 }
 
+// Створює новий план абонемента через API.
 export async function createMembershipPlan(
   payload: Omit<MembershipPlan, "id" | "created_at" | "updated_at">
 ): Promise<MembershipPlan> {
@@ -113,6 +123,7 @@ export async function createMembershipPlan(
   return membershipPlanSchema.parse(data);
 }
 
+// Оновлює план абонемента через API.
 export async function updateMembershipPlan(
   id: string,
   payload: Partial<Omit<MembershipPlan, "id" | "created_at" | "updated_at">>
@@ -125,6 +136,7 @@ export async function updateMembershipPlan(
   return membershipPlanSchema.parse(data);
 }
 
+// Видаляє план абонемента через API.
 export async function deleteMembershipPlan(id: string): Promise<void> {
   await request<void>(`/subscriptions/plans/${id}`, {
     method: "DELETE"

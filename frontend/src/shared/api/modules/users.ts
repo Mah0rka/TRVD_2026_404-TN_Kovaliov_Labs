@@ -1,4 +1,4 @@
-// Коротко: модуль виконує API-запити для модуля користувачів.
+// Модуль містить виклики API для конкретної предметної області.
 
 import { z } from "zod";
 
@@ -6,6 +6,7 @@ import type { CurrentUser, UserRole } from "../core/contracts";
 import { userSchema } from "../core/contracts";
 import { request } from "../core/http";
 
+// Надсилає на бекенд зміни профілю поточного користувача.
 export async function updateMyProfile(input: {
   first_name?: string;
   last_name?: string;
@@ -19,6 +20,7 @@ export async function updateMyProfile(input: {
   return userSchema.parse(data);
 }
 
+// Отримує список користувачів з необовʼязковим фільтром за роллю.
 export async function getUsers(role?: UserRole): Promise<CurrentUser[]> {
   const params = new URLSearchParams();
   if (role) {
@@ -32,6 +34,7 @@ export async function getUsers(role?: UserRole): Promise<CurrentUser[]> {
   return z.array(userSchema).parse(data);
 }
 
+// Створює користувача через API адмін-панелі.
 export async function createUser(input: {
   email: string;
   password: string;
@@ -49,6 +52,7 @@ export async function createUser(input: {
   return userSchema.parse(data);
 }
 
+// Оновлює користувача через API адмін-панелі.
 export async function updateUser(
   userId: string,
   input: {
@@ -69,6 +73,7 @@ export async function updateUser(
   return userSchema.parse(data);
 }
 
+// Видаляє користувача через API адмін-панелі.
 export async function deleteUser(userId: string): Promise<void> {
   await request<void>(`/users/${userId}`, {
     method: "DELETE"

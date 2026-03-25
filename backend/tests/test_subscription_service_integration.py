@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля абонементів.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -13,6 +13,7 @@ from app.schemas.subscription import SubscriptionManagementIssueRequest, Subscri
 from app.services.subscription_service import SubscriptionService
 
 
+# Перевіряє, що create plan працює коректно.
 async def create_plan(db_session, **overrides) -> MembershipPlan:
     payload = {
         "title": "Місячний",
@@ -34,6 +35,7 @@ async def create_plan(db_session, **overrides) -> MembershipPlan:
     return plan
 
 
+# Перевіряє, що purchase uses real membership plan data працює коректно.
 @pytest.mark.asyncio
 async def test_purchase_uses_real_membership_plan_data(db_session):
     client = User(
@@ -66,6 +68,7 @@ async def test_purchase_uses_real_membership_plan_data(db_session):
     assert created.end_date.replace(tzinfo=UTC).date() == (created.start_date.replace(tzinfo=UTC) + timedelta(days=365)).date()
 
 
+# Перевіряє, що freeze subscription extends end date and sets status працює коректно.
 @pytest.mark.asyncio
 async def test_freeze_subscription_extends_end_date_and_sets_status(db_session):
     client = User(
@@ -97,6 +100,7 @@ async def test_freeze_subscription_extends_end_date_and_sets_status(db_session):
     assert frozen.end_date.replace(tzinfo=UTC) == original_end_date + timedelta(days=10)
 
 
+# Перевіряє, що freeze rejects non active subscription працює коректно.
 @pytest.mark.asyncio
 async def test_freeze_rejects_non_active_subscription(db_session):
     client = User(
@@ -128,6 +132,7 @@ async def test_freeze_rejects_non_active_subscription(db_session):
     assert error.value.detail == "Only active subscriptions can be frozen"
 
 
+# Перевіряє, що management update and delete store audit actor працює коректно.
 @pytest.mark.asyncio
 async def test_management_update_and_delete_store_audit_actor(db_session):
     client = User(
@@ -187,6 +192,7 @@ async def test_management_update_and_delete_store_audit_actor(db_session):
     assert deleted.last_modified_by_id == owner.id
 
 
+# Перевіряє, що management can issue private plan and restore deleted subscription працює коректно.
 @pytest.mark.asyncio
 async def test_management_can_issue_private_plan_and_restore_deleted_subscription(db_session):
     client = User(

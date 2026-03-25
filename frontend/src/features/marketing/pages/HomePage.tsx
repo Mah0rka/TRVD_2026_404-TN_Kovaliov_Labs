@@ -1,11 +1,12 @@
-// Коротко: сторінка відображає інтерфейс для модуля головної сторінки.
+// Показує публічну головну сторінку клубу та ключові переваги сервісу.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { useAuthStore } from "../../auth";
 import { getClubStats, getPublicMembershipPlans } from "../../../shared/api";
+import { BrandSignature } from "../../../shared/ui/BrandSignature";
 
 const zones = [
   {
@@ -96,6 +97,7 @@ const convenience = [
   "онлайн-запис без дзвінків"
 ];
 
+// Показує маркетинговий екран і публічні пропозиції клубу.
 export function HomePage() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -114,6 +116,13 @@ export function HomePage() {
   const greetingLabel = user?.first_name ? `Привіт, ${user.first_name}` : "Мій кабінет";
   const stats = statsQuery.data;
   const publicPlans = publicPlansQuery.data ?? [];
+  const visiblePublicPlans = useMemo(
+    () =>
+      [...publicPlans]
+        .filter((plan) => plan.is_public && plan.is_active)
+        .sort((left, right) => left.sort_order - right.sort_order || left.title.localeCompare(right.title, "uk")),
+    [publicPlans]
+  );
   const heroStats = [
     { value: stats ? String(stats.clients_count) : "—", label: "учасників клубу" },
     { value: stats ? String(stats.trainers_count) : "—", label: "тренерів у команді" },
@@ -145,6 +154,7 @@ export function HomePage() {
     };
   }, [isMenuOpen]);
 
+  // Закриває мобільне меню навігації.
   function closeMenu() {
     setIsMenuOpen(false);
   }
@@ -153,25 +163,21 @@ export function HomePage() {
     <div className="marketing-page">
       <header className="marketing-header">
         <div className="brand-lockup">
-          <div className="brand-badge">ML</div>
-          <div>
-            <div className="brand-title">MotionLab</div>
-            <div className="brand-subtitle">fitness club</div>
-          </div>
+          <BrandSignature subtitle="fitness club" />
         </div>
 
         <nav className="marketing-nav" aria-label="Основна навігація">
           <a className="nav-pill" href="#classes" onClick={closeMenu}>
-            Classes
+            Заняття
           </a>
           <a className="nav-pill" href="#coaches" onClick={closeMenu}>
-            Coaches
+            Тренери
           </a>
           <a className="nav-pill" href="#membership" onClick={closeMenu}>
-            Membership
+            Абонементи
           </a>
           <a className="nav-pill" href="#location" onClick={closeMenu}>
-            Location
+            Локація
           </a>
         </nav>
 
@@ -208,11 +214,7 @@ export function HomePage() {
           <div className="marketing-drawer" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="marketing-drawer-header">
               <div className="brand-lockup">
-                <div className="brand-badge">ML</div>
-                <div>
-                  <div className="brand-title">MotionLab</div>
-                  <div className="brand-subtitle">fitness club</div>
-                </div>
+                <BrandSignature subtitle="fitness club" />
               </div>
               <button className="ghost-link mobile-close-button" type="button" aria-label="Закрити меню" onClick={closeMenu}>
                 ✕
@@ -220,16 +222,16 @@ export function HomePage() {
             </div>
             <nav className="marketing-drawer-nav" aria-label="Мобільна навігація">
               <a className="nav-pill" href="#classes" onClick={closeMenu}>
-                Classes
+                Заняття
               </a>
               <a className="nav-pill" href="#coaches" onClick={closeMenu}>
-                Coaches
+                Тренери
               </a>
               <a className="nav-pill" href="#membership" onClick={closeMenu}>
-                Membership
+                Абонементи
               </a>
               <a className="nav-pill" href="#location" onClick={closeMenu}>
-                Location
+                Локація
               </a>
             </nav>
             <div className="marketing-drawer-actions">
@@ -255,7 +257,7 @@ export function HomePage() {
 
       <section className="hero-section">
         <div className="hero-copy">
-          <p className="hero-kicker">Fitness club</p>
+          <p className="hero-kicker">Фітнес-клуб</p>
           <h1 className="hero-title">Тренуйся там, куди хочеться повертатись.</h1>
           <p className="hero-summary">
             Силова зона, групові класи, персональні тренери та атмосфера, яка тримає
@@ -310,7 +312,7 @@ export function HomePage() {
 
       <section className="section-block">
         <div className="section-heading">
-          <p className="eyebrow">Why our gym</p>
+          <p className="eyebrow">Чому ми</p>
           <h2>Атмосфера клубу, яку видно без довгих пояснень</h2>
         </div>
 
@@ -329,7 +331,7 @@ export function HomePage() {
 
       <section className="section-block" id="classes">
         <div className="section-heading">
-          <p className="eyebrow">Classes</p>
+          <p className="eyebrow">Заняття</p>
           <h2>Обери свій формат руху</h2>
         </div>
 
@@ -346,7 +348,7 @@ export function HomePage() {
 
       <section className="section-block" id="coaches">
         <div className="section-heading">
-          <p className="eyebrow">Coaches</p>
+          <p className="eyebrow">Тренери</p>
           <h2>Реальні тренери. Реальна довіра.</h2>
         </div>
 
@@ -371,7 +373,7 @@ export function HomePage() {
 
       <section className="section-block">
         <div className="section-heading">
-          <p className="eyebrow">Reviews</p>
+          <p className="eyebrow">Відгуки</p>
           <h2>Що кажуть ті, хто вже тримає темп з нами</h2>
         </div>
 
@@ -388,12 +390,12 @@ export function HomePage() {
 
       <section className="section-block" id="membership">
         <div className="section-heading">
-          <p className="eyebrow">Membership</p>
+          <p className="eyebrow">Абонементи</p>
           <h2>Абонементи без зайвої складності</h2>
         </div>
 
         <div className="pricing-showcase">
-          {publicPlans.slice(0, 3).map((plan, index) => (
+          {visiblePublicPlans.map((plan, index) => (
             <article
               key={plan.id}
               className={index === 1 ? "pricing-panel featured" : "pricing-panel"}
@@ -418,7 +420,7 @@ export function HomePage() {
               </Link>
             </article>
           ))}
-          {!publicPlans.length ? (
+          {!visiblePublicPlans.length ? (
             <article className="pricing-panel">
               <p className="service-meta">membership</p>
               <h3>Абонементи скоро з’являться</h3>
@@ -430,7 +432,7 @@ export function HomePage() {
 
       <section className="location-panel" id="location">
         <div className="location-copy">
-          <p className="eyebrow">Location</p>
+          <p className="eyebrow">Локація</p>
           <h2>Клуб, у який зручно заїхати до роботи або після неї</h2>
           <p className="location-text">
             Один зрозумілий крок: обираєш пробне, приходиш у клуб і відчуваєш ритм на

@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля audit.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 import logging
 
@@ -7,6 +7,7 @@ from app.core.request_context import get_request_id
 audit_logger = logging.getLogger("fcms.audit")
 
 
+# Обслуговує сценарій log audit event.
 def log_audit_event(action: str, outcome: str, **fields: str | int | None) -> None:
     payload = " ".join(
         f"{key}={value}"

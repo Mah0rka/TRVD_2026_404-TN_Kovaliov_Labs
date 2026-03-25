@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля бази даних.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 

@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля розкладу.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,7 @@ from app.services.schedule_service import ScheduleService
 router = APIRouter()
 
 
+# Створює schedule.
 @router.post("", response_model=ScheduleRead, status_code=status.HTTP_201_CREATED)
 async def create_schedule(
     payload: ScheduleCreate,
@@ -22,6 +23,7 @@ async def create_schedule(
     return ScheduleRead.model_validate(schedule)
 
 
+# Повертає список schedules.
 @router.get("", response_model=list[ScheduleRead])
 async def list_schedules(
     _: User = Depends(get_current_user),
@@ -32,6 +34,7 @@ async def list_schedules(
     return [ScheduleRead.model_validate(item) for item in schedules]
 
 
+# Обслуговує сценарій my classes.
 @router.get("/my-classes", response_model=list[ScheduleRead])
 async def my_classes(
     current_user: User = Depends(require_roles(UserRole.TRAINER)),
@@ -42,6 +45,7 @@ async def my_classes(
     return [ScheduleRead.model_validate(item) for item in schedules]
 
 
+# Обслуговує сценарій attendees.
 @router.get("/{class_id}/attendees", response_model=list[ScheduleAttendeeRead])
 async def attendees(
     class_id: str,
@@ -53,6 +57,7 @@ async def attendees(
     return [ScheduleAttendeeRead.model_validate(item) for item in attendees]
 
 
+# Оновлює schedule.
 @router.patch("/{class_id}", response_model=ScheduleRead)
 async def update_schedule(
     class_id: str,
@@ -65,6 +70,7 @@ async def update_schedule(
     return ScheduleRead.model_validate(schedule)
 
 
+# Видаляє schedule.
 @router.delete("/{class_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_schedule(
     class_id: str,

@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля звітів.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from datetime import UTC, datetime
 
@@ -13,9 +13,11 @@ from app.schemas.report import RevenueReport, TrainerPopularityReport
 
 
 class ReportService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    # Обслуговує сценарій revenue report.
     async def revenue_report(self, start_date: datetime, end_date: datetime) -> RevenueReport:
         if start_date.tzinfo is None:
             start_date = start_date.replace(tzinfo=UTC)
@@ -37,6 +39,7 @@ class ReportService:
             currency="UAH",
         )
 
+    # Повертає статистику популярності тренерів.
     async def trainer_popularity(self) -> list[TrainerPopularityReport]:
         result = await self.session.execute(
             select(

@@ -1,10 +1,11 @@
-// Коротко: сторінка відображає інтерфейс для модуля занять тренера.
+// Показує тренеру його заняття та список учасників.
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getMyClasses, getScheduleAttendees } from "../../../shared/api";
 
+// Показує тренеру його розклад і список учасників занять.
 export function MyClassesPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 

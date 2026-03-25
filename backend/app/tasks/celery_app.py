@@ -1,4 +1,4 @@
-# Коротко: модуль описує фонові задачі для фонових задач.
+# Модуль описує фонові задачі та їх точки входу.
 
 import asyncio
 
@@ -34,28 +34,33 @@ celery_app.conf.update(
 )
 
 
+# Повертає просту відповідь для перевірки доступності worker-команди.
 @celery_app.task(name="fcms.debug.ping")
 def ping() -> str:
     return "pong"
 
 
+# Запускає асинхронний сценарій завершення прострочених абонементів.
 async def _run_expire_subscriptions() -> int:
     async with async_session_factory() as session:
         service = NotificationService(session)
         return await service.expire_subscriptions()
 
 
+# Запускає асинхронний сценарій збору нагадувань по абонементах.
 async def _run_subscription_reminders() -> list[dict[str, str]]:
     async with async_session_factory() as session:
         service = NotificationService(session)
         return await service.collect_expiration_reminders()
 
 
+# Викликає фонове завершення прострочених абонементів.
 @celery_app.task(name="fcms.notifications.expire_subscriptions")
 def expire_subscriptions() -> int:
     return asyncio.run(_run_expire_subscriptions())
 
 
+# Запускає фоновий збір нагадувань про завершення абонементів.
 @celery_app.task(name="fcms.notifications.subscription_reminders")
 def subscription_reminders() -> list[dict[str, str]]:
     return asyncio.run(_run_subscription_reminders())

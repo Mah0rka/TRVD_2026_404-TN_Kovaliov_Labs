@@ -1,4 +1,4 @@
-// Коротко: файл підтримує логіку модуля запуску застосунку.
+// Файл містить допоміжну логіку для цього модуля.
 
 import React from "react";
 import ReactDOM from "react-dom/client";

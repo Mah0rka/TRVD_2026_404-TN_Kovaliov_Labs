@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля платежів.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from decimal import Decimal
 
@@ -14,6 +14,7 @@ from app.services.payment_service import PaymentService
 from app.services.subscription_service import SubscriptionService
 
 
+# Перевіряє, що create plan працює коректно.
 async def create_plan(db_session, **overrides) -> MembershipPlan:
     payload = {
         "title": "Місячний",
@@ -34,6 +35,7 @@ async def create_plan(db_session, **overrides) -> MembershipPlan:
     return plan
 
 
+# Перевіряє, що subscription purchase creates fixed price payment працює коректно.
 @pytest.mark.asyncio
 async def test_subscription_purchase_creates_fixed_price_payment(db_session):
     client = User(
@@ -61,6 +63,7 @@ async def test_subscription_purchase_creates_fixed_price_payment(db_session):
     assert payments[0].status == "SUCCESS"
 
 
+# Перевіряє, що payment service rejects direct top up працює коректно.
 @pytest.mark.asyncio
 async def test_payment_service_rejects_direct_top_up(db_session):
     service = PaymentService(db_session)
@@ -71,6 +74,7 @@ async def test_payment_service_rejects_direct_top_up(db_session):
     assert error.value.status_code == 410
 
 
+# Перевіряє, що payment history shows subscription purchases only працює коректно.
 @pytest.mark.asyncio
 async def test_payment_history_shows_subscription_purchases_only(db_session):
     client = User(
@@ -108,6 +112,7 @@ async def test_payment_history_shows_subscription_purchases_only(db_session):
     assert str(payments[0].amount) == "990.00"
 
 
+# Перевіряє, що subscription purchase rejects second active membership працює коректно.
 @pytest.mark.asyncio
 async def test_subscription_purchase_rejects_second_active_membership(db_session):
     client = User(

@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля експорту модуля.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import * as api from "./index";
 import { apiRequest, getErrorMessage } from "./core/http";

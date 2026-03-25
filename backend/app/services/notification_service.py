@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля сповіщень.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 import logging
 from datetime import UTC, datetime, timedelta
@@ -13,11 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class NotificationService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = SubscriptionRepository(session)
         self.redis = get_redis()
 
+    # Викликає фонове завершення прострочених абонементів.
     async def expire_subscriptions(self) -> int:
         now = datetime.now(UTC)
         subscriptions = await self.repository.list_expired_candidates(now)
@@ -31,6 +33,7 @@ class NotificationService:
         logger.info("notification_job=expire_subscriptions expired_count=%s", len(subscriptions))
         return len(subscriptions)
 
+    # Збирає expiration reminders.
     async def collect_expiration_reminders(self, days_ahead: int = 3) -> list[dict[str, str]]:
         start = datetime.now(UTC) + timedelta(days=days_ahead - 1)
         end = datetime.now(UTC) + timedelta(days=days_ahead)
@@ -51,6 +54,7 @@ class NotificationService:
 
         return reminders
 
+    # Формує reminder payload.
     def _build_reminder_payload(self, subscription: Subscription) -> dict[str, str]:
         return {
             "subscription_id": subscription.id,
@@ -58,6 +62,7 @@ class NotificationService:
             "end_date": subscription.end_date.isoformat(),
         }
 
+    # Виконує внутрішній крок для сценарію should emit reminder.
     async def _should_emit_reminder(self, reminder: dict[str, str]) -> bool:
         reminder_key = (
             f"notifications:subscription-expiring:{reminder['subscription_id']}:{reminder['end_date'][:10]}"

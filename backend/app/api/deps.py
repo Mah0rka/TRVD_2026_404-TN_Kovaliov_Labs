@@ -1,4 +1,4 @@
-# Коротко: модуль готує HTTP-шар для залежностей API.
+# Модуль збирає залежності FastAPI для сесії, авторизації та rate limit.
 
 from collections.abc import AsyncGenerator
 
@@ -14,11 +14,13 @@ from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
 
 
+# Видає асинхронну сесію бази даних на час обробки запиту.
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_factory() as session:
         yield session
 
 
+# Дістає поточного користувача із cookie-сесії та перевіряє її актуальність.
 async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db_session),
@@ -57,7 +59,9 @@ async def get_current_user(
     return user
 
 
+# Створює залежність FastAPI, яка пропускає лише користувачів з потрібними ролями.
 def require_roles(*roles: UserRole):
+    # Перевіряє роль поточного користувача перед доступом до захищеного маршруту.
     async def dependency(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in set(roles):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
@@ -66,7 +70,9 @@ def require_roles(*roles: UserRole):
     return dependency
 
 
+# Створює залежність FastAPI для обмеження частоти запитів у вибраному scope.
 def rate_limit(scope: str, limit: int, window_seconds: int):
+    # Рахує запити клієнта в Redis і блокує перевищення заданого ліміту.
     async def dependency(request: Request) -> None:
         redis = get_redis()
         client_host = request.client.host if request.client else "unknown"

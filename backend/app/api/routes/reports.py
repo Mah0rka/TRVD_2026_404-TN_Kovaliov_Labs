@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля звітів.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from datetime import UTC, datetime, timedelta
 
@@ -13,6 +13,7 @@ from app.services.report_service import ReportService
 router = APIRouter()
 
 
+# Повертає агрегований звіт по доходах за вибраний період.
 @router.get("/revenue", response_model=RevenueReport)
 async def revenue(
     start_date: datetime | None = Query(default=None, alias="startDate"),
@@ -26,6 +27,7 @@ async def revenue(
     return await service.revenue_report(resolved_start, resolved_end)
 
 
+# Повертає статистику популярності тренерів.
 @router.get("/trainers/popularity", response_model=list[TrainerPopularityReport])
 async def trainer_popularity(
     _: User = Depends(require_roles(UserRole.ADMIN, UserRole.OWNER)),

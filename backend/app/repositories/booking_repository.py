@@ -1,4 +1,4 @@
-# Коротко: репозиторій інкапсулює доступ до даних для модуля бронювань.
+# Репозиторій ізолює читання та запис даних у базі.
 
 from datetime import datetime
 
@@ -12,9 +12,11 @@ from app.models.workout_class import WorkoutClass
 
 
 class BookingRepository:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    # Повертає by id.
     async def get_by_id(self, booking_id: str) -> Booking | None:
         result = await self.session.execute(
             select(Booking)
@@ -25,12 +27,14 @@ class BookingRepository:
         )
         return result.scalar_one_or_none()
 
+    # Повертає by user and class.
     async def get_by_user_and_class(self, user_id: str, class_id: str) -> Booking | None:
         result = await self.session.execute(
             select(Booking).where(Booking.user_id == user_id, Booking.class_id == class_id)
         )
         return result.scalar_one_or_none()
 
+    # Підраховує confirmed for class.
     async def count_confirmed_for_class(self, class_id: str) -> int:
         result = await self.session.execute(
             select(func.count(Booking.id)).where(
@@ -40,6 +44,7 @@ class BookingRepository:
         )
         return int(result.scalar_one())
 
+    # Повертає список by user.
     async def list_by_user(self, user_id: str) -> list[Booking]:
         result = await self.session.execute(
             select(Booking)
@@ -51,6 +56,7 @@ class BookingRepository:
         )
         return list(result.scalars().all())
 
+    # Повертає список attendees for class.
     async def list_attendees_for_class(self, class_id: str) -> list[Booking]:
         result = await self.session.execute(
             select(Booking)
@@ -60,6 +66,7 @@ class BookingRepository:
         )
         return list(result.scalars().all())
 
+    # Повертає список confirmed for user between.
     async def list_confirmed_for_user_between(
         self,
         user_id: str,

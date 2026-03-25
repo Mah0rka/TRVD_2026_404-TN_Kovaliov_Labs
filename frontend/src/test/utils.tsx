@@ -1,10 +1,11 @@
-// Коротко: тестова утиліта підтримує перевірки модуля utils.
+// Модуль містить спільні тестові утиліти для фронтенду.
 
 import type { PropsWithChildren, ReactElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { render } from "@testing-library/react";
 
+// Створює тестовий QueryClient без повторних спроб запитів.
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -18,6 +19,7 @@ export function createTestQueryClient() {
   });
 }
 
+// Рендерить компонент у тесті з потрібними провайдерами.
 export function renderWithProviders(
   ui: ReactElement,
   options?: {
@@ -26,6 +28,7 @@ export function renderWithProviders(
 ) {
   const queryClient = createTestQueryClient();
 
+  // Огортає тестовий UI потрібними провайдерами.
   function Wrapper({ children }: PropsWithChildren) {
     return (
       <MemoryRouter initialEntries={[options?.route ?? "/"]}>

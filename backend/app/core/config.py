@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля конфігурації.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 from functools import lru_cache
 
@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     allowed_origins: str = Field(default="http://localhost:3000,http://localhost:5173")
     run_db_migrations: bool = True
     seed_demo_data: bool = False
+    serve_frontend: bool = False
+    frontend_dist_path: str | None = None
     auth_login_rate_limit: int = 5
     auth_register_rate_limit: int = 3
     auth_refresh_rate_limit: int = 10
@@ -34,21 +36,26 @@ class Settings(BaseSettings):
     refresh_cookie_name: str = "fcms_refresh_token"
     csrf_cookie_name: str = "fcms_csrf_token"
 
+    # Обслуговує сценарій refresh token expire seconds.
     @property
     def refresh_token_expire_seconds(self) -> int:
         return self.refresh_token_expire_days * 24 * 60 * 60
 
+    # Обслуговує сценарій admin idle timeout seconds.
     @property
     def admin_idle_timeout_seconds(self) -> int:
         return self.admin_idle_timeout_minutes * 60
 
+    # Обслуговує сценарій cors origins.
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
 
+    # Обслуговує сценарій session key.
     def session_key(self, session_id: str) -> str:
         return f"auth:session:{session_id}"
 
+    # Перевіряє security defaults.
     @model_validator(mode="after")
     def validate_security_defaults(self) -> "Settings":
         insecure_values = {
@@ -69,6 +76,7 @@ class Settings(BaseSettings):
         return self
 
 
+# Створює та кешує обʼєкт налаштувань застосунку.
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

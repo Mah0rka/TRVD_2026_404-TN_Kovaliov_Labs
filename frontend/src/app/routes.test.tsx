@@ -1,7 +1,8 @@
-// Коротко: тести перевіряють сценарії модуля routes.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import { appRouter } from "./routes";
 
+// Збирає вкладені маршрути для перевірки карти роутів у тесті.
 function collectRoutes(route: { children?: unknown[]; lazy?: () => Promise<unknown> }) {
   const current = [route];
   const children = Array.isArray(route.children)

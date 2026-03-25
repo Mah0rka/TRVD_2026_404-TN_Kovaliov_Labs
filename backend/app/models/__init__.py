@@ -1,4 +1,4 @@
-# Коротко: модель описує сутності домену для модуля models.
+# Модель описує структуру доменних сутностей і звʼязків між ними.
 
 from app.models.base import Base
 from app.models.booking import Booking

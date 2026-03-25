@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля абонементів користувача.
+// Керує планами, покупками та адмініструванням абонементів.
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import {
 } from "../../../shared/api";
 import { useAuthStore } from "../../auth";
 
+// Повертає локалізований підпис для статусу абонемента.
 function getStatusLabel(status: string): string {
   if (status === "ACTIVE") {
     return "Активний";
@@ -29,6 +30,7 @@ function getStatusLabel(status: string): string {
   return "Завершений";
 }
 
+// Повертає локалізовану назву типу абонемента.
 function getPlanTypeLabel(type: MembershipPlan["type"]): string {
   if (type === "MONTHLY") {
     return "Місячний";
@@ -41,11 +43,13 @@ function getPlanTypeLabel(type: MembershipPlan["type"]): string {
   return "Разове відвідування";
 }
 
+// Склеює короткий опис параметрів плану абонемента.
 function getPlanMeta(plan: MembershipPlan): string {
   const visits = plan.visits_limit ? `${plan.visits_limit} занять` : "Безліміт";
   return `${visits} · ${plan.duration_days} днів · ${plan.currency} ${plan.price}`;
 }
 
+// Повертає початковий стан форми створення або редагування плану.
 function emptyPlanForm() {
   return {
     title: "",
@@ -61,6 +65,7 @@ function emptyPlanForm() {
   };
 }
 
+// Обслуговує сценарій subscriptions page.
 export function SubscriptionsPage() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
@@ -162,6 +167,7 @@ export function SubscriptionsPage() {
     }
   }, [selectedPlanId, sortedPlans]);
 
+  // Переносить дані плану у форму редагування.
   function startEditingPlan(plan: MembershipPlan) {
     setEditingPlanId(plan.id);
     setPlanForm({
@@ -178,11 +184,13 @@ export function SubscriptionsPage() {
     });
   }
 
+  // Скидає форму та режим редагування плану.
   function resetPlanEditor() {
     setEditingPlanId(null);
     setPlanForm(emptyPlanForm());
   }
 
+  // Збирає payload для створення або оновлення плану абонемента.
   function buildPlanPayload() {
     return {
       ...planForm,

@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля бронювань.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
@@ -16,12 +16,14 @@ from app.models.payment import Payment
 
 
 class BookingService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.booking_repository = BookingRepository(session)
         self.subscription_repository = SubscriptionRepository(session)
         self.payment_repository = PaymentRepository(session)
 
+    # Створює бронювання заняття для клієнта.
     async def create_booking(self, user_id: str, class_id: str) -> Booking:
         try:
             workout_class = await self.session.get(WorkoutClass, class_id)
@@ -75,6 +77,7 @@ class BookingService:
         assert created_booking is not None
         return created_booking
 
+    # Скасовує бронювання з урахуванням правил повернення візиту.
     async def cancel_booking(self, user_id: str, booking_id: str) -> Booking:
         try:
             booking = await self.booking_repository.get_by_id(booking_id)
@@ -120,9 +123,11 @@ class BookingService:
         assert refreshed is not None
         return refreshed
 
+    # Повертає список for user.
     async def list_for_user(self, user_id: str) -> list[Booking]:
         return await self.booking_repository.list_by_user(user_id)
 
+    # Запускає оплату додаткового платного бронювання.
     async def create_paid_booking_checkout(self, user_id: str, class_id: str) -> Payment:
         workout_class = await self.session.get(WorkoutClass, class_id)
         if not workout_class:
@@ -164,6 +169,7 @@ class BookingService:
         assert created_payment is not None
         return created_payment
 
+    # Підтверджує платіж і завершує створення платного бронювання.
     async def confirm_paid_booking(self, user_id: str, payment_id: str) -> Booking:
         payment = await self.payment_repository.get_by_id(payment_id)
         if not payment or payment.user_id != user_id or payment.purpose != "BOOKING_EXTRA" or not payment.booking_class_id:
@@ -216,6 +222,7 @@ class BookingService:
         assert created_booking is not None
         return created_booking
 
+    # Виконує внутрішній крок для сценарію consume visit if needed.
     async def _consume_visit_if_needed(self, active_subscription):
         self._validate_subscription_for_booking(active_subscription)
 
@@ -225,6 +232,7 @@ class BookingService:
         remaining_visits = active_subscription.remaining_visits or 0
         active_subscription.remaining_visits = remaining_visits - 1
 
+    # Повертає список non paid bookings for day.
     async def _list_non_paid_bookings_for_day(self, user_id: str, class_start_time: datetime) -> list[Booking]:
         club_tz = ZoneInfo("Europe/Kiev")
         localized_start = class_start_time.astimezone(club_tz)
@@ -235,6 +243,7 @@ class BookingService:
         bookings = await self.booking_repository.list_confirmed_for_user_between(user_id, day_start_utc, day_end_utc)
         return [booking for booking in bookings if not booking.workout_class.is_paid_extra]
 
+    # Перевіряє subscription for booking.
     @staticmethod
     def _validate_subscription_for_booking(active_subscription, *, paid_message: bool = False) -> None:
         if not active_subscription:

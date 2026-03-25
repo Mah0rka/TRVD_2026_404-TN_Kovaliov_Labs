@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля сповіщень.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -10,6 +10,7 @@ from app.models.subscription import SubscriptionStatus
 from app.services.notification_service import NotificationService
 
 
+# Перевіряє, що expire subscriptions updates status and commits працює коректно.
 @pytest.mark.asyncio
 async def test_expire_subscriptions_updates_status_and_commits():
     session = AsyncMock()
@@ -28,6 +29,7 @@ async def test_expire_subscriptions_updates_status_and_commits():
     session.commit.assert_awaited_once()
 
 
+# Перевіряє, що collect expiration reminders returns payloads працює коректно.
 @pytest.mark.asyncio
 async def test_collect_expiration_reminders_returns_payloads():
     session = AsyncMock()

@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля розкладу занять.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import userEvent from "@testing-library/user-event";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
@@ -37,6 +37,7 @@ vi.mock("../../../shared/api", async () => {
 const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 const end = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
+// Створює фікстуру заняття для тестових сценаріїв.
 function scheduleFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: "schedule-1",

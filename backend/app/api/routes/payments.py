@@ -1,4 +1,4 @@
-# Коротко: маршрут обробляє HTTP-запити для модуля платежів.
+# Маршрути приймають HTTP-запити, валідовують дані та делегують роботу сервісам.
 
 from datetime import datetime
 
@@ -13,6 +13,7 @@ from app.services.payment_service import PaymentService
 router = APIRouter()
 
 
+# Працює з checkout-сценарієм платежів.
 @router.post("/checkout", response_model=PaymentRead)
 async def checkout(
     payload: PaymentCreateRequest,
@@ -24,6 +25,7 @@ async def checkout(
     return PaymentRead.model_validate(payment)
 
 
+# Повертає історію платежів поточного користувача.
 @router.get("/my-payments", response_model=list[PaymentRead])
 async def my_payments(
     current_user: User = Depends(require_roles(UserRole.CLIENT)),
@@ -34,6 +36,7 @@ async def my_payments(
     return [PaymentRead.model_validate(item) for item in payments]
 
 
+# Повертає реєстр платежів з фільтрами для адміністрації.
 @router.get("", response_model=list[PaymentRead])
 async def all_payments(
     user_id: str | None = Query(default=None, alias="userId"),

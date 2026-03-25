@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля HTTP-клієнта.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

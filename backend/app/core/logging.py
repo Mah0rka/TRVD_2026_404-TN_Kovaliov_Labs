@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля логування.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 import logging
 
@@ -6,11 +6,13 @@ from app.core.request_context import get_request_id
 
 
 class RequestIdFilter(logging.Filter):
+    # Обслуговує сценарій filter.
     def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = get_request_id()
         return True
 
 
+# Налаштовує формат логів і фільтр з ідентифікатором запиту.
 def configure_logging() -> None:
     root_logger = logging.getLogger()
     if root_logger.handlers:

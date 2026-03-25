@@ -1,4 +1,4 @@
-# Коротко: репозиторій інкапсулює доступ до даних для модуля платежів.
+# Репозиторій ізолює читання та запис даних у базі.
 
 from datetime import datetime
 
@@ -10,21 +10,25 @@ from app.models.payment import Payment
 
 
 class PaymentRepository:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    # Створює потрібні дані.
     async def create(self, payment: Payment) -> Payment:
         self.session.add(payment)
         await self.session.commit()
         await self.session.refresh(payment)
         return payment
 
+    # Повертає by id.
     async def get_by_id(self, payment_id: str) -> Payment | None:
         result = await self.session.execute(
             select(Payment).where(Payment.id == payment_id).options(selectinload(Payment.user))
         )
         return result.scalar_one_or_none()
 
+    # Повертає pending booking payment.
     async def get_pending_booking_payment(self, user_id: str, class_id: str) -> Payment | None:
         result = await self.session.execute(
             select(Payment)
@@ -39,6 +43,7 @@ class PaymentRepository:
         )
         return result.scalar_one_or_none()
 
+    # Повертає список by user.
     async def list_by_user(self, user_id: str) -> list[Payment]:
         result = await self.session.execute(
             select(Payment)
@@ -51,6 +56,7 @@ class PaymentRepository:
         )
         return list(result.scalars().all())
 
+    # Повертає список all.
     async def list_all(
         self,
         user_id: str | None = None,

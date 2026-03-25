@@ -28,6 +28,21 @@ docker compose up --build
 - PostgreSQL: `localhost:5433`
 - Redis: `localhost:6379`
 
+### Продакшн без Nginx
+
+Продова схема запускає один застосунок, у якому FastAPI віддає API і зібраний фронтенд
+без окремого `Nginx`.
+
+1. Створіть `.env.prod` на основі `.env.prod.example`
+2. Запустіть:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
+```
+
+Після чистого старту бази перший користувач, який зареєструється через `/auth/register`,
+автоматично отримає роль `OWNER`. Усі наступні користувачі створюються як `CLIENT`.
+
 ### Локальні перевірки
 
 ```powershell

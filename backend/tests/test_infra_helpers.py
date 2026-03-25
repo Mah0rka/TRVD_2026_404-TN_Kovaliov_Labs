@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля infra helpers.
+# Тести перевіряють ключові сценарії цього модуля.
 
 import logging
 from types import SimpleNamespace
@@ -25,6 +25,7 @@ from app.middleware.request_context import RequestContextMiddleware
 from app.models.user import UserRole
 
 
+# Перевіряє, що make request працює коректно.
 def make_request(path: str = "/", method: str = "GET", headers=None, cookies=None) -> Request:
     return Request(
         {
@@ -39,28 +40,35 @@ def make_request(path: str = "/", method: str = "GET", headers=None, cookies=Non
     )
 
 
+# Перевіряє, що dependency helpers працює коректно.
 @pytest.mark.asyncio
 async def test_dependency_helpers(monkeypatch):
     class FakeRedis:
+        # Перевіряє, що init працює коректно.
         def __init__(self):
             self.storage = {"auth:session:test-session": "user-1"}
             self.expired = []
             self.count = 0
 
+        # Перевіряє, що get працює коректно.
         async def get(self, key):
             return self.storage.get(key)
 
+        # Перевіряє, що expire працює коректно.
         async def expire(self, key, seconds):
             self.expired.append((key, seconds))
 
+        # Перевіряє, що incr працює коректно.
         async def incr(self, key):
             self.count += 1
             return self.count
 
     class FakeRepo:
+        # Перевіряє, що init працює коректно.
         def __init__(self, db):
             self.db = db
 
+        # Перевіряє, що get by id працює коректно.
         async def get_by_id(self, user_id):
             return SimpleNamespace(
                 id=user_id,
@@ -98,6 +106,7 @@ async def test_dependency_helpers(monkeypatch):
         await limiter(make_request())
 
 
+# Перевіряє, що cookie helpers and request context працює коректно.
 def test_cookie_helpers_and_request_context():
     response = Response()
     cookies = AuthCookies("access-token", "refresh-token", "csrf-token")
@@ -117,6 +126,7 @@ def test_cookie_helpers_and_request_context():
     assert record.request_id == request_id
 
 
+# Перевіряє, що middleware and exception handlers працює коректно.
 def test_middleware_and_exception_handlers():
     from fastapi import FastAPI
 
@@ -124,14 +134,17 @@ def test_middleware_and_exception_handlers():
     test_app.add_middleware(RequestContextMiddleware)
     test_app.add_middleware(CSRFMiddleware)
 
+    # Повертає просту відповідь для перевірки доступності worker-команди.
     @test_app.get("/ping")
     async def ping():
         return {"ok": True}
 
+    # Перевіряє, що secure працює коректно.
     @test_app.post("/secure")
     async def secure():
         return {"ok": True}
 
+    # Перевіряє облікові дані й відкриває нову користувацьку сесію.
     @test_app.post("/auth/login")
     async def login():
         return {"ok": True}
@@ -156,6 +169,7 @@ def test_middleware_and_exception_handlers():
     assert _request_id(request) == "req-1"
 
 
+# Перевіряє, що exception handlers працює коректно.
 @pytest.mark.asyncio
 async def test_exception_handlers():
     request = make_request()

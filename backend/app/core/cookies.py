@@ -1,4 +1,4 @@
-# Коротко: ядро містить інфраструктурну логіку для модуля cookies.
+# Модуль зберігає спільну інфраструктурну логіку застосунку.
 
 from dataclasses import dataclass
 
@@ -14,6 +14,7 @@ class AuthCookies:
     csrf_token: str
 
 
+# Записує access, refresh і CSRF cookies у відповідь сервера.
 def set_auth_cookies(response: Response, cookies: AuthCookies) -> None:
     response.set_cookie(
         key=settings.access_cookie_name,
@@ -47,6 +48,7 @@ def set_auth_cookies(response: Response, cookies: AuthCookies) -> None:
     )
 
 
+# Очищає auth cookies під час виходу користувача.
 def clear_auth_cookies(response: Response) -> None:
     for cookie_name in (settings.access_cookie_name, settings.refresh_cookie_name, settings.csrf_cookie_name):
         response.delete_cookie(key=cookie_name, domain=settings.cookie_domain, path="/")

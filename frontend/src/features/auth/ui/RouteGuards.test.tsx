@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля RouteGuards.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
@@ -89,6 +89,7 @@ describe("route guards", () => {
   });
 });
 
+// Рендерить маршрут у тестовому MemoryRouter.
 function renderRoutes(ui: ReactNode, route: string) {
   return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
 }

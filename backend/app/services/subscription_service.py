@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля абонементів.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from datetime import UTC, datetime, timedelta
 
@@ -15,11 +15,13 @@ from app.services.payment_service import PaymentService
 
 
 class SubscriptionService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = SubscriptionRepository(session)
         self.plan_repository = MembershipPlanRepository(session)
 
+    # Оформлює покупку потрібні дані.
     async def purchase(
         self,
         user_id: str,
@@ -62,6 +64,7 @@ class SubscriptionService:
         await self.session.commit()
         return (await self.repository.get_by_id(subscription.id)) or subscription
 
+    # Оформлює for management.
     async def issue_for_management(
         self,
         actor_user_id: str,
@@ -100,6 +103,7 @@ class SubscriptionService:
         await self.session.commit()
         return (await self.repository.get_by_id(subscription.id, include_deleted=True)) or subscription
 
+    # Ставить на паузу потрібні дані.
     async def freeze(self, user_id: str, subscription_id: str, days: int) -> Subscription:
         subscription = await self.repository.get_by_id(subscription_id)
         if not subscription or subscription.user_id != user_id:
@@ -115,9 +119,11 @@ class SubscriptionService:
         await self.session.commit()
         return (await self.repository.get_by_id(subscription.id)) or subscription
 
+    # Повертає список for user.
     async def list_for_user(self, user_id: str) -> list[Subscription]:
         return await self.repository.list_by_user(user_id)
 
+    # Повертає список for management.
     async def list_for_management(
         self,
         *,
@@ -126,6 +132,7 @@ class SubscriptionService:
     ) -> list[Subscription]:
         return await self.repository.list_all(user_id=user_id, include_deleted=include_deleted)
 
+    # Оновлює for management.
     async def update_for_management(
         self,
         actor_user_id: str,
@@ -174,6 +181,7 @@ class SubscriptionService:
         await self.session.commit()
         return (await self.repository.get_by_id(subscription.id, include_deleted=True)) or subscription
 
+    # Видаляє for management.
     async def delete_for_management(self, actor_user_id: str, subscription_id: str) -> None:
         subscription = await self.repository.get_by_id(subscription_id, include_deleted=True)
         if not subscription:
@@ -189,6 +197,7 @@ class SubscriptionService:
         subscription.last_modified_at = now
         await self.session.commit()
 
+    # Відновлює for management.
     async def restore_for_management(self, actor_user_id: str, subscription_id: str) -> Subscription:
         subscription = await self.repository.get_by_id(subscription_id, include_deleted=True)
         if not subscription:
@@ -208,6 +217,7 @@ class SubscriptionService:
         await self.session.commit()
         return (await self.repository.get_by_id(subscription.id, include_deleted=True)) or subscription
 
+    # Визначає plan.
     async def _resolve_plan(
         self,
         *,
@@ -231,6 +241,7 @@ class SubscriptionService:
 
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Membership plan is required")
 
+    # Перевіряє management update.
     def _validate_management_update(self, subscription: Subscription) -> None:
         if subscription.start_date > subscription.end_date:
             raise HTTPException(

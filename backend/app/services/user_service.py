@@ -1,4 +1,4 @@
-# Коротко: сервіс містить бізнес-логіку модуля користувачів.
+# Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,13 +10,16 @@ from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate
 
 
 class UserService:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = UserRepository(session)
 
+    # Повертає список користувачів з необовʼязковою фільтрацією за роллю.
     async def list_users(self, role: UserRole | None = None) -> list[User]:
         return await self.repository.list_all(role)
 
+    # Оновлює особисті дані поточного користувача.
     async def update_profile(self, user: User, payload: UserProfileUpdate) -> User:
         update_data = payload.model_dump(exclude_unset=True)
         for field_name, value in update_data.items():
@@ -25,6 +28,7 @@ class UserService:
             setattr(user, field_name, value)
         return await self.repository.commit(user)
 
+    # Створює користувача з адмінського інтерфейсу.
     async def create_user(self, payload: UserAdminCreate) -> User:
         existing_user = await self.repository.get_by_email(payload.email)
         if existing_user:
@@ -43,6 +47,7 @@ class UserService:
         )
         return await self.repository.create(user)
 
+    # Оновлює профіль користувача з адмінського інтерфейсу.
     async def update_user(self, user_id: str, payload: UserAdminUpdate) -> User:
         from fastapi import HTTPException, status
 
@@ -71,6 +76,7 @@ class UserService:
 
         return await self.repository.commit(user)
 
+    # Видаляє користувача з урахуванням захисту від небезпечних сценаріїв.
     async def delete_user(self, actor: User, user_id: str) -> None:
         from fastapi import HTTPException, status
 

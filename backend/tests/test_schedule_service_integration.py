@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля розкладу.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 
@@ -12,6 +12,7 @@ from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
 from app.services.schedule_service import ScheduleService
 
 
+# Перевіряє, що create schedule uses current trainer when trainer id missing працює коректно.
 @pytest.mark.asyncio
 async def test_create_schedule_uses_current_trainer_when_trainer_id_missing(db_session):
     trainer = User(
@@ -45,6 +46,7 @@ async def test_create_schedule_uses_current_trainer_when_trainer_id_missing(db_s
     assert created.extra_price is None
 
 
+# Перевіряє, що update schedule rejects invalid time range працює коректно.
 @pytest.mark.asyncio
 async def test_update_schedule_rejects_invalid_time_range(db_session):
     trainer = User(
@@ -81,6 +83,7 @@ async def test_update_schedule_rejects_invalid_time_range(db_session):
     assert error.value.detail == "Час завершення має бути пізніше за час початку"
 
 
+# Перевіряє, що list attendees allows trainer and blocks other roles працює коректно.
 @pytest.mark.asyncio
 async def test_list_attendees_allows_trainer_and_blocks_other_roles(db_session):
     trainer = User(

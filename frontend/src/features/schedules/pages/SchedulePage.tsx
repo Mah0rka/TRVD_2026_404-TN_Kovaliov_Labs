@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля розкладу занять.
+// Показує розклад занять і дає змогу керувати записами.
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import { useAuthStore } from "../../auth";
 
 const classTypes = ["ALL", "GROUP", "PERSONAL"] as const;
 
+// Показує розклад, деталі занять і керування записом на них.
 export function SchedulePage() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);

@@ -1,4 +1,4 @@
-# Коротко: тести перевіряють сценарії модуля звітів.
+# Тести перевіряють ключові сценарії цього модуля.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -12,6 +12,7 @@ from app.models.workout_class import WorkoutClass, WorkoutType
 from app.services.report_service import ReportService
 
 
+# Перевіряє, що revenue report aggregates successful payments працює коректно.
 @pytest.mark.asyncio
 async def test_revenue_report_aggregates_successful_payments(db_session):
     client = User(
@@ -63,6 +64,7 @@ async def test_revenue_report_aggregates_successful_payments(db_session):
     assert report.currency == "UAH"
 
 
+# Перевіряє, що trainer popularity counts confirmed bookings працює коректно.
 @pytest.mark.asyncio
 async def test_trainer_popularity_counts_confirmed_bookings(db_session):
     trainer = User(

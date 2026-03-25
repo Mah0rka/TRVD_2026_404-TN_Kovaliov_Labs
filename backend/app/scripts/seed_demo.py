@@ -1,4 +1,4 @@
-# Коротко: скрипт підтримує службові операції для модуля демо-даних.
+# Скрипт автоматизує підготовку локального середовища або даних.
 
 import asyncio
 import logging
@@ -19,6 +19,7 @@ from app.models.workout_class import WorkoutClass, WorkoutType
 logger = logging.getLogger(__name__)
 
 
+# Наповнює базу демо-даними для локального середовища.
 async def seed_demo_data() -> None:
     async with async_session_factory() as session:
         users = await _ensure_users(session)
@@ -36,6 +37,7 @@ async def seed_demo_data() -> None:
         logger.info("Demo seed completed successfully")
 
 
+# Створює або оновлює базовий набір демо-користувачів.
 async def _ensure_users(session) -> dict[str, User]:
     definitions = {
         "owner": ("owner@example.com", "Owner", "Account", UserRole.OWNER),
@@ -64,6 +66,7 @@ async def _ensure_users(session) -> dict[str, User]:
     return created
 
 
+# Створює або оновлює базовий набір планів абонементів.
 async def _ensure_membership_plans(session) -> dict[str, MembershipPlan]:
     definitions = {
         "monthly": {
@@ -132,6 +135,7 @@ async def _ensure_membership_plans(session) -> dict[str, MembershipPlan]:
     return created
 
 
+# Переносить звʼязки зі старих демо-користувачів на актуальні записи.
 async def _reconcile_legacy_demo_users(session, canonical_users: dict[str, User]) -> None:
     legacy_emails = {
         "owner@fcms.local": "owner",
@@ -152,6 +156,7 @@ async def _reconcile_legacy_demo_users(session, canonical_users: dict[str, User]
         await session.flush()
 
 
+# Перепривʼязує звʼязані сутності від старого користувача до нового.
 async def _migrate_user_relations(session, source_user: User, target_user: User) -> None:
     if source_user.id == target_user.id:
         return
@@ -177,6 +182,7 @@ async def _migrate_user_relations(session, source_user: User, target_user: User)
         workout_class.trainer_id = target_user.id
 
 
+# Створює демонстраційний розклад занять для тренера.
 async def _ensure_schedule(session, trainer: User) -> None:
     first_start = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(days=1, hours=8)
     second_start = first_start + timedelta(days=1)
@@ -218,6 +224,7 @@ async def _ensure_schedule(session, trainer: User) -> None:
     await session.flush()
 
 
+# Створює демо-абонемент для клієнта, якщо його ще немає.
 async def _ensure_subscription(session, client: User, plan: MembershipPlan) -> None:
     result = await session.execute(select(Subscription).where(Subscription.user_id == client.id))
     if result.scalars().first():
@@ -238,6 +245,7 @@ async def _ensure_subscription(session, client: User, plan: MembershipPlan) -> N
     )
 
 
+# Створює демо-платіж для клієнта, якщо його ще немає.
 async def _ensure_payment(session, client: User, plan: MembershipPlan) -> None:
     result = await session.execute(select(Payment).where(Payment.user_id == client.id))
     if result.scalars().first():
@@ -256,6 +264,7 @@ async def _ensure_payment(session, client: User, plan: MembershipPlan) -> None:
     )
 
 
+# Привʼязує плани до старих абонементів без plan_id.
 async def _attach_plans_to_existing_subscriptions(session, plans: dict[str, MembershipPlan]) -> None:
     result = await session.execute(select(Subscription))
     subscriptions = result.scalars().all()
@@ -270,6 +279,7 @@ async def _attach_plans_to_existing_subscriptions(session, plans: dict[str, Memb
             subscription.plan_id = plans["dropin"].id
 
 
+# Запускає основний сценарій файла.
 def main() -> None:
     asyncio.run(seed_demo_data())
 

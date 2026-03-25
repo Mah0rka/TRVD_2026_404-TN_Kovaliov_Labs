@@ -1,10 +1,11 @@
-// Коротко: сторінка відображає інтерфейс для модуля звітів адміністрації.
+// Відображає аналітику доходів і популярності тренерів.
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getRevenueReport, getTrainerPopularity } from "../../../shared/api";
 
+// Показує графіки й показники для звітів адміністрації.
 export function ReportsPage() {
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();

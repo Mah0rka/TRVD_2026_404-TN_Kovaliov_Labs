@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля платежів користувача.
+// Показує історію платежів і фільтри для фінансових записів.
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../auth";
 import { getMyPayments, getPayments } from "../../../shared/api";
 
+// Показує історію платежів користувача або адміністративний реєстр.
 export function PaymentsPage() {
   const user = useAuthStore((state) => state.user);
   const isManagement = user?.role === "ADMIN" || user?.role === "OWNER";
@@ -57,6 +58,7 @@ export function PaymentsPage() {
     });
   }, [paymentsQuery.data, searchTerm]);
 
+  // Повертає локалізований статус платежу для таблиці.
   function getPaymentStatusLabel(status: string): string {
     if (status === "SUCCESS") return "Підтверджено";
     if (status === "PENDING") return "Очікує підтвердження";

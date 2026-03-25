@@ -1,4 +1,4 @@
-/* Коротко: стилі задають візуальну систему всього застосунку. */
+/* Стилі задають візуальну систему всього застосунку. */
 
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap");
 
@@ -296,15 +296,26 @@ a {
   gap: 12px;
 }
 
-.brand-badge {
-  width: 44px;
-  height: 44px;
+.brand-signature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: 72px;
+  height: auto;
+  max-height: 62px;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.brand-copy {
+  min-width: 0;
   display: grid;
-  place-items: center;
-  border-radius: 14px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--accent), #8f351e);
-  color: #fff;
+  gap: 2px;
 }
 
 .brand-title {
@@ -406,6 +417,7 @@ a {
 
 .sidebar-mobile-brand {
   justify-content: space-between;
+  gap: 16px;
 }
 
 .mobile-close-button {
@@ -2177,6 +2189,11 @@ a {
 }
 
 @media (max-width: 720px) {
+  .brand-logo {
+    width: 60px;
+    max-height: 52px;
+  }
+
   .shell-main,
   .marketing-page {
     padding: 16px;

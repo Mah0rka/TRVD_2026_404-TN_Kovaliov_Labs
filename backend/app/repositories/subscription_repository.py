@@ -1,4 +1,4 @@
-# Коротко: репозиторій інкапсулює доступ до даних для модуля абонементів.
+# Репозиторій ізолює читання та запис даних у базі.
 
 from datetime import datetime
 
@@ -11,15 +11,18 @@ from app.models.user import User
 
 
 class SubscriptionRepository:
+    # Ініціалізує внутрішній стан обʼєкта.
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    # Створює потрібні дані.
     async def create(self, subscription: Subscription) -> Subscription:
         self.session.add(subscription)
         await self.session.commit()
         await self.session.refresh(subscription)
         return subscription
 
+    # Повертає by id.
     async def get_by_id(self, subscription_id: str, include_deleted: bool = False) -> Subscription | None:
         statement = (
             select(Subscription)
@@ -38,6 +41,7 @@ class SubscriptionRepository:
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
+    # Повертає список by user.
     async def list_by_user(self, user_id: str, include_deleted: bool = False) -> list[Subscription]:
         statement = (
             select(Subscription)
@@ -59,12 +63,14 @@ class SubscriptionRepository:
         )
         return list(result.scalars().all())
 
+    # Повертає список by plan.
     async def list_by_plan(self, plan_id: str) -> list[Subscription]:
         result = await self.session.execute(
             select(Subscription).where(Subscription.plan_id == plan_id, Subscription.deleted_at.is_(None))
         )
         return list(result.scalars().all())
 
+    # Повертає список all.
     async def list_all(
         self,
         *,
@@ -90,6 +96,7 @@ class SubscriptionRepository:
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
+    # Повертає active by user.
     async def get_active_by_user(self, user_id: str) -> Subscription | None:
         result = await self.session.execute(
             select(Subscription)
@@ -109,6 +116,7 @@ class SubscriptionRepository:
         )
         return result.scalars().first()
 
+    # Повертає список expired candidates.
     async def list_expired_candidates(self, now: datetime) -> list[Subscription]:
         result = await self.session.execute(
             select(Subscription).where(
@@ -119,6 +127,7 @@ class SubscriptionRepository:
         )
         return list(result.scalars().all())
 
+    # Повертає список expiring between.
     async def list_expiring_between(self, start: datetime, end: datetime) -> list[Subscription]:
         result = await self.session.execute(
             select(Subscription)

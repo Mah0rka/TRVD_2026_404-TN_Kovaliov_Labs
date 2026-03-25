@@ -1,4 +1,4 @@
-// Коротко: сторінка відображає інтерфейс для модуля входу користувача.
+// Відображає форми входу та реєстрації користувача.
 
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import {
 import { login, register } from "../../../shared/api";
 import { getFieldErrors } from "../../../shared/lib/forms";
 
+// Показує вкладки входу й реєстрації для користувача.
 export function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
 
+  // Надсилає форму входу та оновлює auth-стан після успіху.
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -56,6 +58,7 @@ export function LoginPage() {
     }
   }
 
+  // Надсилає форму реєстрації та перемикає користувача у нову сесію.
   async function handleRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);

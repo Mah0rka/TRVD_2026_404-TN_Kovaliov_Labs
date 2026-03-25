@@ -1,4 +1,4 @@
-// Коротко: тести перевіряють сценарії модуля modules.
+// Тести перевіряють ключові сценарії цього модуля.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

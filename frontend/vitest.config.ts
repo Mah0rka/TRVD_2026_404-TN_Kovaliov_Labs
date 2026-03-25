@@ -1,4 +1,4 @@
-// Коротко: файл підтримує логіку модуля vitest.config.
+// Файл містить допоміжну логіку для цього модуля.
 
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
