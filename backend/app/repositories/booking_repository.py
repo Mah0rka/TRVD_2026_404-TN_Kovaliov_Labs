@@ -1,3 +1,5 @@
+# Коротко: репозиторій інкапсулює доступ до даних для модуля бронювань.
+
 from datetime import datetime
 
 from sqlalchemy import func, select

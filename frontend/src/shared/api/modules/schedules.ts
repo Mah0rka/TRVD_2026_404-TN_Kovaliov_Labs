@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля розкладу.
+
 import { z } from "zod";
 
 import type { Schedule, ScheduleAttendee } from "../core/contracts";

@@ -1,3 +1,5 @@
+// Коротко: модуль керує каркасом застосунку та глобальних провайдерів.
+
 import { PropsWithChildren, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 

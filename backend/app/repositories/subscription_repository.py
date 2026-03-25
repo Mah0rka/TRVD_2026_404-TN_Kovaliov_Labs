@@ -1,3 +1,5 @@
+# Коротко: репозиторій інкапсулює доступ до даних для модуля абонементів.
+
 from datetime import datetime
 
 from sqlalchemy import select

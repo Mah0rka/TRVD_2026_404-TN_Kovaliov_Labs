@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля звітів.
+
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 

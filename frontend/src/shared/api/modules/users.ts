@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля користувачів.
+
 import { z } from "zod";
 
 import type { CurrentUser, UserRole } from "../core/contracts";

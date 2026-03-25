@@ -1,3 +1,5 @@
+# Коротко: схеми описують DTO та валідацію для модуля автентифікації.
+
 from dataclasses import dataclass
 
 from pydantic import BaseModel, EmailStr, Field

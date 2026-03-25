@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля розкладу.
+
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,3 +1,5 @@
+// Коротко: допоміжний модуль містить утиліти для валідації.
+
 import { z } from "zod";
 
 export const loginSchema = z.object({

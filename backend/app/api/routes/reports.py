@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+# Коротко: маршрут обробляє HTTP-запити для модуля звітів.
+
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +21,7 @@ async def revenue(
     db: AsyncSession = Depends(get_db_session),
 ) -> RevenueReport:
     service = ReportService(db)
-    resolved_end = end_date or datetime.utcnow()
+    resolved_end = end_date or datetime.now(UTC)
     resolved_start = start_date or (resolved_end - timedelta(days=30))
     return await service.revenue_report(resolved_start, resolved_end)
 

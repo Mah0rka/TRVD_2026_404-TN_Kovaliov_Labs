@@ -1,3 +1,5 @@
+// Коротко: ядро API містить базову логіку для контрактів API.
+
 import { z } from "zod";
 
 export const userRoleSchema = z.enum(["CLIENT", "TRAINER", "ADMIN", "OWNER"]);

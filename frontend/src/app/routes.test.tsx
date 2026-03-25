@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля routes.
+
 import { appRouter } from "./routes";
 
 function collectRoutes(route: { children?: unknown[]; lazy?: () => Promise<unknown> }) {

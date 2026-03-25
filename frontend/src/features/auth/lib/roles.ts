@@ -1,3 +1,5 @@
+// Коротко: допоміжний модуль містить утиліти для ролей доступу.
+
 import type { CurrentUser, UserRole } from "../../../shared/api";
 
 type RoleAwareUser = Pick<CurrentUser, "role">;

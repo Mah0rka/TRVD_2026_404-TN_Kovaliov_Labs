@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля автентифікації.
+
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

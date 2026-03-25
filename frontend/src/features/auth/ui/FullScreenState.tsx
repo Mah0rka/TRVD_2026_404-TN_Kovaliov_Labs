@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля повноекранного стану.
+
 export function FullScreenState({ message }: { message: string }) {
   return (
     <main className="screen">

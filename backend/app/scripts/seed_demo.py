@@ -1,3 +1,5 @@
+# Коротко: скрипт підтримує службові операції для модуля демо-даних.
+
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
@@ -199,15 +201,19 @@ async def _ensure_schedule(session, trainer: User) -> None:
         },
     }
 
+    new_classes: list[WorkoutClass] = []
     for title, payload in definitions.items():
         result = await session.execute(select(WorkoutClass).where(WorkoutClass.title == title))
         workout_class = result.scalar_one_or_none()
         if not workout_class:
-            session.add(WorkoutClass(title=title, **payload))
+            new_classes.append(WorkoutClass(title=title, **payload))
             continue
 
         for field, value in payload.items():
             setattr(workout_class, field, value)
+
+    if new_classes:
+        session.add_all(new_classes)
 
     await session.flush()
 
@@ -244,6 +250,8 @@ async def _ensure_payment(session, client: User, plan: MembershipPlan) -> None:
             currency=plan.currency,
             status="SUCCESS",
             method="CARD",
+            purpose="SUBSCRIPTION",
+            description=f"Покупка абонемента: {plan.title}",
         )
     )
 

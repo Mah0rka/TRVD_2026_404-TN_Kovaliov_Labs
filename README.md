@@ -1,9 +1,51 @@
-## License
+# Fitness Club Management System
 
-This project is source-available.
+Вебзастосунок для керування фітнес-клубом з окремими модулями `backend` і `frontend`.
+Проєкт покриває сценарії автентифікації, ролей доступу, розкладу занять, бронювань,
+абонементів, платежів, звітів і фонових задач.
 
-You may view, fork, and modify the source code for personal or educational purposes.
+## Структура репозиторію
 
-Commercial use, selling, or offering this software as a service is prohibited without written permission from the author.
+- `backend` - FastAPI, SQLAlchemy 2.0, Alembic, Redis, Celery, pytest.
+- `frontend` - React 19, TypeScript, React Router, TanStack Query, Zustand, Vitest.
+- `Docs` - окрема технічна документація для бекенду й фронтенду.
+- `labs` - звіти до лабораторних робіт 1-5 та вихідні PDF з умовами.
+- `scripts` - скрипти швидкої локальної перевірки.
 
-For commercial licensing see COMMERCIAL_LICENSE.md
+## Швидкий старт
+
+### Запуск у Docker
+
+```bash
+docker compose up --build
+```
+
+Сервіси після старту:
+
+- frontend: `http://localhost:3000`
+- backend API: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
+- PostgreSQL: `localhost:5433`
+- Redis: `localhost:6379`
+
+### Локальні перевірки
+
+```powershell
+./scripts/test-backend.ps1
+./scripts/test-frontend.ps1
+./scripts/smoke-new-stack.ps1
+```
+
+## Документація
+
+- [Backend Guide](Docs/backend.md)
+- [Frontend Guide](Docs/frontend.md)
+- [Lab Reports Index](labs/README.md)
+
+## Ліцензія
+
+Цей репозиторій є source-available.
+
+- Перегляд, форк і модифікація дозволені для особистого та навчального використання.
+- Комерційне використання, продаж або надання як SaaS заборонені без письмового дозволу автора.
+- Деталі комерційного ліцензування наведені у `COMMERCIAL_LICENSE.md`.

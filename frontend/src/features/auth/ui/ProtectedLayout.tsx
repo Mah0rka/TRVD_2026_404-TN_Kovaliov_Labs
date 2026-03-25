@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля захищеної навігації.
+
 import { Navigate, Outlet } from "react-router-dom";
 
 import { AppShell } from "../../../shared/ui/AppShell";

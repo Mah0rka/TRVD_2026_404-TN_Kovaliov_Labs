@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля користувачів.
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля безпеки.
+
 from jose import jwt
 
 from app.core.config import settings

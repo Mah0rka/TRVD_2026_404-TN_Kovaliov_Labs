@@ -1,4 +1,6 @@
 #!/bin/sh
+# Коротко: скрипт запускає сервісні процеси для start-beat.
+
 set -e
 
 if [ "${RUN_DB_MIGRATIONS:-true}" = "true" ]; then

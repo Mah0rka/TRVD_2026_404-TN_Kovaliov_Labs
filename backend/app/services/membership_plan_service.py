@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля membership plan service.
+
 from fastapi import HTTPException, status
 
 from app.models.membership_plan import MembershipPlan

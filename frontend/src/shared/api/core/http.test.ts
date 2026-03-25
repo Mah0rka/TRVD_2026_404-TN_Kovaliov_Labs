@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля HTTP-клієнта.
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, request } from "./http";

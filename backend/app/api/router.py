@@ -1,3 +1,5 @@
+# Коротко: модуль готує HTTP-шар для маршрутизації.
+
 from fastapi import APIRouter
 
 from app.api.routes.auth import router as auth_router

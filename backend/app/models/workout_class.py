@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля workout class.
+
 import enum
 import uuid
 from datetime import datetime

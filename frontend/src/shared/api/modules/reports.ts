@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля звітів.
+
 import { z } from "zod";
 
 import type { RevenueReport, TrainerReport } from "../core/contracts";

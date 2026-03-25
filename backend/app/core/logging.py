@@ -1,3 +1,5 @@
+# Коротко: ядро містить інфраструктурну логіку для модуля логування.
+
 import logging
 
 from app.core.request_context import get_request_id

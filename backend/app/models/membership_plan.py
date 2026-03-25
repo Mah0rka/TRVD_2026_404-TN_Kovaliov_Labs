@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля планів абонементів.
+
 import uuid
 from decimal import Decimal
 

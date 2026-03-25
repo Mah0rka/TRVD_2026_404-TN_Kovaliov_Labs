@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля models.
+
 from app.models.base import Base
 from app.models.booking import Booking
 from app.models.membership_plan import MembershipPlan

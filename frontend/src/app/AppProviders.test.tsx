@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля глобальних провайдерів.
+
 import { screen } from "@testing-library/react";
 
 import { AppProviders } from "./AppProviders";

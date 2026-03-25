@@ -1,3 +1,5 @@
+// Коротко: модуль зберігає стан та події для стану застосунку.
+
 import { create } from "zustand";
 
 import type { CurrentUser } from "../../../shared/api";

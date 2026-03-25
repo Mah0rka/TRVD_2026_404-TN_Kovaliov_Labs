@@ -1,3 +1,5 @@
+// Коротко: модуль керує каркасом застосунку та routes.
+
 import { createBrowserRouter } from "react-router-dom";
 
 import {

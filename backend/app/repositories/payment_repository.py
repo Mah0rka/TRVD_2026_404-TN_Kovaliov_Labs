@@ -1,3 +1,5 @@
+# Коротко: репозиторій інкапсулює доступ до даних для модуля платежів.
+
 from datetime import datetime
 
 from sqlalchemy import select
@@ -40,7 +42,10 @@ class PaymentRepository:
     async def list_by_user(self, user_id: str) -> list[Payment]:
         result = await self.session.execute(
             select(Payment)
-            .where(Payment.user_id == user_id)
+            .where(
+                Payment.user_id == user_id,
+                Payment.purpose == "SUBSCRIPTION",
+            )
             .options(selectinload(Payment.user))
             .order_by(Payment.created_at.desc())
         )

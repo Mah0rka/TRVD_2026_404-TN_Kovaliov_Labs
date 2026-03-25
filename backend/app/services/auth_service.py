@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля автентифікації.
+
 from secrets import token_urlsafe
 from uuid import uuid4
 

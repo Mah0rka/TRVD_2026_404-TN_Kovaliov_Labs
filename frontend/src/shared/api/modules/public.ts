@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля публічних даних.
+
 import { z } from "zod";
 
 import type { ClubStats, MembershipPlan } from "../core/contracts";

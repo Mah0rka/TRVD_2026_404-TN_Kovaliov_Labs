@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля розкладу занять.
+
 import userEvent from "@testing-library/user-event";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";

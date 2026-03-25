@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля абонементів користувача.
+
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";

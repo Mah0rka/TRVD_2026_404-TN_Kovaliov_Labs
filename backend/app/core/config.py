@@ -1,3 +1,5 @@
+# Коротко: ядро містить інфраструктурну логіку для модуля конфігурації.
+
 from functools import lru_cache
 
 from pydantic import Field, model_validator

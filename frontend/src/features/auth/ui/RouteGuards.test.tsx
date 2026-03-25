@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля RouteGuards.
+
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";

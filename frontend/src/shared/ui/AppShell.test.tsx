@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля каркаса застосунку.
+
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
 import { Routes, Route } from "react-router-dom";

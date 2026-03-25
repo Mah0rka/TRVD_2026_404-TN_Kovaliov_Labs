@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля платежів.
+
 import { z } from "zod";
 
 import type { Payment } from "../core/contracts";

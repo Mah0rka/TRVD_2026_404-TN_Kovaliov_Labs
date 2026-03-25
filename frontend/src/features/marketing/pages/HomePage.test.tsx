@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля головної сторінки.
+
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor, within } from "@testing-library/react";
 import { vi } from "vitest";

@@ -1,3 +1,5 @@
+# Коротко: файл підтримує логіку модуля запуску застосунку.
+
 import logging
 
 from fastapi import FastAPI, HTTPException, Request, status

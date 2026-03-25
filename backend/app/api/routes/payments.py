@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля платежів.
+
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query

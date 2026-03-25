@@ -1,3 +1,5 @@
+# Коротко: ядро містить інфраструктурну логіку для модуля контексту запиту.
+
 from contextvars import ContextVar
 from uuid import uuid4
 

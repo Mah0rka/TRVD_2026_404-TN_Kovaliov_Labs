@@ -1,3 +1,5 @@
+// Коротко: файл підтримує логіку модуля конфігурації.
+
 import type { UserRole } from "../../shared/api";
 import {
   allRoles,

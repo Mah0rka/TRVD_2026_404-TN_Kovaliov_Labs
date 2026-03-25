@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля абонементів.
+
 import enum
 import uuid
 from datetime import datetime

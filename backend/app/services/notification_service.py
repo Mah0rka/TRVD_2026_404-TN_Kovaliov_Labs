@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля сповіщень.
+
 import logging
 from datetime import UTC, datetime, timedelta
 

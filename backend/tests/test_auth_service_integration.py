@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля автентифікації.
+
 from types import SimpleNamespace
 
 import pytest

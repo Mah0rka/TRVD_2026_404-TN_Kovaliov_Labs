@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля керування користувачами.
+
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 

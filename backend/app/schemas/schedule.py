@@ -1,3 +1,5 @@
+# Коротко: схеми описують DTO та валідацію для модуля розкладу.
+
 from datetime import datetime
 
 from decimal import Decimal

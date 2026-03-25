@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля стану сервісу.
+
 from fastapi import APIRouter
 from sqlalchemy import text
 

@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля бронювань.
+
 import { z } from "zod";
 
 import type { Booking } from "../core/contracts";

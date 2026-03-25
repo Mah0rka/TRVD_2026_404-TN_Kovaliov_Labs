@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля платежів.
+
 from decimal import Decimal
 
 import pytest

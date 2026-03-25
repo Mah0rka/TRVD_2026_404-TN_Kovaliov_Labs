@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля автентифікації.
+
 import type { CurrentUser } from "../core/contracts";
 import { authResponseSchema, userSchema } from "../core/contracts";
 import { request } from "../core/http";

@@ -1,3 +1,5 @@
+# Коротко: файл описує локальне оточення з контейнерами проєкту.
+
 services:
   postgres:
     image: postgres:15-alpine

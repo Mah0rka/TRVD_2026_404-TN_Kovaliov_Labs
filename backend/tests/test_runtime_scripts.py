@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля runtime scripts.
+
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 

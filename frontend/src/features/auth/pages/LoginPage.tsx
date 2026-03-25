@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля входу користувача.
+
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 

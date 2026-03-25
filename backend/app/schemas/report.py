@@ -1,3 +1,5 @@
+# Коротко: схеми описують DTO та валідацію для модуля звітів.
+
 from datetime import datetime
 
 from pydantic import BaseModel

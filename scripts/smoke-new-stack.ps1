@@ -1,3 +1,5 @@
+# Коротко: скрипт автоматизує локальну перевірку для smoke-new-stack.
+
 param(
     [string]$BaseUrl = "http://localhost:8000",
     [string]$Email = "client@example.com",

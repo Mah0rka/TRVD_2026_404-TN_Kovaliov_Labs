@@ -1,3 +1,5 @@
+# Коротко: скрипт підтримує службові операції для модуля ініціалізації бази даних.
+
 import asyncio
 import logging
 import subprocess

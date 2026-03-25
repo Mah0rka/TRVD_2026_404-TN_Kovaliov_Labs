@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля звітів.
+
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select

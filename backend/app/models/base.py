@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля base.
+
 from datetime import datetime
 
 from sqlalchemy import DateTime, func

@@ -1,3 +1,5 @@
+// Коротко: файл підтримує логіку модуля експорту модуля.
+
 export { hasSessionHint } from "./lib/session";
 export {
   allRoles,

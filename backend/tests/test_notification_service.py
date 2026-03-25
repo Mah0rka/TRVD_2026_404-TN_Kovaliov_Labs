@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля сповіщень.
+
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock

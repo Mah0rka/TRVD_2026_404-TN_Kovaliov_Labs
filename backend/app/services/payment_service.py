@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля платежів.
+
 from datetime import UTC, datetime
 from decimal import Decimal
 

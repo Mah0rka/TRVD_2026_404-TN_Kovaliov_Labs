@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля публічної навігації.
+
 import { Navigate, Outlet } from "react-router-dom";
 
 import { useAuthStore } from "../model/store";

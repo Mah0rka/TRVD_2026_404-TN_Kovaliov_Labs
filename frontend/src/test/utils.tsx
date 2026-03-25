@@ -1,3 +1,5 @@
+// Коротко: тестова утиліта підтримує перевірки модуля utils.
+
 import type { PropsWithChildren, ReactElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";

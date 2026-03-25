@@ -1,3 +1,5 @@
+# Коротко: репозиторій інкапсулює доступ до даних для модуля користувачів.
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

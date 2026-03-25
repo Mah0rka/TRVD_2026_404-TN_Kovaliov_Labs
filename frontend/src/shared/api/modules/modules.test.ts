@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля modules.
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestMock = vi.fn();

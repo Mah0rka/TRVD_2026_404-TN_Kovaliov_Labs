@@ -1,4 +1,6 @@
 #!/bin/sh
+# Коротко: скрипт запускає сервісні процеси для start-api.
+
 set -e
 
 if [ "${RUN_DB_MIGRATIONS:-true}" = "true" ]; then

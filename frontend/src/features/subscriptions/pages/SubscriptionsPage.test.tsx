@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля абонементів користувача.
+
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";

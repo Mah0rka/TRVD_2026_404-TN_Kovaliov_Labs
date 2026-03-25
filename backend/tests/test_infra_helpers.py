@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля infra helpers.
+
 import logging
 from types import SimpleNamespace
 

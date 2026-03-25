@@ -1,3 +1,5 @@
+# Коротко: скрипт автоматизує локальну перевірку для test-backend.
+
 $ErrorActionPreference = "Stop"
 
 Push-Location "$PSScriptRoot\..\backend"

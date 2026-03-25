@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля платежів користувача.
+
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";

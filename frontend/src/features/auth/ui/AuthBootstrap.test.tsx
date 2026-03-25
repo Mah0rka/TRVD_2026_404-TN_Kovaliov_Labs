@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля відновлення сесії.
+
 import type { ReactNode } from "react";
 import { screen, waitFor } from "@testing-library/react";
 import { render } from "@testing-library/react";

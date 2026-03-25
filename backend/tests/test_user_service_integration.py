@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля користувачів.
+
 import pytest
 from fastapi import HTTPException
 

@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля бронювань користувача.
+
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 

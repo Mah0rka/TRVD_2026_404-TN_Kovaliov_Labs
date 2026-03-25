@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля звітів адміністрації.
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 

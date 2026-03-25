@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля публічних даних.
+
 from datetime import UTC, datetime, timedelta
 
 import pytest

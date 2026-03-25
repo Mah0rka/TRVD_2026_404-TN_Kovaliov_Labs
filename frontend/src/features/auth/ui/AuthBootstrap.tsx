@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля відновлення сесії.
+
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

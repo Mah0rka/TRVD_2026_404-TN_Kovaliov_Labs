@@ -1,3 +1,5 @@
+// Коротко: допоміжний модуль містить утиліти для допоміжних форм.
+
 import type { ZodError } from "zod";
 
 export function getFieldErrors(error: ZodError): Record<string, string> {

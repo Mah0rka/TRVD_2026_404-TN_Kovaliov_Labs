@@ -1,3 +1,5 @@
+# Коротко: репозиторій інкапсулює доступ до даних для модуля membership plan repository.
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

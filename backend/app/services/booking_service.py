@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля бронювань.
+
 from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 

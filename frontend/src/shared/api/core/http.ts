@@ -1,3 +1,5 @@
+// Коротко: ядро API містить базову логіку для HTTP-клієнта.
+
 const configuredBaseUrl = import.meta.env.VITE_API_URL?.trim() ?? "";
 const API_BASE_URL =
   import.meta.env.DEV && typeof window !== "undefined" && window.location.port === "3000"

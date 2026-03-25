@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля api route units.
+
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 

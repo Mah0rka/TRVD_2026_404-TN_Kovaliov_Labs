@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля каркаса застосунку.
+
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 

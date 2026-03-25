@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля публічних даних.
+
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select

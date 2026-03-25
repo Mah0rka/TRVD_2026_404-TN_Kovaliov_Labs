@@ -1,3 +1,5 @@
+# Коротко: ядро містить інфраструктурну логіку для модуля безпеки.
+
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 

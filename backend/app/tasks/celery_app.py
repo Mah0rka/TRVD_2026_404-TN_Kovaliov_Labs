@@ -1,3 +1,5 @@
+# Коротко: модуль описує фонові задачі для фонових задач.
+
 import asyncio
 
 from celery import Celery

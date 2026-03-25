@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля ролей доступу.
+
 import { userHasRole } from "./roles";
 
 describe("userHasRole", () => {

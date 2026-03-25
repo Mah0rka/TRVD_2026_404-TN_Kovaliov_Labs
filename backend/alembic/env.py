@@ -1,3 +1,5 @@
+# Коротко: файл налаштовує міграції бази даних для env.
+
 from logging.config import fileConfig
 
 from alembic import context

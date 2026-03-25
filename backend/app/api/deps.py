@@ -1,3 +1,5 @@
+# Коротко: модуль готує HTTP-шар для залежностей API.
+
 from collections.abc import AsyncGenerator
 
 from fastapi import Cookie, Depends, HTTPException, Request, status

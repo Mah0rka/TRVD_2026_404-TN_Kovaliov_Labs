@@ -1,3 +1,5 @@
+// Коротко: файл підтримує логіку модуля запуску застосунку.
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 

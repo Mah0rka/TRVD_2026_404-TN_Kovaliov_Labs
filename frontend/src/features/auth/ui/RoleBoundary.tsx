@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля рольового доступу.
+
 import { Navigate, Outlet } from "react-router-dom";
 
 import type { UserRole } from "../../../shared/api";

@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля платежів користувача.
+
 import { screen } from "@testing-library/react";
 import { vi } from "vitest";
 

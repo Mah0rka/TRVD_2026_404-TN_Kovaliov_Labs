@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля маршрутизації.
+
 import { screen } from "@testing-library/react";
 import { vi } from "vitest";
 

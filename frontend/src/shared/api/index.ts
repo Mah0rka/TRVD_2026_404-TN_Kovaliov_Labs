@@ -1,3 +1,5 @@
+// Коротко: шар API експортує функції для експорту модуля.
+
 export * from "./core/contracts";
 export * from "./core/http";
 export * from "./modules/auth";

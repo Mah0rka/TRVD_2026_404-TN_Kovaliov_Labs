@@ -1,3 +1,5 @@
+// Коротко: компонент керує UI-логікою для модуля виходу користувача.
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 

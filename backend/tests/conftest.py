@@ -1,3 +1,5 @@
+# Коротко: тести перевіряють сценарії модуля conftest.
+
 from collections.abc import AsyncIterator
 
 import pytest_asyncio

@@ -1,3 +1,5 @@
+# Коротко: маршрут обробляє HTTP-запити для модуля абонементів.
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 

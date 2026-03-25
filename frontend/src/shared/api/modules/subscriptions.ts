@@ -1,3 +1,5 @@
+// Коротко: модуль виконує API-запити для модуля абонементів.
+
 import { z } from "zod";
 
 import type { MembershipPlan, Subscription } from "../core/contracts";

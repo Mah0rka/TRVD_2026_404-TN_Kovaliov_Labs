@@ -1,3 +1,5 @@
+# Коротко: ядро містить інфраструктурну логіку для модуля cookies.
+
 from dataclasses import dataclass
 
 from fastapi import Response

@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля експорту модуля.
+
 import * as api from "./index";
 import { apiRequest, getErrorMessage } from "./core/http";
 import { authApi } from "./modules/auth";

@@ -1,3 +1,5 @@
+# Коротко: модель описує сутності домену для модуля платежів.
+
 import uuid
 from decimal import Decimal
 
@@ -5,6 +7,9 @@ from sqlalchemy import ForeignKey, Index, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+
+"""Модель зберігає транзакції за абонементи та додаткові послуги клубу."""
 
 
 class Payment(Base, TimestampMixin):
@@ -17,7 +22,7 @@ class Payment(Base, TimestampMixin):
     currency: Mapped[str] = mapped_column(String(8), default="UAH")
     status: Mapped[str] = mapped_column(String(32))
     method: Mapped[str] = mapped_column(String(32))
-    purpose: Mapped[str] = mapped_column(String(32), default="SUBSCRIPTION")
+    purpose: Mapped[str] = mapped_column(String(32), default="GENERAL")
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     booking_class_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 

@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля профілю користувача.
+
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";

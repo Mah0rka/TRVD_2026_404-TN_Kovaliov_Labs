@@ -1,3 +1,5 @@
+// Коротко: сторінка відображає інтерфейс для модуля занять тренера.
+
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 

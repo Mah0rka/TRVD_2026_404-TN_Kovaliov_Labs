@@ -1,3 +1,5 @@
+# Коротко: міграція фіксує зміну схеми для модуля 20260324 0005 workout class pricing.
+
 """workout class pricing and booking rules support
 
 Revision ID: 20260324_0005

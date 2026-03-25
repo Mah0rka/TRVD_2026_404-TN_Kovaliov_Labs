@@ -1,3 +1,5 @@
+# Коротко: міграція фіксує зміну схеми для модуля платежів.
+
 """payment booking checkout metadata
 
 Revision ID: 20260324_0006

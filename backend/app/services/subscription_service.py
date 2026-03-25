@@ -1,3 +1,5 @@
+# Коротко: сервіс містить бізнес-логіку модуля абонементів.
+
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status

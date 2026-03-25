@@ -1,3 +1,5 @@
+# Коротко: міграція фіксує зміну схеми для модуля абонементів.
+
 """subscription restore audit and plan visibility
 
 Revision ID: 20260324_0004

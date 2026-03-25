@@ -1,3 +1,5 @@
+# Коротко: міграція фіксує зміну схеми для модуля 20260323 0002 membership plans.
+
 """Add membership plans
 
 Revision ID: 20260323_0002

@@ -1,3 +1,5 @@
+// Коротко: тести перевіряють сценарії модуля експорту модуля.
+
 import * as authExports from "./index";
 import { hasSessionHint } from "./lib/session";
 import {
