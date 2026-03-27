@@ -50,6 +50,7 @@ export function MyClassesPage() {
 
   const visibleClasses = useMemo(() => {
     const classes = classesQuery.data ?? [];
+    // Один і той самий набір занять розкладаємо на активні, очікувані та історичні списки.
     const activeClasses = classes
       .filter((item) => !hasSessionEnded(item.end_time))
       .sort((left, right) => +new Date(left.start_time) - +new Date(right.start_time));
@@ -72,6 +73,7 @@ export function MyClassesPage() {
   }, [classesQuery.data, isManagement, view]);
 
   useEffect(() => {
+    // Тримаємо вибір синхронним із поточним табом, щоб права панель не лишалась порожньою.
     if (!visibleClasses.length) {
       setSelectedClassId(null);
       return;
@@ -91,6 +93,7 @@ export function MyClassesPage() {
     setCompletionComment(selectedClass?.completion_comment ?? "");
   }, [selectedClass?.completion_comment, selectedClass?.id]);
 
+  // Завершення можна підтверджувати лише після фактичного закінчення заняття.
   const canConfirmCompletion =
     Boolean(selectedClass) &&
     Boolean(user) &&

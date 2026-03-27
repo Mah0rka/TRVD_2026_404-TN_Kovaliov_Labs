@@ -94,6 +94,7 @@ class ScheduleService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостатньо прав доступу")
 
         now = datetime.now(UTC)
+        # Нормалізуємо час завершення, щоб коректно порівнювати aware/naive datetime.
         class_end = workout_class.end_time
         if class_end.tzinfo is None:
             class_end = class_end.replace(tzinfo=UTC)
@@ -103,6 +104,7 @@ class ScheduleService:
                 detail="Заняття можна підтвердити лише після завершення",
             )
 
+        # Перше підтвердження фіксує час, повторне дозволяє оновити коментар без створення дубля.
         workout_class.completed_at = workout_class.completed_at or now
         workout_class.completed_by = current_user
         comment = payload.comment.strip() if payload.comment else None

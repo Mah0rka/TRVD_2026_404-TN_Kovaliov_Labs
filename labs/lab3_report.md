@@ -22,7 +22,7 @@
 ### Service Layer
 
 - `AuthService` керує register/login/refresh/logout.
-- `ScheduleService` відповідає за CRUD розкладу.
+- `ScheduleService` відповідає за CRUD розкладу, список класів тренера та підтвердження завершення заняття.
 - `BookingService` перевіряє `capacity`, дублікати та правила скасування.
 - `SubscriptionService` обробляє покупку, freeze та management-сценарії.
 - `ReportService` формує фінансові та операційні звіти.
@@ -49,7 +49,7 @@ FastAPI `Depends(...)` використовується для:
 |---|---|
 | `/auth` | `POST /register`, `POST /login`, `POST /refresh`, `POST /logout`, `GET /me` |
 | `/users` | `GET /profile`, `PATCH /profile`, `GET /`, `POST /`, `PATCH /{user_id}`, `DELETE /{user_id}` |
-| `/schedules` | `POST /`, `GET /`, `GET /my-classes`, `GET /{class_id}/attendees`, `PATCH /{class_id}`, `DELETE /{class_id}` |
+| `/schedules` | `POST /`, `GET /`, `GET /my-classes`, `GET /{class_id}/attendees`, `PATCH /{class_id}/complete`, `PATCH /{class_id}`, `DELETE /{class_id}` |
 | `/bookings` | `POST /{class_id}`, `POST /{class_id}/checkout`, `POST /payments/{payment_id}/confirm`, `PATCH /{booking_id}/cancel`, `GET /my-bookings` |
 | `/subscriptions` | `GET /plans`, `POST /purchase`, `PATCH /{subscription_id}/freeze`, `GET /my-subscriptions`, management CRUD |
 | `/payments` | `POST /checkout`, `GET /my-payments`, `GET /` |
@@ -65,9 +65,14 @@ FastAPI `Depends(...)` використовується для:
   - `AuthPayload`
   - `UserRead`
   - `ScheduleRead`
+  - `ScheduleCompleteRequest`
   - `SubscriptionRead`
   - `PaymentRead`
   - `RevenueReport`
+
+`ScheduleRead` у поточній реалізації також повертає службові поля
+`completed_at`, `completion_comment` і `completed_by`, що дає фронтенду змогу
+розділяти історію занять і непідтверджені завершені класи.
 
 ## Приклад реалізації потоку
 
@@ -78,6 +83,14 @@ FastAPI `Depends(...)` використовується для:
 5. Репозиторії та ORM зберігають зміни в PostgreSQL.
 6. API повертає DTO `SubscriptionRead`.
 
+Окремий приклад management flow для занять:
+
+1. Тренер або менеджмент відкриває завершене заняття.
+2. Фронтенд викликає `PATCH /schedules/{class_id}/complete`.
+3. `ScheduleService` перевіряє роль та факт завершення за `end_time`.
+4. У `WorkoutClass` зберігаються `completed_at`, `completed_by_id` і коментар.
+5. API повертає оновлений `ScheduleRead` для історії занять.
+
 ## Інструменти тестування
 
 - `pytest` для інтеграційних та unit-тестів.
@@ -86,8 +99,8 @@ FastAPI `Depends(...)` використовується для:
 
 Актуальний результат перевірки на 2026-03-25:
 
-- `50/50` backend-тестів проходять успішно.
-- покриття коду бекенду: `87%`.
+- `56/56` backend-тестів проходять успішно.
+- покриття коду бекенду: `86%`.
 
 ## Короткі відповіді для захисту
 

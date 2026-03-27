@@ -5,7 +5,7 @@
 `frontend` - це SPA на `React 19 + TypeScript`, яка працює поверх захищеного API.
 Клієнтська частина забезпечує логін, відновлення сесії, захищені маршрути,
 перегляд розкладу, бронювання, роботу з абонементами, оплатами, звітами та
-адміністративними сторінками.
+адміністративними сторінками, а також історію і підтвердження завершених занять.
 
 ## Технологічний стек
 
@@ -41,7 +41,7 @@
 | `/dashboard/bookings` | мої записи | client |
 | `/dashboard/subscriptions` | абонементи | client, admin, owner |
 | `/dashboard/payments` | історія оплат | client, admin, owner |
-| `/dashboard/my-classes` | заняття тренера | trainer |
+| `/dashboard/my-classes` | заняття тренера, історія класів і підтвердження завершення | trainer, admin, owner |
 | `/dashboard/users` | керування учасниками | admin, owner |
 | `/dashboard/reports` | аналітика | admin, owner |
 
@@ -67,6 +67,7 @@
 - Контракти API валідовані через `Zod`.
 - Навігація адаптується під роль користувача.
 - CRUD-сценарії мають інвалідацію запитів через `TanStack Query`.
+- Кожна dashboard-сторінка використовує один основний заголовок і коротке пояснення без дубльованих шапок.
 
 ## Запуск
 
@@ -94,8 +95,8 @@ npm run dev
 
 Актуальний стан перевірки на 2026-03-25:
 
-- `60/60` frontend-тестів проходять успішно.
-- покриття фронтенду: `85.92%`.
+- `66/66` frontend-тестів проходять успішно.
+- покриття фронтенду: `86.3%`.
 
 ## Корисні точки входу
 
@@ -104,3 +105,4 @@ npm run dev
 - `frontend/src/features/auth/ui/AuthBootstrap.tsx` - відновлення сесії.
 - `frontend/src/shared/api/core/http.ts` - базовий HTTP-клієнт.
 - `frontend/src/features/users/pages/UsersPage.tsx` - найбільший management CRUD flow.
+- `frontend/src/features/classes/pages/MyClassesPage.tsx` - тренерський і management flow для завершених занять.

@@ -41,7 +41,7 @@ flowchart TD
 | `BookingsPage` | список моїх бронювань |
 | `SubscriptionsPage` | абонементи клієнта і management flow |
 | `PaymentsPage` | історія оплат |
-| `MyClassesPage` | сторінка тренера |
+| `MyClassesPage` | сторінка класів для тренера й менеджменту |
 | `UsersPage` | керування користувачами й підписками |
 | `ReportsPage` | доходи і популярність тренерів |
 
@@ -67,7 +67,7 @@ flowchart TD
 |---|---|
 | `/dashboard/*` | лише авторизований користувач |
 | `/dashboard/bookings` | лише `CLIENT` |
-| `/dashboard/my-classes` | лише `TRAINER` |
+| `/dashboard/my-classes` | `TRAINER`, `ADMIN`, `OWNER` |
 | `/dashboard/users` | лише `ADMIN` або `OWNER` |
 | `/dashboard/reports` | лише `ADMIN` або `OWNER` |
 
@@ -80,6 +80,7 @@ flowchart TD
 | Subscriptions | купівля, freeze, issue, edit, restore, delete |
 | Bookings | create, cancel, підтвердження оплати extra-class |
 | Payments | перегляд історії клієнта та реєстру платежів |
+| Classes | історія занять, список учасників, підтвердження завершення з коментарем |
 
 ## UX та обробка помилок
 
@@ -88,6 +89,7 @@ flowchart TD
 - Zod-контракти для перевірки структури відповіді API;
 - повідомлення про втрату сесії через подію `fcms:auth-expired`;
 - інвалідація кешу після мутацій через `TanStack Query`.
+- dashboard-сторінки спрощені до одного головного заголовка й пояснення без дубльованих шапок.
 
 ## Результати тестування
 
@@ -95,8 +97,8 @@ flowchart TD
 
 Актуальний стан на 2026-03-25:
 
-- `60/60` frontend-тестів проходять успішно;
-- покриття фронтенду: `85.92%`.
+- `66/66` frontend-тестів проходять успішно;
+- покриття фронтенду: `86.3%`.
 
 ## Короткі відповіді для захисту
 

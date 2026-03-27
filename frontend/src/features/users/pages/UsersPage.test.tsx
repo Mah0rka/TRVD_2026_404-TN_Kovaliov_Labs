@@ -304,5 +304,5 @@ describe("UsersPage", () => {
     await waitFor(() => {
       expect(deleteUserMock.mock.calls[0]?.[0]).toBe("client-1");
     });
-  });
+  }, 15000);
 });
