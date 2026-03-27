@@ -1,10 +1,7 @@
 // Модуль описує базову логіку клієнтського API-шару.
 
 const configuredBaseUrl = import.meta.env.VITE_API_URL?.trim() ?? "";
-const API_BASE_URL =
-  import.meta.env.DEV && typeof window !== "undefined" && window.location.port === "3000"
-    ? ""
-    : configuredBaseUrl;
+const API_BASE_URL = import.meta.env.DEV ? "" : configuredBaseUrl;
 export const AUTH_EXPIRED_EVENT = "fcms:auth-expired";
 
 let refreshPromise: Promise<boolean> | null = null;

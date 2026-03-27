@@ -11,14 +11,14 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       host: true,
-      port: 3000,
+      port: 3001,
       watch: {
         usePolling: true,
         interval: 250
       },
       hmr: {
         host: "localhost",
-        port: 3000
+        port: 3001
       },
       proxy: {
         "/auth": {

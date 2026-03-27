@@ -73,7 +73,7 @@ services:
 
   backend-worker:
     image: fcms-app:prod
-    command: /app/scripts/start-worker.sh
+    command: ["/app/scripts/start-worker.sh"]
     environment:
       APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}
@@ -99,7 +99,7 @@ services:
 
   backend-beat:
     image: fcms-app:prod
-    command: /app/scripts/start-beat.sh
+    command: ["/app/scripts/start-beat.sh"]
     environment:
       APP_ENV: ${APP_ENV}
       DATABASE_URL: ${DATABASE_URL}

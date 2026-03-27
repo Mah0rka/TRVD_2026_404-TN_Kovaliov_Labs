@@ -1,5 +1,5 @@
 #!/bin/sh
-# Коротко: скрипт запускає сервісні процеси для start-beat.
+# Starts the Celery beat process.
 
 set -e
 

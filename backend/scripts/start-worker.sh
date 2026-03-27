@@ -1,5 +1,5 @@
 #!/bin/sh
-# Коротко: скрипт запускає сервісні процеси для start-worker.
+# Starts the Celery worker process.
 
 set -e
 

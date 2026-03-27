@@ -30,7 +30,8 @@ RUN poetry config virtualenvs.create false && poetry install --only main --no-in
 COPY backend/ ./
 COPY --from=frontend-build /frontend/dist /app/frontend-dist
 
-RUN chmod +x /app/scripts/*.sh
+RUN find /app/scripts -type f -name "*.sh" -exec sed -i 's/\r$//' {} \; \
+    && chmod +x /app/scripts/*.sh
 
 EXPOSE 8000
 

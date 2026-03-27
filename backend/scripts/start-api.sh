@@ -1,5 +1,5 @@
 #!/bin/sh
-# Коротко: скрипт запускає сервісні процеси для start-api.
+# Starts the backend API process.
 
 set -e
 

@@ -200,6 +200,18 @@ a {
   padding: 14px 16px;
 }
 
+.error-trace {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
 .tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
