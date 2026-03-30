@@ -38,6 +38,11 @@ async def test_user_service_can_create_filter_and_update_users(db_session):
     assert len(admins) == 1
     assert admins[0].email == "admin-flow@example.com"
 
+    paginated_admins = await service.list_users_page(page=1, page_size=1, role=UserRole.ADMIN)
+    assert paginated_admins.total == 1
+    assert paginated_admins.total_pages == 1
+    assert paginated_admins.items[0].email == "admin-flow@example.com"
+
     updated_admin = await service.update_user(
         created_admin.id,
         UserAdminUpdate(first_name="Updated", phone="+380991112233", role=UserRole.OWNER),

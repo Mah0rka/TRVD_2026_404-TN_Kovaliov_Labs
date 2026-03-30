@@ -33,11 +33,33 @@ class UserRepository:
         result = await self.session.execute(select(func.count()).select_from(User))
         return int(result.scalar_one())
 
+    # Підраховує кількість користувачів з необов'язковим фільтром за роллю.
+    async def count_filtered(self, role: UserRole | None = None) -> int:
+        statement = select(func.count()).select_from(User)
+        if role:
+            statement = statement.where(User.role == role)
+        result = await self.session.execute(statement)
+        return int(result.scalar_one())
+
     # Повертає список all.
     async def list_all(self, role: UserRole | None = None) -> list[User]:
         statement = select(User).order_by(User.created_at.desc())
         if role:
             statement = statement.where(User.role == role)
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
+    # Повертає сторінку користувачів із фільтрацією за роллю.
+    async def list_page(
+        self,
+        page: int,
+        page_size: int,
+        role: UserRole | None = None,
+    ) -> list[User]:
+        statement = select(User).order_by(User.created_at.desc())
+        if role:
+            statement = statement.where(User.role == role)
+        statement = statement.offset((page - 1) * page_size).limit(page_size)
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 

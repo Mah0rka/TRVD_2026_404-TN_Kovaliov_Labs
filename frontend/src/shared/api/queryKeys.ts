@@ -60,6 +60,8 @@ export const queryKeys = {
   users: {
     root: () => ["users"] as const,
     all: () => ["users", "all"] as const,
-    list: (role?: string | null) => ["users", "list", role ?? "ALL"] as const
+    list: (role?: string | null) => ["users", "list", role ?? "ALL"] as const,
+    page: (role?: string | null, page = 1, pageSize = 10) =>
+      ["users", "page", role ?? "ALL", page, pageSize] as const
   }
 };

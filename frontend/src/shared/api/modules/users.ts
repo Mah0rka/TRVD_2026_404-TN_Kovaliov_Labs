@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 
-import type { CurrentUser, UserRole } from "../core/contracts";
-import { userSchema } from "../core/contracts";
+import type { CurrentUser, PaginatedUsers, UserRole } from "../core/contracts";
+import { paginatedUsersSchema, userSchema } from "../core/contracts";
 import { request } from "../core/http";
 
 // Надсилає на бекенд зміни профілю поточного користувача.
@@ -32,6 +32,26 @@ export async function getUsers(role?: UserRole): Promise<CurrentUser[]> {
   });
 
   return z.array(userSchema).parse(data);
+}
+
+// Отримує сторінку користувачів для клієнтської пагінації.
+export async function getUsersPage(input?: {
+  role?: UserRole;
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedUsers> {
+  const params = new URLSearchParams();
+  if (input?.role) {
+    params.set("role", input.role);
+  }
+  params.set("page", String(input?.page ?? 1));
+  params.set("page_size", String(input?.pageSize ?? 10));
+
+  const data = await request<unknown>(`/users/paginated?${params.toString()}`, {
+    method: "GET"
+  });
+
+  return paginatedUsersSchema.parse(data);
 }
 
 // Створює користувача через API адмін-панелі.

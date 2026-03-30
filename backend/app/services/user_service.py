@@ -1,12 +1,14 @@
 # Сервіс інкапсулює бізнес-правила та координує роботу репозиторіїв.
 
+import math
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models.user import User
 from app.models.user import UserRole
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate
+from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserListPage, UserProfileUpdate, UserRead
 
 
 class UserService:
@@ -18,6 +20,24 @@ class UserService:
     # Повертає список користувачів з необовʼязковою фільтрацією за роллю.
     async def list_users(self, role: UserRole | None = None) -> list[User]:
         return await self.repository.list_all(role)
+
+    # Повертає сторінку користувачів з метаданими пагінації.
+    async def list_users_page(
+        self,
+        page: int,
+        page_size: int,
+        role: UserRole | None = None,
+    ) -> UserListPage:
+        total = await self.repository.count_filtered(role)
+        users = await self.repository.list_page(page=page, page_size=page_size, role=role)
+        total_pages = max(1, math.ceil(total / page_size)) if total else 1
+        return UserListPage(
+            items=[UserRead.model_validate(user) for user in users],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
 
     # Оновлює особисті дані поточного користувача.
     async def update_profile(self, user: User, payload: UserProfileUpdate) -> User:

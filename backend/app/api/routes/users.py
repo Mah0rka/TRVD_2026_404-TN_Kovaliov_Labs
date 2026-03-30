@@ -20,7 +20,7 @@ from app.api.docs import (
 )
 from app.api.deps import get_current_user, get_db_session, require_roles
 from app.models.user import User, UserRole
-from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate, UserRead
+from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserListPage, UserProfileUpdate, UserRead
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -93,6 +93,45 @@ async def list_users(
     service = UserService(db)
     users = await service.list_users(role)
     return [UserRead.model_validate(user) for user in users]
+
+
+# Повертає сторінку користувачів для клієнтської пагінації.
+@router.get(
+    "/paginated",
+    response_model=UserListPage,
+    summary="Отримати сторінку користувачів",
+    description="Повертає сторінку адміністративного списку користувачів з метаданими пагінації.",
+    responses=merge_responses(
+        {
+            200: response_example(
+                "Сторінка користувачів.",
+                {
+                    "items": [USER_EXAMPLE],
+                    "total": 37,
+                    "page": 2,
+                    "page_size": 10,
+                    "total_pages": 4,
+                },
+            )
+        },
+        AUTH_REQUIRED_RESPONSE,
+        PERMISSION_DENIED_RESPONSE,
+        VALIDATION_ERROR_RESPONSE,
+    ),
+)
+async def list_users_paginated(
+    role: UserRole | None = Query(
+        default=None,
+        description="Необов'язковий фільтр за роллю користувача.",
+        examples=["TRAINER"],
+    ),
+    page: int = Query(default=1, ge=1, description="Номер сторінки, починаючи з 1."),
+    page_size: int = Query(default=10, ge=1, le=100, description="Кількість записів на сторінці."),
+    _: User = Depends(require_roles(UserRole.ADMIN, UserRole.OWNER)),
+    db: AsyncSession = Depends(get_db_session),
+) -> UserListPage:
+    service = UserService(db)
+    return await service.list_users_page(page=page, page_size=page_size, role=role)
 
 
 # Створює користувача з адмінського інтерфейсу.

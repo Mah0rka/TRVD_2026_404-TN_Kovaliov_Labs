@@ -30,7 +30,7 @@ from app.schemas.subscription import (
     SubscriptionPurchaseRequest,
     SubscriptionRead,
 )
-from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserProfileUpdate, UserRead
+from app.schemas.user import UserAdminCreate, UserAdminUpdate, UserListPage, UserProfileUpdate, UserRead
 
 
 # Перевіряє, що make request працює коректно.
@@ -265,6 +265,16 @@ async def test_user_routes(monkeypatch):
         async def list_users(self, role):
             return [make_user(role or UserRole.CLIENT)]
 
+        # Повертає сторінку користувачів з метаданими пагінації.
+        async def list_users_page(self, page, page_size, role):
+            return UserListPage(
+                items=[UserRead.model_validate(make_user(role or UserRole.CLIENT))],
+                total=1,
+                page=page,
+                page_size=page_size,
+                total_pages=1,
+            )
+
         # Створює користувача з адмінського інтерфейсу.
         async def create_user(self, payload):
             return make_user(payload.role)
@@ -283,6 +293,10 @@ async def test_user_routes(monkeypatch):
         await users.update_profile(UserProfileUpdate(first_name="Neo"), current_user, object())
     ).first_name == "Test"
     assert len(await users.list_users(UserRole.TRAINER, make_user(UserRole.ADMIN), object())) == 1
+    paginated = await users.list_users_paginated(UserRole.TRAINER, 2, 5, make_user(UserRole.ADMIN), object())
+    assert paginated.page == 2
+    assert paginated.page_size == 5
+    assert paginated.total == 1
 
     created = await users.create_user(
         UserAdminCreate(

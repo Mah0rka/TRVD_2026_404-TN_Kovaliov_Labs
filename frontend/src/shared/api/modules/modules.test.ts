@@ -36,6 +36,7 @@ import {
   getSubscriptions,
   getTrainerPopularity,
   getUsers,
+  getUsersPage,
   login,
   logout,
   purchaseSubscription,
@@ -234,6 +235,20 @@ describe("api modules", () => {
     requestMock.mockResolvedValueOnce([currentUser]);
     await getUsers("CLIENT");
     expect(requestMock).toHaveBeenNthCalledWith(2, "/users?role=CLIENT", { method: "GET" });
+
+    requestMock.mockResolvedValueOnce({
+      items: [currentUser],
+      total: 1,
+      page: 2,
+      page_size: 5,
+      total_pages: 1
+    });
+    await getUsersPage({ role: "CLIENT", page: 2, pageSize: 5 });
+    expect(requestMock).toHaveBeenNthCalledWith(
+      3,
+      "/users/paginated?role=CLIENT&page=2&page_size=5",
+      { method: "GET" }
+    );
 
     requestMock.mockResolvedValueOnce(currentUser);
     await createUser({

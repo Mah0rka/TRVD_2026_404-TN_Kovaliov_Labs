@@ -14,4 +14,13 @@ export const userSchema = z.object({
   updated_at: z.string()
 });
 
+export const paginatedUsersSchema = z.object({
+  items: z.array(userSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive(),
+  total_pages: z.number().int().positive()
+});
+
 export type CurrentUser = z.infer<typeof userSchema>;
+export type PaginatedUsers = z.infer<typeof paginatedUsersSchema>;

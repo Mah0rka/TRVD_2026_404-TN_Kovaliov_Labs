@@ -11,6 +11,7 @@ import {
   getPayments,
   getSubscriptionPlans,
   getUsers,
+  getUsersPage,
   issueClientSubscription,
   queryKeys,
   restoreClientSubscription,
@@ -141,6 +142,8 @@ export function UsersPage() {
   const isAuthReady = useAuthStore((state) => state.isReady);
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
   const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CurrentUser | null>(null);
   const [editingSubscriptionId, setEditingSubscriptionId] = useState<string | null>(null);
@@ -158,9 +161,14 @@ export function UsersPage() {
     enabled: canLoadManagementData
   });
 
-  const usersQuery = useQuery({
-    queryKey: queryKeys.users.list(filterRole),
-    queryFn: () => getUsers(filterRole === "ALL" ? undefined : filterRole),
+  const usersPageQuery = useQuery({
+    queryKey: queryKeys.users.page(filterRole, currentPage, pageSize),
+    queryFn: () =>
+      getUsersPage({
+        role: filterRole === "ALL" ? undefined : filterRole,
+        page: currentPage,
+        pageSize
+      }),
     enabled: canLoadManagementData
   });
 
@@ -317,7 +325,7 @@ export function UsersPage() {
   }, [allSubscriptionsQuery.data]);
 
   const filteredUsers = useMemo(() => {
-    const users = usersQuery.data ?? [];
+    const users = usersPageQuery.data?.items ?? [];
     const normalizedQuery = userSearchTerm.trim().toLocaleLowerCase("uk-UA");
 
     if (!normalizedQuery) {
@@ -325,7 +333,11 @@ export function UsersPage() {
     }
 
     return users.filter((user) => getUserSearchValue(user).includes(normalizedQuery));
-  }, [userSearchTerm, usersQuery.data]);
+  }, [userSearchTerm, usersPageQuery.data]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterRole, pageSize]);
 
   useEffect(() => {
     if (!selectedUser) {
@@ -584,12 +596,34 @@ export function UsersPage() {
                 </span>
               </label>
             </div>
-            <span className="toolbar-count">{filteredUsers.length} записів</span>
+            <div className="users-pagination-summary">
+              <span className="toolbar-count">
+                {filteredUsers.length} із {usersPageQuery.data?.total ?? 0} записів
+              </span>
+              <label className="toolbar-field users-page-size-field">
+                <span className="toolbar-label">На сторінці</span>
+                <span className="toolbar-select-shell">
+                  <select
+                    className="toolbar-control"
+                    aria-label="Кількість записів на сторінці"
+                    value={pageSize}
+                    onChange={(event) => setPageSize(Number(event.target.value))}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <span className="toolbar-select-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
-        {usersQuery.isLoading ? <p className="muted">Завантаження користувачів...</p> : null}
-        {usersQuery.isError ? <p className="error-banner">{usersQuery.error instanceof Error ? usersQuery.error.message : "Помилка"}</p> : null}
+        {usersPageQuery.isLoading ? <p className="muted">Завантаження користувачів...</p> : null}
+        {usersPageQuery.isError ? <p className="error-banner">{usersPageQuery.error instanceof Error ? usersPageQuery.error.message : "Помилка"}</p> : null}
 
         <div className="management-table">
           <div className="management-table-head users-table-layout">
@@ -645,6 +679,30 @@ export function UsersPage() {
               </article>
             );
           })}
+        </div>
+
+        <div className="users-pagination-controls">
+          <button
+            className="ghost-link"
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+          >
+            Попередня сторінка
+          </button>
+          <span className="users-pagination-label">
+            Сторінка {usersPageQuery.data?.page ?? currentPage} із {usersPageQuery.data?.total_pages ?? 1}
+          </span>
+          <button
+            className="ghost-link"
+            type="button"
+            disabled={currentPage >= (usersPageQuery.data?.total_pages ?? 1)}
+            onClick={() =>
+              setCurrentPage((page) => Math.min(usersPageQuery.data?.total_pages ?? page, page + 1))
+            }
+          >
+            Наступна сторінка
+          </button>
         </div>
       </div>
 

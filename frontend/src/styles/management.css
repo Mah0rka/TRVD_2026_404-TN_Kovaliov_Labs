@@ -154,6 +154,33 @@
   gap: 18px;
 }
 
+.users-pagination-summary {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.users-page-size-field {
+  min-width: 120px;
+}
+
+.users-pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.users-pagination-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+}
+
 .create-panel {
   display: grid;
   gap: 16px;

@@ -11,6 +11,7 @@ import { UsersPage } from "./UsersPage";
 const createUserMock = vi.fn();
 const deleteUserMock = vi.fn();
 const getUsersMock = vi.fn();
+const getUsersPageMock = vi.fn();
 const updateUserMock = vi.fn();
 const getManagedSubscriptionsMock = vi.fn();
 const getPaymentsMock = vi.fn();
@@ -27,6 +28,7 @@ vi.mock("../../../shared/api", async () => {
     createUser: (...args: unknown[]) => createUserMock(...args),
     deleteUser: (...args: unknown[]) => deleteUserMock(...args),
     getUsers: (...args: unknown[]) => getUsersMock(...args),
+    getUsersPage: (...args: unknown[]) => getUsersPageMock(...args),
     updateUser: (...args: unknown[]) => updateUserMock(...args),
     getManagedSubscriptions: (...args: unknown[]) => getManagedSubscriptionsMock(...args),
     getPayments: (...args: unknown[]) => getPaymentsMock(...args),
@@ -178,6 +180,7 @@ describe("UsersPage", () => {
     createUserMock.mockReset();
     deleteUserMock.mockReset();
     getUsersMock.mockReset();
+    getUsersPageMock.mockReset();
     updateUserMock.mockReset();
     getManagedSubscriptionsMock.mockReset();
     getPaymentsMock.mockReset();
@@ -189,6 +192,20 @@ describe("UsersPage", () => {
 
     getUsersMock.mockImplementation(async (role?: string) =>
       role ? usersFixture.filter((user) => user.role === role) : usersFixture
+    );
+    getUsersPageMock.mockImplementation(
+      async ({ role, page = 1, pageSize = 10 }: { role?: string; page?: number; pageSize?: number } = {}) => {
+        const filtered = role ? usersFixture.filter((user) => user.role === role) : usersFixture;
+        const start = (page - 1) * pageSize;
+        const items = filtered.slice(start, start + pageSize);
+        return {
+          items,
+          total: filtered.length,
+          page,
+          page_size: pageSize,
+          total_pages: Math.max(1, Math.ceil(filtered.length / pageSize))
+        };
+      }
     );
     getManagedSubscriptionsMock.mockResolvedValue(subscriptionsFixture);
     getPaymentsMock.mockResolvedValue(paymentsFixture);
@@ -205,7 +222,11 @@ describe("UsersPage", () => {
     await user.selectOptions(screen.getByLabelText("Фільтр списку"), "TRAINER");
 
     await waitFor(() => {
-      expect(getUsersMock).toHaveBeenLastCalledWith("TRAINER");
+      expect(getUsersMock).toHaveBeenLastCalledWith();
+    });
+
+    await waitFor(() => {
+      expect(getUsersPageMock).toHaveBeenLastCalledWith({ role: "TRAINER", page: 1, pageSize: 10 });
     });
   });
 
