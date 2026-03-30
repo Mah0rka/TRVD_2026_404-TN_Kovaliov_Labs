@@ -54,16 +54,7 @@ Thumbs.db
 
 # Local docs not intended for repository
 Docs/
-labs/
 !Docs/
 Docs/*
 !Docs/backend.md
 !Docs/frontend.md
-!labs/
-labs/*
-!labs/README.md
-!labs/lab1_report.md
-!labs/lab2_report.md
-!labs/lab3_report.md
-!labs/lab4_report.md
-!labs/lab5_report.md
