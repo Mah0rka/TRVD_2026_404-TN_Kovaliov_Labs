@@ -5,12 +5,16 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from app.api.docs import BOOKING_CLASS_SUMMARY_EXAMPLE, BOOKING_EXAMPLE
 from app.models.booking import BookingStatus
 from app.schemas.schedule import TrainerSummary
 
 
 class BookingClassSummary(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={"example": BOOKING_CLASS_SUMMARY_EXAMPLE},
+    )
 
     id: str
     title: str
@@ -24,7 +28,7 @@ class BookingClassSummary(BaseModel):
 
 
 class BookingRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={"example": BOOKING_EXAMPLE})
 
     id: str
     user_id: str

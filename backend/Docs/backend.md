@@ -41,7 +41,8 @@ API відповідає за безпечну cookie-based автентифік
 | `User` | `email`, `password_hash`, `role`, `is_verified` | має багато `Subscription`, `Booking`, `Payment`, `WorkoutClass` |
 | `MembershipPlan` | `title`, `type`, `duration_days`, `visits_limit`, `price` | має багато `Subscription` |
 | `Subscription` | `plan_id`, `type`, `start_date`, `end_date`, `status`, `remaining_visits` | належить `User` і `MembershipPlan` |
-| `WorkoutClass` | `title`, `trainer_id`, `start_time`, `end_time`, `capacity`, `type`, `extra_price`, `completed_at`, `completion_comment` | належить тренеру `User`, має багато `Booking`, містить службове підтвердження завершення |
+| `WorkoutClass` | `title`, `trainer_id`, `start_time`, `end_time`, `capacity`, `type`, `extra_price`, `series_id`, `source_occurrence_start`, `is_series_exception`, `completed_at`, `completion_comment` | належить тренеру `User`, може належати recurring-серії `WorkoutSeries`, має багато `Booking`, містить службове підтвердження завершення |
+| `WorkoutSeries` | `trainer_id`, `start_time`, `end_time`, `frequency`, `interval`, `by_weekday`, `count`, `until`, `rule_text` | належить тренеру `User`, materialize-ить багато `WorkoutClass`, має винятки `WorkoutSeriesExclusion` |
 | `Booking` | `user_id`, `class_id`, `status` | зв'язує `User` і `WorkoutClass` |
 | `Payment` | `amount`, `status`, `method`, `purpose`, `booking_class_id`, `description` | належить `User` |
 
@@ -51,7 +52,7 @@ API відповідає за безпечну cookie-based автентифік
 |---|---|---|
 | `/auth` | register, login, refresh, logout, me | public + authenticated |
 | `/users` | профіль, керування користувачами | authenticated / admin / owner |
-| `/schedules` | CRUD занять, список класів, класи тренера, учасники, підтвердження завершення | all roles / trainer / admin / owner |
+| `/schedules` | CRUD занять, recurring-серії, список класів, класи тренера, учасники, підтвердження завершення | all roles / trainer / admin / owner |
 | `/bookings` | бронювання, checkout extra-занять, скасування | client |
 | `/subscriptions` | плани, покупка, freeze, management CRUD | client / admin / owner |
 | `/payments` | checkout, історія оплат, управлінський реєстр | client / admin / owner |
@@ -73,7 +74,15 @@ API відповідає за безпечну cookie-based автентифік
 
 - `celery worker` виконує асинхронні задачі клубу.
 - `celery beat` запускає періодичні перевірки.
-- Поточний фокус: нагадування про завершення абонементів і службові maintenance-сценарії.
+- Поточний фокус: нагадування про завершення абонементів, expire-flow і materialization recurring-серій.
+
+## Recurring Schedule Flow
+
+1. `ScheduleCreate.recurrence` дозволяє створити recurring-серію замість одиночного заняття.
+2. У `WorkoutSeries` зберігається шаблон правила (`frequency`, `interval`, `by_weekday`, `count` / `until`, `rule_text`).
+3. Окремі `WorkoutClass`-occurrence materialize-яться в межах горизонту `schedule_materialization_horizon_days`.
+4. `scope=OCCURRENCE | FOLLOWING | SERIES` визначає, чи зміна стосується одного заняття, всіх наступних або всієї серії.
+5. Для видалених окремих occurrences зберігаються `WorkoutSeriesExclusion`, щоб materialization не відновлював їх повторно.
 
 ## Ключові бізнес-правила
 
@@ -83,6 +92,9 @@ API відповідає за безпечну cookie-based автентифік
 4. Підтвердити завершення заняття можна лише після фактичного `end_time`.
 5. Підтвердження завершення доступне тренеру свого заняття або менеджменту (`ADMIN` / `OWNER`).
 6. Після підтвердження у `WorkoutClass` зберігаються `completed_at`, `completed_by_id` і `completion_comment`.
+7. Будь-яке заняття, включно з recurring-occurrence, дозволено лише в межах локального часу клубу `06:00-22:00`.
+8. Weekly-recurring правило повинно містити хоча б один день тижня; одночасне використання `count` і `until` заборонене.
+9. Серію не можна змінювати або видаляти, якщо в зачеплених occurrences уже є підтверджені бронювання.
 
 ## Запуск
 
@@ -121,10 +133,11 @@ uvicorn app.main:app --reload
 ./scripts/test-backend.ps1
 ```
 
-Актуальний стан перевірки на 2026-03-25:
+Актуальний стан перевірки на 2026-03-28:
 
-- `56/56` backend-тестів проходять успішно.
-- тестове покриття бекенду: `86%`.
+- `101/101` backend-тестів проходять успішно.
+- загальне тестове покриття бекенду: `90%`.
+- покриття recurring-модулів (`schedule_service`, `schedule_recurrence`, `workout_series_repository`, `schedule_repository`, `celery_app`, `schedule schemas`) становить `100%`.
 
 ## Корисні точки входу
 
@@ -133,4 +146,5 @@ uvicorn app.main:app --reload
 - `backend/app/services/auth_service.py` - auth flow і rotation refresh-токенів.
 - `backend/app/services/subscription_service.py` - покупки, freeze, management flow.
 - `backend/app/services/booking_service.py` - правила бронювання та скасування.
-- `backend/app/services/schedule_service.py` - CRUD занять, список класів, підтвердження завершення.
+- `backend/app/services/schedule_service.py` - CRUD занять, recurring-серії, список класів, підтвердження завершення.
+- `backend/app/services/schedule_recurrence.py` - RRULE helper-и, summary і materialization helpers.

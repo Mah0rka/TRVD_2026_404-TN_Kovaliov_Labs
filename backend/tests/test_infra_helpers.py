@@ -184,6 +184,24 @@ async def test_exception_handlers():
         RequestValidationError([{"loc": ("body", "email"), "msg": "field required", "type": "missing"}]),
     )
     assert validation_response.status_code == 422
+    assert b'"code":"validation_error"' in validation_response.body
+
+    serializable_validation_response = await validation_exception_handler(
+        request,
+        RequestValidationError(
+            [
+                {
+                    "type": "value_error",
+                    "loc": ("body", "recurrence"),
+                    "msg": "Value error, bad recurrence rule",
+                    "input": {"frequency": "WEEKLY"},
+                    "ctx": {"error": ValueError("bad recurrence rule")},
+                }
+            ]
+        ),
+    )
+    assert serializable_validation_response.status_code == 422
+    assert b'"recurrence"' in serializable_validation_response.body
 
     unhandled_response = await unhandled_exception_handler(request, RuntimeError("boom"))
     assert unhandled_response.status_code == 500

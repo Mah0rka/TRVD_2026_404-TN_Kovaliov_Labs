@@ -1,9 +1,17 @@
-// Модуль описує базову логіку клієнтського API-шару.
+// HTTP-клієнт є єдиною точкою доступу до backend API.
+// Тут зосереджені три критичні правила:
+// - dev/prod base URL стратегія;
+// - CSRF-підпис mutating-запитів;
+// - автоматичний refresh/retry для 401 без розмазування цієї логіки по feature-коду.
 
 const configuredBaseUrl = import.meta.env.VITE_API_URL?.trim() ?? "";
+// У dev середовищі лишаємо відносні шляхи, щоб Vite proxy міг прозоро
+// прокидати `/auth`, `/schedules` та інші endpoint-и на backend.
 const API_BASE_URL = import.meta.env.DEV ? "" : configuredBaseUrl;
 export const AUTH_EXPIRED_EVENT = "fcms:auth-expired";
 
+// Один спільний promise не дає кільком паралельним 401 одночасно запускати
+// декілька refresh-запитів і змагатися між собою за стан сесії.
 let refreshPromise: Promise<boolean> | null = null;
 
 export class ApiError extends Error {
@@ -19,7 +27,8 @@ export class ApiError extends Error {
   }
 }
 
-// Зчитує CSRF token з cookies браузера.
+// CSRF token читається з cookie, яку видає backend. Саме cookie лишається
+// доступною JS, бо значення токена треба дублювати в X-CSRF-Token заголовок.
 function readCsrfToken(): string | null {
   const cookie = document.cookie
     .split("; ")
@@ -28,7 +37,8 @@ function readCsrfToken(): string | null {
   return cookie ? decodeURIComponent(cookie.split("=")[1]) : null;
 }
 
-// Готує заголовки запиту та додає CSRF token для mutating-викликів.
+// Базові заголовки будуються централізовано, щоб feature-модулі не думали
+// про Content-Type і CSRF при кожному виклику request().
 function buildHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
 
@@ -46,7 +56,8 @@ function buildHeaders(init?: RequestInit): Headers {
   return headers;
 }
 
-// Пробує оновити авторизаційну сесію через refresh endpoint.
+// Refresh викликаємо лише через цей helper, щоб легко гарантувати dedupe та
+// однакові credentials/headers для всіх повторних спроб.
 async function refreshSession(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -65,14 +76,18 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise;
 }
 
-// Сповіщає застосунок про завершення сесії користувача.
+// DOM-подія є тонким контрактом між API-шаром і React-auth bootstrap-ом.
 function notifyAuthExpired() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
   }
 }
 
-// Виконує HTTP-запит, обробляє 401 і піднімає типізовану помилку API.
+// request<T>() інкапсулює весь happy path і error path:
+// - виконує fetch;
+// - при дозволеному 401 пробує refresh;
+// - повторює оригінальний запит один раз;
+// - піднімає ApiError з detail/request_id для UI.
 export async function request<T>(
   path: string,
   init?: RequestInit,
@@ -85,6 +100,9 @@ export async function request<T>(
     credentials: "include"
   });
 
+  // Для auth-endpoint-ів retry був би небезпечний або беззмістовний:
+  // login/register/logout/refresh мають власну семантику і не повинні
+  // автоматично запускати ще один refresh поверх себе.
   const isRefreshEligiblePath = ![
     "/auth/login",
     "/auth/register",
@@ -95,6 +113,8 @@ export async function request<T>(
   if (response.status === 401 && options.retryOnAuth !== false && isRefreshEligiblePath) {
     const refreshed = await refreshSession();
     if (refreshed) {
+      // Рекурсивний повтор відбувається лише один раз завдяки retryOnAuth=false,
+      // тому нескінченного циклу refresh -> retry -> refresh тут не буде.
       return request<T>(path, init, { retryOnAuth: false });
     }
     notifyAuthExpired();
@@ -106,6 +126,8 @@ export async function request<T>(
       notifyAuthExpired();
     }
 
+    // Намагаємось прочитати backend detail/request_id, але не падаємо вдруге,
+    // якщо тіло відповіді не є JSON.
     const errorBody = await response
       .json()
       .catch(() => ({ detail: "Request failed", request_id: undefined }));
@@ -118,6 +140,8 @@ export async function request<T>(
   }
 
   if (response.status === 204) {
+    // Для DELETE/empty-success endpoint-ів повертаємо undefined, зберігаючи
+    // при цьому єдиний generic-інтерфейс request<T>().
     return undefined as T;
   }
 

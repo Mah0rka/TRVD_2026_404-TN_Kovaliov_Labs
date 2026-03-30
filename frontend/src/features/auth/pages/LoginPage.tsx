@@ -3,15 +3,15 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { login, register } from "../../../shared/api";
+import { getFieldErrors } from "../../../shared/lib/forms";
 import {
   loginSchema,
   registerSchema,
   type LoginFormValues,
-  type RegisterFormValues,
-  useAuthStore
-} from "..";
-import { login, register } from "../../../shared/api";
-import { getFieldErrors } from "../../../shared/lib/forms";
+  type RegisterFormValues
+} from "../lib/validation";
+import { useAuthStore } from "../model/store";
 
 // Показує вкладки входу й реєстрації для користувача.
 export function LoginPage() {
@@ -113,6 +113,7 @@ export function LoginPage() {
               Email
               <input
                 type="email"
+                autoComplete="username"
                 value={loginValues.email}
                 onChange={(event) =>
                   setLoginValues((current) => ({ ...current, email: event.target.value }))
@@ -124,6 +125,7 @@ export function LoginPage() {
               Пароль
               <input
                 type="password"
+                autoComplete="current-password"
                 value={loginValues.password}
                 onChange={(event) =>
                   setLoginValues((current) => ({ ...current, password: event.target.value }))
@@ -141,6 +143,7 @@ export function LoginPage() {
               Ім'я
               <input
                 type="text"
+                autoComplete="given-name"
                 value={registerValues.first_name}
                 onChange={(event) =>
                   setRegisterValues((current) => ({ ...current, first_name: event.target.value }))
@@ -152,6 +155,7 @@ export function LoginPage() {
               Прізвище
               <input
                 type="text"
+                autoComplete="family-name"
                 value={registerValues.last_name}
                 onChange={(event) =>
                   setRegisterValues((current) => ({ ...current, last_name: event.target.value }))
@@ -163,6 +167,7 @@ export function LoginPage() {
               Email
               <input
                 type="email"
+                autoComplete="email"
                 value={registerValues.email}
                 onChange={(event) =>
                   setRegisterValues((current) => ({ ...current, email: event.target.value }))
@@ -174,6 +179,7 @@ export function LoginPage() {
               Пароль
               <input
                 type="password"
+                autoComplete="new-password"
                 value={registerValues.password}
                 onChange={(event) =>
                   setRegisterValues((current) => ({ ...current, password: event.target.value }))

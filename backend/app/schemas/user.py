@@ -4,11 +4,17 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.api.docs import (
+    USER_ADMIN_CREATE_EXAMPLE,
+    USER_ADMIN_UPDATE_EXAMPLE,
+    USER_EXAMPLE,
+    USER_PROFILE_UPDATE_EXAMPLE,
+)
 from app.models.user import UserRole
 
 
 class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={"example": USER_EXAMPLE})
 
     id: str
     email: EmailStr
@@ -22,12 +28,16 @@ class UserRead(BaseModel):
 
 
 class UserProfileUpdate(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": USER_PROFILE_UPDATE_EXAMPLE})
+
     first_name: str | None = Field(default=None, min_length=2, max_length=100)
     last_name: str | None = Field(default=None, min_length=2, max_length=100)
     phone: str | None = Field(default=None, max_length=32)
 
 
 class UserAdminCreate(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": USER_ADMIN_CREATE_EXAMPLE})
+
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     first_name: str = Field(min_length=2, max_length=100)
@@ -38,6 +48,8 @@ class UserAdminCreate(BaseModel):
 
 
 class UserAdminUpdate(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": USER_ADMIN_UPDATE_EXAMPLE})
+
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
     first_name: str | None = Field(default=None, min_length=2, max_length=100)

@@ -10,6 +10,7 @@ import { reportsApi } from "./modules/reports";
 import { schedulesApi } from "./modules/schedules";
 import { subscriptionsApi } from "./modules/subscriptions";
 import { usersApi } from "./modules/users";
+import { queryKeys } from "./queryKeys";
 
 describe("shared/api barrel", () => {
   it("re-exports http helpers and module APIs", () => {
@@ -23,5 +24,17 @@ describe("shared/api barrel", () => {
     expect(api.bookingsApi).toBe(bookingsApi);
     expect(api.paymentsApi).toBe(paymentsApi);
     expect(api.reportsApi).toBe(reportsApi);
+    expect(api.queryKeys).toBe(queryKeys);
+  });
+
+  it("keeps centralized query key factories stable", () => {
+    expect(api.queryKeys.dashboard.revenue()).toEqual(["dashboard", "revenue"]);
+    expect(api.queryKeys.schedules.calendar("from", "to")).toEqual([
+      "schedules",
+      "calendar",
+      "from",
+      "to"
+    ]);
+    expect(api.queryKeys.users.list()).toEqual(["users", "list", "ALL"]);
   });
 });

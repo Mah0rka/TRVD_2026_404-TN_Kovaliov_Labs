@@ -1,0 +1,204 @@
+/* Shared cards, buttons, forms and generic surface primitives. */
+
+.screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card,
+.surface-card,
+.feature-card,
+.stat-card,
+.schedule-item,
+.class-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+}
+
+.card {
+  width: min(100%, 560px);
+  border-radius: 28px;
+  padding: 28px;
+}
+
+.auth-card,
+.dashboard-card,
+.schedule-card {
+  display: grid;
+  gap: 20px;
+}
+
+.button-link,
+.ghost-link,
+.secondary-button,
+.danger-link,
+.chip,
+.nav-link,
+.class-card {
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button-link,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary-button {
+  padding: 13px 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #a33d20);
+  color: #fff;
+}
+
+.wide-button {
+  width: 100%;
+}
+
+.ghost-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+
+.danger-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.heading-group,
+.panel-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.heading-group h1,
+.panel-heading h2,
+.hero-copy h1,
+.section-heading h2,
+.final-cta h2 {
+  margin: 0;
+  line-height: 1.05;
+  font-family: "Oswald", "Manrope", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.heading-group p,
+.panel-heading p,
+.section-heading p,
+.final-cta p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error-banner {
+  border-radius: 16px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  padding: 14px 16px;
+}
+
+.error-trace {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.tab {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #ff4d4d;
+  color: #fff;
+}
+
+.form,
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form label,
+.form-grid label,
+.create-panel label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+  min-width: 0;
+  align-content: start;
+}
+
+.form input,
+.form-grid input,
+.form-grid select,
+.create-panel input,
+.create-panel select {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--surface-strong);
+  color: #ffffff;
+}
+
+.form input::placeholder,
+.form-grid input::placeholder,
+.create-panel input::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.form span {
+  min-height: 20px;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+

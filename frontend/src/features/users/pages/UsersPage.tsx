@@ -12,6 +12,7 @@ import {
   getSubscriptionPlans,
   getUsers,
   issueClientSubscription,
+  queryKeys,
   restoreClientSubscription,
   type CurrentUser,
   type MembershipPlan,
@@ -152,37 +153,37 @@ export function UsersPage() {
   const canLoadManagementData = Boolean(isAuthReady && authUser);
 
   const allUsersQuery = useQuery({
-    queryKey: ["users", "all"],
+    queryKey: queryKeys.users.all(),
     queryFn: () => getUsers(),
     enabled: canLoadManagementData
   });
 
   const usersQuery = useQuery({
-    queryKey: ["users", filterRole],
+    queryKey: queryKeys.users.list(filterRole),
     queryFn: () => getUsers(filterRole === "ALL" ? undefined : filterRole),
     enabled: canLoadManagementData
   });
 
   const plansQuery = useQuery({
-    queryKey: ["membership-plans"],
+    queryKey: queryKeys.subscriptions.plans(),
     queryFn: getSubscriptionPlans,
     enabled: canLoadManagementData
   });
 
   const allSubscriptionsQuery = useQuery({
-    queryKey: ["managed-subscriptions", "all-users"],
+    queryKey: queryKeys.subscriptions.managedAll(),
     queryFn: () => getManagedSubscriptions({ includeDeleted: true }),
     enabled: canLoadManagementData
   });
 
   const subscriptionsQuery = useQuery({
-    queryKey: ["managed-subscriptions", selectedUser?.id],
+    queryKey: queryKeys.subscriptions.managedByUser(selectedUser?.id),
     queryFn: () => getManagedSubscriptions({ userId: selectedUser?.id, includeDeleted: true }),
     enabled: Boolean(canLoadManagementData && selectedUser?.id)
   });
 
   const paymentsQuery = useQuery({
-    queryKey: ["payments-ledger", selectedUser?.id],
+    queryKey: queryKeys.payments.ledger(selectedUser?.id),
     queryFn: () => getPayments({ userId: selectedUser?.id }),
     enabled: Boolean(canLoadManagementData && selectedUser?.id)
   });
@@ -190,7 +191,7 @@ export function UsersPage() {
   const createMutation = useMutation({
     mutationFn: createUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.root() });
       setCreateForm(emptyCreateForm());
       setIsCreateOpen(false);
     }
@@ -200,7 +201,7 @@ export function UsersPage() {
     mutationFn: ({ userId, payload }: { userId: string; payload: Parameters<typeof updateUser>[1] }) =>
       updateUser(userId, payload),
     onSuccess: (user) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.root() });
       setSelectedUser(user);
       setEditForm({
         first_name: user.first_name,
@@ -215,7 +216,10 @@ export function UsersPage() {
   const issueMutation = useMutation({
     mutationFn: issueClientSubscription,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.subscriptions.managedByUser(selectedUser?.id)
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.managedAll() });
       setIssueForm(emptyIssueForm());
     }
   });
@@ -229,7 +233,10 @@ export function UsersPage() {
       payload: Parameters<typeof updateClientSubscription>[1];
     }) => updateClientSubscription(subscriptionId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.subscriptions.managedByUser(selectedUser?.id)
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.managedAll() });
       setEditingSubscriptionId(null);
       setSubscriptionEditForm(emptySubscriptionEditForm());
     }
@@ -238,8 +245,10 @@ export function UsersPage() {
   const deleteSubscriptionMutation = useMutation({
     mutationFn: deleteClientSubscription,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", "all-users"] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.subscriptions.managedByUser(selectedUser?.id)
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.managedAll() });
       setConfirmationState(null);
       setConfirmationInput("");
     }
@@ -248,16 +257,19 @@ export function UsersPage() {
   const restoreSubscriptionMutation = useMutation({
     mutationFn: restoreClientSubscription,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", selectedUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.subscriptions.managedByUser(selectedUser?.id)
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.managedAll() });
     }
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: (_, deletedUserId) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["managed-subscriptions", "all-users"] });
-      queryClient.invalidateQueries({ queryKey: ["payments-ledger"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.root() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.managedAll() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.root() });
       if (selectedUser?.id === deletedUserId) {
         setSelectedUser(null);
       }

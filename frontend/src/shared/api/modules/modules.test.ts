@@ -73,6 +73,10 @@ const schedule = {
   type: "GROUP" as const,
   is_paid_extra: false,
   extra_price: null,
+  series_id: null,
+  source_occurrence_start: null,
+  is_series_exception: false,
+  recurrence: null,
   trainer: {
     id: "trainer-1",
     first_name: "Ira",
@@ -249,10 +253,20 @@ describe("api modules", () => {
 
   it("handles schedules module calls", async () => {
     requestMock.mockResolvedValueOnce([schedule]);
-    await getSchedules();
+    await getSchedules({ from: "2026-03-23T00:00:00Z", to: "2026-03-30T00:00:00Z" });
+    expect(requestMock).toHaveBeenNthCalledWith(
+      1,
+      "/schedules?from=2026-03-23T00%3A00%3A00Z&to=2026-03-30T00%3A00%3A00Z",
+      { method: "GET" }
+    );
 
     requestMock.mockResolvedValueOnce([schedule]);
-    await getMyClasses();
+    await getMyClasses({ from: "2026-03-23T00:00:00Z", to: "2026-03-30T00:00:00Z" });
+    expect(requestMock).toHaveBeenNthCalledWith(
+      2,
+      "/schedules/my-classes?from=2026-03-23T00%3A00%3A00Z&to=2026-03-30T00%3A00%3A00Z",
+      { method: "GET" }
+    );
 
     requestMock.mockResolvedValueOnce([attendee]);
     await getScheduleAttendees("schedule-1");
@@ -269,14 +283,21 @@ describe("api modules", () => {
       capacity: 12,
       trainerId: "trainer-1",
       isPaidExtra: false,
-      extraPrice: null
+      extraPrice: null,
+      recurrence: {
+        frequency: "WEEKLY",
+        interval: 1,
+        byWeekday: ["MO", "WE"],
+        count: 8,
+        until: null
+      }
     });
 
     requestMock.mockResolvedValueOnce(schedule);
-    await updateSchedule("schedule-1", { title: "Updated" });
+    await updateSchedule("schedule-1", { title: "Updated", scope: "SERIES" });
 
     requestMock.mockResolvedValueOnce(undefined);
-    await removeSchedule("schedule-1");
+    await removeSchedule("schedule-1", "FOLLOWING");
   });
 
   it("handles bookings and subscriptions module calls", async () => {

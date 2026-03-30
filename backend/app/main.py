@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
+from app.api.docs import API_DESCRIPTION, API_SUMMARY, OPENAPI_TAGS
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -32,7 +34,13 @@ RESERVED_FRONTEND_PREFIXES = {
     "users",
 }
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(
+    title=settings.app_name,
+    summary=API_SUMMARY,
+    description=API_DESCRIPTION,
+    version="0.1.0",
+    openapi_tags=OPENAPI_TAGS,
+)
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -103,7 +111,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "detail": "Validation failed",
             "code": "validation_error",
             "request_id": _request_id(request),
-            "errors": exc.errors(),
+            "errors": jsonable_encoder(exc.errors()),
         },
     )
 

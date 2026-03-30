@@ -25,7 +25,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   override componentDidCatch(error: Error, info: ErrorInfo) {
     this.setState({
       error,
-      componentStack: info.componentStack
+      componentStack: info.componentStack ?? ""
     });
   }
 

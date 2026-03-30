@@ -1,4 +1,7 @@
-// Модуль збирає каркас клієнтського застосунку і його маршрути.
+// Тут описана вся карта маршрутів SPA:
+// - верхній AuthBootstrap відновлює сесію до рендеру захищених сторінок;
+// - public/public-only/protected сегменти розділені окремими layout-ами;
+// - role-based доступ концентрується в RoleBoundary, а не всередині сторінок.
 
 import { createBrowserRouter } from "react-router-dom";
 
@@ -13,6 +16,23 @@ import {
   RoleBoundary,
   trainerAndManagementRoles
 } from "../features/auth";
+
+function AppHydrateFallback() {
+  return (
+    <main className="screen">
+      <section className="card auth-card">
+        <div className="heading-group">
+          <p className="eyebrow">MotionLab</p>
+          <h1>Завантаження застосунку</h1>
+          <p className="muted">Підготовка маршруту та відновлення сесії...</p>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// Кожен lazy-loader повертає об'єкт { Component }, сумісний з data router API.
+// Це дає route-level code splitting без додаткової обгортки на рівні самих сторінок.
 
 // Ліниво підвантажує головну сторінку застосунку.
 async function loadHomePage() {
@@ -82,6 +102,10 @@ async function loadUsersPage() {
 
 export const appRouter = createBrowserRouter([
   {
+    // Показуємо fallback, поки React Router догружає route-модулі після гідрації.
+    hydrateFallbackElement: <AppHydrateFallback />,
+    // AuthBootstrap завжди рендериться першим і вирішує, чи можна вже
+    // віддавати дочірні маршрути, чи спочатку треба відновити сесію.
     element: <AuthBootstrap />,
     children: [
       {
@@ -89,6 +113,7 @@ export const appRouter = createBrowserRouter([
         lazy: loadHomePage
       },
       {
+        // PublicOnlyLayout не пускає авторизованого користувача назад на login.
         element: <PublicOnlyLayout />,
         children: [
           {
@@ -98,6 +123,7 @@ export const appRouter = createBrowserRouter([
         ]
       },
       {
+        // Увесь dashboard-сегмент захищений і рендериться всередині shell-обгортки.
         element: <ProtectedLayout />,
         children: [
           {
@@ -113,6 +139,7 @@ export const appRouter = createBrowserRouter([
             lazy: loadSchedulePage
           },
           {
+            // Окремий role-boundary робить правила доступу видимими прямо в карті роутів.
             element: <RoleBoundary roles={clientRoles} />,
             children: [
               {

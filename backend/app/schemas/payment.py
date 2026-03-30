@@ -5,16 +5,19 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.api.docs import PAYMENT_CREATE_EXAMPLE, PAYMENT_EXAMPLE
 from app.schemas.user import UserRead
 
 
 class PaymentCreateRequest(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": PAYMENT_CREATE_EXAMPLE})
+
     amount: Decimal = Field(gt=0)
     method: str = Field(min_length=3, max_length=32)
 
 
 class PaymentRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={"example": PAYMENT_EXAMPLE})
 
     id: str
     user_id: str

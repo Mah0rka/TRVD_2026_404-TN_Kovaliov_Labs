@@ -16,7 +16,13 @@ from app.schemas.membership_plan import MembershipPlanRead
 from app.schemas.membership_plan import MembershipPlanCreate, MembershipPlanUpdate
 from app.schemas.payment import PaymentCreateRequest
 from app.schemas.report import RevenueReport, TrainerPopularityReport
-from app.schemas.schedule import ScheduleCompleteRequest, ScheduleCreate, ScheduleRead, ScheduleUpdate
+from app.schemas.schedule import (
+    RecurrenceScope,
+    ScheduleCompleteRequest,
+    ScheduleCreate,
+    ScheduleRead,
+    ScheduleUpdate,
+)
 from app.schemas.subscription import (
     SubscriptionFreezeRequest,
     SubscriptionManagementIssueRequest,
@@ -313,11 +319,11 @@ async def test_schedule_routes(monkeypatch):
             return make_schedule()
 
         # Перевіряє, що list schedules працює коректно.
-        async def list_schedules(self):
+        async def list_schedules(self, start_datetime=None, end_datetime=None):
             return [make_schedule()]
 
         # Перевіряє, що list my classes працює коректно.
-        async def list_my_classes(self, user_id):
+        async def list_my_classes(self, user_id, start_datetime=None, end_datetime=None):
             return [make_schedule()]
 
         # Перевіряє, що list attendees працює коректно.
@@ -333,11 +339,11 @@ async def test_schedule_routes(monkeypatch):
             return schedule
 
         # Перевіряє, що update schedule працює коректно.
-        async def update_schedule(self, class_id, payload):
+        async def update_schedule(self, class_id, payload, current_user):
             return make_schedule()
 
         # Перевіряє, що delete schedule працює коректно.
-        async def delete_schedule(self, class_id):
+        async def delete_schedule(self, class_id, current_user, scope):
             return None
 
     monkeypatch.setattr(schedules, "ScheduleService", FakeScheduleService)
@@ -356,8 +362,8 @@ async def test_schedule_routes(monkeypatch):
         object(),
     )
     assert isinstance(created, ScheduleRead)
-    assert len(await schedules.list_schedules(make_user(), object())) == 1
-    assert len(await schedules.my_classes(make_user(UserRole.TRAINER), object())) == 1
+    assert len(await schedules.list_schedules(None, None, make_user(), object())) == 1
+    assert len(await schedules.my_classes(None, None, make_user(UserRole.TRAINER), object())) == 1
     assert len(await schedules.attendees("class-1", make_user(UserRole.TRAINER), object())) == 1
     completed = await schedules.complete_schedule(
         "class-1",
@@ -367,8 +373,13 @@ async def test_schedule_routes(monkeypatch):
     )
     assert isinstance(completed, ScheduleRead)
     assert completed.completion_comment == "Class completed"
-    assert isinstance(await schedules.update_schedule("class-1", ScheduleUpdate(title="Updated"), admin, object()), ScheduleRead)
-    assert (await schedules.delete_schedule("class-1", admin, object())).status_code == 204
+    assert isinstance(
+        await schedules.update_schedule("class-1", ScheduleUpdate(title="Updated"), admin, object()),
+        ScheduleRead,
+    )
+    assert (
+        await schedules.delete_schedule("class-1", RecurrenceScope.OCCURRENCE, admin, object())
+    ).status_code == 204
 
 
 # Перевіряє, що subscription booking payment report public and health routes працює коректно.

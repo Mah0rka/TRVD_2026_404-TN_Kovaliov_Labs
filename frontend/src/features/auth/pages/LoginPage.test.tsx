@@ -5,7 +5,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 
 import { LoginPage } from "./LoginPage";
-import { useAuthStore } from "..";
+import { useAuthStore } from "../model/store";
 import { renderWithProviders } from "../../../test/utils";
 
 const navigateMock = vi.fn();

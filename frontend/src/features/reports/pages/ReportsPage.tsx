@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { getRevenueReport, getTrainerPopularity } from "../../../shared/api";
+import { getRevenueReport, getTrainerPopularity, queryKeys } from "../../../shared/api";
 
 // Показує графіки й показники для звітів адміністрації.
 export function ReportsPage() {
@@ -15,12 +15,12 @@ export function ReportsPage() {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   const revenueQuery = useQuery({
-    queryKey: ["revenue", startDate, endDate],
+    queryKey: queryKeys.reports.revenue(startDate, endDate),
     queryFn: () => getRevenueReport(startDate, endDate)
   });
 
   const trainersQuery = useQuery({
-    queryKey: ["trainer-popularity"],
+    queryKey: queryKeys.reports.trainerPopularity(),
     queryFn: getTrainerPopularity
   });
 

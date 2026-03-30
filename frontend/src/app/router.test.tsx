@@ -8,8 +8,8 @@ import { AppRouter } from "./router";
 
 const routerProviderMock = vi.fn(() => <div>router-provider</div>);
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+vi.mock("react-router/dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router/dom")>("react-router/dom");
   return {
     ...actual,
     RouterProvider: (props: unknown) => routerProviderMock(props)

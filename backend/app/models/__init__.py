@@ -7,5 +7,16 @@ from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.models.user import User
 from app.models.workout_class import WorkoutClass
+from app.models.workout_series import WorkoutSeries, WorkoutSeriesExclusion
 
-__all__ = ["Base", "Booking", "MembershipPlan", "Payment", "Subscription", "User", "WorkoutClass"]
+__all__ = [
+    "Base",
+    "Booking",
+    "MembershipPlan",
+    "Payment",
+    "Subscription",
+    "User",
+    "WorkoutClass",
+    "WorkoutSeries",
+    "WorkoutSeriesExclusion",
+]

@@ -1,0 +1,86 @@
+.schedule-calendar-shell .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.08);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+  --fc-neutral-text-color: rgba(255, 255, 255, 0.72);
+  --fc-event-bg-color: transparent;
+  --fc-event-border-color: transparent;
+  --fc-now-indicator-color: var(--accent);
+  color: #ffffff;
+}
+
+.schedule-calendar-shell .fc .fc-scrollgrid,
+.schedule-calendar-shell .fc-theme-standard td,
+.schedule-calendar-shell .fc-theme-standard th {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.schedule-calendar-shell .fc .fc-scrollgrid {
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(10, 10, 10, 0.42);
+}
+
+.schedule-calendar-shell .fc .fc-col-header-cell {
+  padding: 2px 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.schedule-calendar-shell .fc .fc-col-header-cell-cushion {
+  padding: 10px 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-axis,
+.schedule-calendar-shell .fc .fc-timegrid-slot-label {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-slot-label-cushion {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-slot {
+  height: 40px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-col-frame {
+  min-height: 100%;
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-col.fc-day-today,
+.schedule-calendar-shell .fc .fc-timegrid-col.fc-day-today .fc-timegrid-col-frame {
+  background:
+    linear-gradient(180deg, rgba(255, 77, 77, 0.08), rgba(255, 255, 255, 0.01)),
+    rgba(255, 255, 255, 0.01);
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-now-indicator-line {
+  border-color: rgba(255, 77, 77, 0.78);
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-now-indicator-arrow {
+  border-left-color: rgba(255, 77, 77, 0.78);
+  border-right-color: rgba(255, 77, 77, 0.78);
+}
+
+.schedule-calendar-shell .fc .fc-event {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.schedule-calendar-shell .fc .fc-timegrid-event-harness {
+  margin: 0 4px;
+}
+
+.schedule-calendar-shell .fc .fc-event-main {
+  padding: 0;
+}

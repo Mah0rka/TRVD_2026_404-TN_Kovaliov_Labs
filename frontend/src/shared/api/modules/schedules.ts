@@ -6,15 +6,38 @@ import type { Schedule, ScheduleAttendee } from "../core/contracts";
 import { scheduleAttendeeSchema, scheduleSchema } from "../core/contracts";
 import { request } from "../core/http";
 
+type ScheduleRecurrenceInput = {
+  frequency: "DAILY" | "WEEKLY" | "MONTHLY";
+  interval: number;
+  byWeekday?: Array<"MO" | "TU" | "WE" | "TH" | "FR" | "SA" | "SU">;
+  count?: number | null;
+  until?: string | null;
+};
+
+function buildRangeQuery(input?: { from?: string; to?: string }): string {
+  if (!input?.from && !input?.to) {
+    return "";
+  }
+
+  const searchParams = new URLSearchParams();
+  if (input.from) {
+    searchParams.set("from", input.from);
+  }
+  if (input.to) {
+    searchParams.set("to", input.to);
+  }
+  return `?${searchParams.toString()}`;
+}
+
 // Отримує список занять із API.
-export async function getSchedules(): Promise<Schedule[]> {
-  const data = await request<unknown>("/schedules", { method: "GET" });
+export async function getSchedules(input?: { from?: string; to?: string }): Promise<Schedule[]> {
+  const data = await request<unknown>(`/schedules${buildRangeQuery(input)}`, { method: "GET" });
   return z.array(scheduleSchema).parse(data);
 }
 
 // Отримує заняття поточного тренера.
-export async function getMyClasses(): Promise<Schedule[]> {
-  const data = await request<unknown>("/schedules/my-classes", { method: "GET" });
+export async function getMyClasses(input?: { from?: string; to?: string }): Promise<Schedule[]> {
+  const data = await request<unknown>(`/schedules/my-classes${buildRangeQuery(input)}`, { method: "GET" });
   return z.array(scheduleSchema).parse(data);
 }
 
@@ -48,6 +71,7 @@ export async function createSchedule(input: {
   trainerId?: string;
   isPaidExtra: boolean;
   extraPrice?: number | null;
+  recurrence?: ScheduleRecurrenceInput | null;
 }): Promise<Schedule> {
   const data = await request<unknown>("/schedules", {
     method: "POST",
@@ -69,6 +93,8 @@ export async function updateSchedule(
     trainerId?: string;
     isPaidExtra: boolean;
     extraPrice?: number | null;
+    recurrence?: ScheduleRecurrenceInput | null;
+    scope: "OCCURRENCE" | "FOLLOWING" | "SERIES";
   }>
 ): Promise<Schedule> {
   const data = await request<unknown>(`/schedules/${id}`, {
@@ -80,6 +106,10 @@ export async function updateSchedule(
 }
 
 // Видаляє заняття через API.
-export async function removeSchedule(id: string): Promise<void> {
-  await request(`/schedules/${id}`, { method: "DELETE" });
+export async function removeSchedule(
+  id: string,
+  scope: "OCCURRENCE" | "FOLLOWING" | "SERIES" = "OCCURRENCE"
+): Promise<void> {
+  const searchParams = new URLSearchParams({ scope });
+  await request(`/schedules/${id}?${searchParams.toString()}`, { method: "DELETE" });
 }

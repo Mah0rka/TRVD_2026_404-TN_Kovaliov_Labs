@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { useAuthStore } from "../../auth";
-import { getClubStats, getPublicMembershipPlans } from "../../../shared/api";
+import { getClubStats, getPublicMembershipPlans, queryKeys } from "../../../shared/api";
 import { BrandSignature } from "../../../shared/ui/BrandSignature";
 
 const zones = [
@@ -103,11 +103,11 @@ export function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const statsQuery = useQuery({
-    queryKey: ["club-stats"],
+    queryKey: queryKeys.public.stats(),
     queryFn: getClubStats
   });
   const publicPlansQuery = useQuery({
-    queryKey: ["public-membership-plans"],
+    queryKey: queryKeys.public.membershipPlans(),
     queryFn: getPublicMembershipPlans
   });
   const primaryTarget = isAuthenticated ? "/dashboard" : "/login";

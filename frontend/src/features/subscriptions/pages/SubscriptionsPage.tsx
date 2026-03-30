@@ -1,21 +1,14 @@
 // Керує планами, покупками та адмініструванням абонементів.
 
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import {
-  createMembershipPlan,
-  deleteMembershipPlan,
-  freezeSubscription,
-  getSubscriptionPlans,
-  getSubscriptions,
-  purchaseSubscription,
   type Subscription,
-  updateMembershipPlan,
   type MembershipPlan
 } from "../../../shared/api";
 import { useAuthStore } from "../../auth";
+import { useSubscriptionsPageData } from "../hooks/useSubscriptionsPageData";
 
 // Повертає локалізований підпис для статусу абонемента.
 function getStatusLabel(status: string): string {
@@ -65,9 +58,9 @@ function emptyPlanForm() {
   };
 }
 
-// Обслуговує сценарій subscriptions page.
+// Один екран навмисно об'єднує клієнтський і management сценарій:
+// каталог планів, покупку, freeze-flow та CRUD для membership plans.
 export function SubscriptionsPage() {
-  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const isClient = user?.role === "CLIENT";
   const isManagement = user?.role === "ADMIN" || user?.role === "OWNER";
@@ -78,65 +71,15 @@ export function SubscriptionsPage() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [planForm, setPlanForm] = useState(emptyPlanForm());
 
-  const plansQuery = useQuery({
-    queryKey: ["membership-plans"],
-    queryFn: getSubscriptionPlans
-  });
-
-  const subscriptionsQuery = useQuery({
-    queryKey: ["my-subscriptions"],
-    queryFn: getSubscriptions,
-    enabled: isClient
-  });
-
-  const purchaseMutation = useMutation({
-    mutationFn: purchaseSubscription,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["my-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-subscriptions"] });
-    }
-  });
-
-  const freezeMutation = useMutation({
-    mutationFn: ({ id, days }: { id: string; days: number }) => freezeSubscription(id, days),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] });
-      setFreezeTarget(null);
-    }
-  });
-
-  const createPlanMutation = useMutation({
-    mutationFn: createMembershipPlan,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membership-plans"] });
-      setPlanForm(emptyPlanForm());
-    }
-  });
-
-  const updatePlanMutation = useMutation({
-    mutationFn: ({
-      id,
-      payload
-    }: {
-      id: string;
-      payload: Partial<Omit<MembershipPlan, "id" | "created_at" | "updated_at">>;
-    }) =>
-      updateMembershipPlan(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membership-plans"] });
-      setEditingPlanId(null);
-      setPlanForm(emptyPlanForm());
-    }
-  });
-
-  const deletePlanMutation = useMutation({
-    mutationFn: deleteMembershipPlan,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membership-plans"] });
-    }
-  });
+  const {
+    plansQuery,
+    subscriptionsQuery,
+    purchaseMutation,
+    freezeMutation,
+    createPlanMutation,
+    updatePlanMutation,
+    deletePlanMutation
+  } = useSubscriptionsPageData({ isClient });
 
   const currentSubscriptions = subscriptionsQuery.data ?? [];
   const blockingSubscription = currentSubscriptions.find(
@@ -150,11 +93,14 @@ export function SubscriptionsPage() {
   const hiddenPlansCount = Math.max(sortedPlans.length - 3, 0);
   const selectedPlan =
     sortedPlans.find((plan) => plan.id === selectedPlanId) ?? sortedPlans[0] ?? null;
+  // Для клієнта при великій кількості планів показуємо один вибраний варіант,
+  // щоб сітка не розросталась у важкий для сканування каталог.
   const clientVisiblePlans =
     sortedPlans.length > 3 ? (selectedPlan ? [selectedPlan] : []) : sortedPlans;
   const adminVisiblePlans = showAllPlans || sortedPlans.length <= 3 ? sortedPlans : sortedPlans.slice(0, 3);
 
   useEffect(() => {
+    // Після refetch/CRUD гарантуємо, що select не тримає id плану, якого вже нема.
     if (!sortedPlans.length) {
       if (selectedPlanId) {
         setSelectedPlanId("");
@@ -166,6 +112,29 @@ export function SubscriptionsPage() {
       setSelectedPlanId(sortedPlans[0].id);
     }
   }, [selectedPlanId, sortedPlans]);
+
+  useEffect(() => {
+    // Freeze-flow є короткою одноразовою дією, тому після успіху ховаємо
+    // форму підтвердження і повертаємо екран до нормального стану.
+    if (freezeMutation.isSuccess) {
+      setFreezeTarget(null);
+    }
+  }, [freezeMutation.isSuccess]);
+
+  useEffect(() => {
+    if (createPlanMutation.isSuccess) {
+      // Після створення нового плану не лишаємо старі значення у формі,
+      // інакше менеджер легко зробить дублікат випадковим повторним кліком.
+      setPlanForm(emptyPlanForm());
+    }
+  }, [createPlanMutation.isSuccess]);
+
+  useEffect(() => {
+    if (updatePlanMutation.isSuccess) {
+      setEditingPlanId(null);
+      setPlanForm(emptyPlanForm());
+    }
+  }, [updatePlanMutation.isSuccess]);
 
   // Переносить дані плану у форму редагування.
   function startEditingPlan(plan: MembershipPlan) {
@@ -192,6 +161,7 @@ export function SubscriptionsPage() {
 
   // Збирає payload для створення або оновлення плану абонемента.
   function buildPlanPayload() {
+    // Нульовий visits_limit інтерпретуємо як "безліміт", тому в API відправляємо null.
     return {
       ...planForm,
       visits_limit: planForm.visits_limit > 0 ? planForm.visits_limit : null

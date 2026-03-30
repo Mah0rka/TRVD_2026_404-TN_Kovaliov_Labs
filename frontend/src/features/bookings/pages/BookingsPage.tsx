@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { cancelBooking, getMyBookings } from "../../../shared/api";
+import { cancelBooking, getMyBookings, queryKeys } from "../../../shared/api";
 import { hasSessionEnded } from "../../../shared/lib/sessionTime";
 
 // Показує бронювання поточного користувача та їх статуси.
@@ -12,16 +12,16 @@ export function BookingsPage() {
   const [view, setView] = useState<"ACTIVE" | "HISTORY">("ACTIVE");
 
   const bookingsQuery = useQuery({
-    queryKey: ["my-bookings"],
+    queryKey: queryKeys.bookings.mine(),
     queryFn: getMyBookings
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelBooking,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookings.mine() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.mine() });
     }
   });
 

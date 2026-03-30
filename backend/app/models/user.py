@@ -43,6 +43,12 @@ class User(Base, TimestampMixin):
         cascade="all, delete-orphan",
         foreign_keys="WorkoutClass.trainer_id",
     )
+    class_series = relationship(
+        "WorkoutSeries",
+        back_populates="trainer",
+        cascade="all, delete-orphan",
+        foreign_keys="WorkoutSeries.trainer_id",
+    )
     subscription_edits = relationship(
         "Subscription",
         foreign_keys="Subscription.last_modified_by_id",

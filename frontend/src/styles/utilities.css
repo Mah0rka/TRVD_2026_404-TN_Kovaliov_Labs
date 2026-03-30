@@ -1,0 +1,15 @@
+/* Small reusable presentation helpers shared across feature surfaces. */
+
+.empty-card {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.service-meta {
+  color: #ff6a3d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

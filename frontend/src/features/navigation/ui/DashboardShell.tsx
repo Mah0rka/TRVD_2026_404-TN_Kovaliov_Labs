@@ -1,21 +1,28 @@
-// Компонент формує спільні елементи інтерфейсу для різних сторінок.
+// DashboardShell відповідає лише за chrome/dashboard-обгортку:
+// sidebar, topbar, mobile drawer і місце для дочірніх сторінок.
+// Бізнес-логіка конкретних екранів сюди не потрапляє.
 
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
-import { useAuthStore, userHasRole } from "../../features/auth";
-import { navigationItems } from "../../features/navigation/config";
-import { logout } from "../api";
-import { BrandSignature } from "./BrandSignature";
+import { logout } from "../../../shared/api";
+import { BrandSignature } from "../../../shared/ui/BrandSignature";
+import { useAuthStore, userHasRole } from "../../auth";
+import { navigationItems } from "../config";
 
-// Будує каркас dashboard-інтерфейсу з навігацією та контентом.
-export function AppShell({ children }: PropsWithChildren) {
+// Спільна оболонка дає єдину навігацію для всіх protected-сторінок
+// і тримає mobile/desktop поведінку в одному місці.
+export function DashboardShell({ children }: PropsWithChildren) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Schedule-екран має щільніший workspace, тому для нього вмикаємо ширшу колонку контенту.
+  const isWideWorkspace = location.pathname === "/dashboard/schedule";
 
+  // Пункти навігації фільтруються один раз на рівні shell, щоб сторінки не дублювали
+  // рольову логіку лише заради того, щоб приховати лінк у sidebar.
   const visibleItems = navigationItems.filter((item) => userHasRole(user, item.roles));
   const formattedDate = new Intl.DateTimeFormat("uk-UA", {
     day: "numeric",
@@ -23,6 +30,8 @@ export function AppShell({ children }: PropsWithChildren) {
   }).format(new Date());
 
   useEffect(() => {
+    // Після будь-якої навігації мобільне меню має закриватися, щоб новий екран
+    // не лишався прихованим під drawer-ом.
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
@@ -32,6 +41,8 @@ export function AppShell({ children }: PropsWithChildren) {
     }
 
     const previousOverflow = document.body.style.overflow;
+    // Drawer поводиться як modal overlay: блокуємо прокрутку body і даємо Escape
+    // як стандартний спосіб закриття.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsMobileMenuOpen(false);
@@ -47,15 +58,17 @@ export function AppShell({ children }: PropsWithChildren) {
     };
   }, [isMobileMenuOpen]);
 
-  // Виконує logout із хедера та очищає auth-стан на клієнті.
   async function handleLogout() {
+    // Навіть якщо /logout не відповість, локальний auth-state все одно очищаємо,
+    // щоб користувач не застряг у shell після втрати сесії.
     await logout().catch(() => undefined);
     clearAuth();
     navigate("/login", { replace: true });
   }
 
-  // Формує список пунктів навігації для desktop і mobile режимів.
   function renderNavigationContent(isMobile = false) {
+    // Один renderer використовується і для desktop sidebar, і для mobile drawer.
+    // Так список посилань, профіль і logout-панель не роз'їжджаються між двома копіями JSX.
     return (
       <>
         <div className={isMobile ? "brand-lockup sidebar-mobile-brand" : "brand-lockup"}>
@@ -153,7 +166,9 @@ export function AppShell({ children }: PropsWithChildren) {
             <div className="topbar-badge">{formattedDate}</div>
           </div>
         </header>
-        <main className="content-area">{children}</main>
+        <main className={isWideWorkspace ? "content-area content-area-wide" : "content-area"}>
+          {children}
+        </main>
       </div>
     </div>
   );

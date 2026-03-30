@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -143,6 +144,9 @@ async def test_seed_helpers(monkeypatch):
 
     await seed_demo._ensure_schedule(session, users_map["trainer"])
     assert len(session.added_all) == 2
+    start_times = [item.start_time.astimezone(ZoneInfo("Europe/Kiev")) for item in session.added_all]
+    assert [value.hour for value in start_times] == [9, 10]
+    assert all(6 <= value.hour < 22 for value in start_times)
 
     await seed_demo._ensure_subscription(session, users_map["client"], plans_map["monthly"])
     await seed_demo._ensure_payment(session, users_map["client"], plans_map["monthly"])

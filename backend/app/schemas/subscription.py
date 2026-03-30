@@ -4,21 +4,34 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.api.docs import (
+    SUBSCRIPTION_EXAMPLE,
+    SUBSCRIPTION_FREEZE_EXAMPLE,
+    SUBSCRIPTION_ISSUE_EXAMPLE,
+    SUBSCRIPTION_MANAGEMENT_UPDATE_EXAMPLE,
+    SUBSCRIPTION_PURCHASE_EXAMPLE,
+)
 from app.models.subscription import SubscriptionStatus, SubscriptionType
 from app.schemas.membership_plan import MembershipPlanRead
 from app.schemas.user import UserRead
 
 
 class SubscriptionPurchaseRequest(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": SUBSCRIPTION_PURCHASE_EXAMPLE})
+
     plan_id: str | None = None
     type: SubscriptionType | None = None
 
 
 class SubscriptionFreezeRequest(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": SUBSCRIPTION_FREEZE_EXAMPLE})
+
     days: int = Field(ge=7, le=30)
 
 
 class SubscriptionManagementUpdate(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": SUBSCRIPTION_MANAGEMENT_UPDATE_EXAMPLE})
+
     plan_id: str | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None
@@ -28,6 +41,8 @@ class SubscriptionManagementUpdate(BaseModel):
 
 
 class SubscriptionManagementIssueRequest(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"example": SUBSCRIPTION_ISSUE_EXAMPLE})
+
     user_id: str
     plan_id: str
     start_date: datetime | None = None
@@ -38,7 +53,7 @@ class SubscriptionManagementIssueRequest(BaseModel):
 
 
 class SubscriptionRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_schema_extra={"example": SUBSCRIPTION_EXAMPLE})
 
     id: str
     user_id: str

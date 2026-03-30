@@ -1,25 +1,23 @@
-// Тести перевіряють ключові сценарії цього модуля.
-
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
 import { Routes, Route } from "react-router-dom";
 import { vi } from "vitest";
 
-import { useAuthStore } from "../../features/auth";
-import { renderWithProviders } from "../../test/utils";
-import { AppShell } from "./AppShell";
+import { useAuthStore } from "../../auth";
+import { renderWithProviders } from "../../../test/utils";
+import { DashboardShell } from "./DashboardShell";
 
 const logoutMock = vi.fn();
 
-vi.mock("../api", async () => {
-  const actual = await vi.importActual<typeof import("../api")>("../api");
+vi.mock("../../../shared/api", async () => {
+  const actual = await vi.importActual<typeof import("../../../shared/api")>("../../../shared/api");
   return {
     ...actual,
     logout: () => logoutMock()
   };
 });
 
-describe("AppShell", () => {
+describe("DashboardShell", () => {
   beforeEach(() => {
     logoutMock.mockReset();
   });
@@ -46,9 +44,9 @@ describe("AppShell", () => {
         <Route
           path="/dashboard"
           element={
-            <AppShell>
+            <DashboardShell>
               <div>dashboard content</div>
-            </AppShell>
+            </DashboardShell>
           }
         />
       </Routes>,
@@ -84,9 +82,9 @@ describe("AppShell", () => {
         <Route
           path="/dashboard"
           element={
-            <AppShell>
+            <DashboardShell>
               <div>dashboard content</div>
-            </AppShell>
+            </DashboardShell>
           }
         />
       </Routes>,
@@ -123,9 +121,9 @@ describe("AppShell", () => {
         <Route
           path="/dashboard/schedule"
           element={
-            <AppShell>
+            <DashboardShell>
               <div>schedule content</div>
-            </AppShell>
+            </DashboardShell>
           }
         />
       </Routes>,
@@ -135,6 +133,7 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Розклад" })).toHaveClass("active");
     expect(screen.getByRole("link", { name: "Огляд" })).not.toHaveClass("active");
     expect(container.querySelectorAll(".sidebar-nav .nav-link.active")).toHaveLength(1);
+    expect(container.querySelector(".content-area-wide")).toBeInTheDocument();
   });
 
   it("opens and closes mobile drawer navigation", async () => {
@@ -160,9 +159,9 @@ describe("AppShell", () => {
         <Route
           path="/dashboard"
           element={
-            <AppShell>
+            <DashboardShell>
               <div>dashboard content</div>
-            </AppShell>
+            </DashboardShell>
           }
         />
       </Routes>,
@@ -173,6 +172,48 @@ describe("AppShell", () => {
     expect(screen.getByRole("dialog", { name: "Навігація кабінету" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Закрити меню" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Навігація кабінету" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes mobile drawer with Escape", async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      user: {
+        id: "owner-1",
+        email: "owner@example.com",
+        first_name: "Owner",
+        last_name: "Account",
+        role: "OWNER",
+        phone: null,
+        is_verified: true,
+        created_at: "2026-03-23T00:00:00Z",
+        updated_at: "2026-03-23T00:00:00Z"
+      },
+      isAuthenticated: true,
+      isReady: true
+    });
+
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/dashboard"
+          element={
+            <DashboardShell>
+              <div>dashboard content</div>
+            </DashboardShell>
+          }
+        />
+      </Routes>,
+      { route: "/dashboard" }
+    );
+
+    await user.click(screen.getByRole("button", { name: "Відкрити меню" }));
+    expect(screen.getByRole("dialog", { name: "Навігація кабінету" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Навігація кабінету" })).not.toBeInTheDocument();

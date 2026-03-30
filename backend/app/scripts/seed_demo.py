@@ -4,6 +4,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 
@@ -17,6 +18,7 @@ from app.models.user import User, UserRole
 from app.models.workout_class import WorkoutClass, WorkoutType
 
 logger = logging.getLogger(__name__)
+CLUB_TIMEZONE = ZoneInfo("Europe/Kiev")
 
 
 # Наповнює базу демо-даними для локального середовища.
@@ -184,8 +186,9 @@ async def _migrate_user_relations(session, source_user: User, target_user: User)
 
 # Створює демонстраційний розклад занять для тренера.
 async def _ensure_schedule(session, trainer: User) -> None:
-    first_start = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) + timedelta(days=1, hours=8)
-    second_start = first_start + timedelta(days=1)
+    club_now = datetime.now(CLUB_TIMEZONE)
+    first_start = (club_now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+    second_start = (club_now + timedelta(days=2)).replace(hour=10, minute=0, second=0, microsecond=0)
     definitions = {
         "Morning Mobility": {
             "trainer_id": trainer.id,

@@ -57,6 +57,9 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
 - [Frontend Guide](frontend/Docs/frontend.md)
 - [Lab Reports Index](labs/README.md)
 
+`Frontend Guide` описує поточну клієнтську архітектуру: cookie-based auth, централізовані
+`queryKeys`, role-aware dashboard/schedule flows і модульний CSS split без `legacy.css`.
+
 ## Ліцензія
 
 Цей репозиторій є source-available.

@@ -1,0 +1,372 @@
+/* Responsive overrides shared across app, dashboard, marketing and CRUD screens. */
+
+@media (max-width: 1200px) {
+  .app-shell {
+    grid-template-columns: minmax(220px, 260px) 1fr;
+  }
+
+  .dashboard-hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page .dashboard-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .mobile-menu-button,
+  .mobile-close-button,
+  .marketing-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shell-main {
+    padding: 14px 16px 20px;
+  }
+
+  .dual-grid,
+  .table-row,
+  .compact-details,
+  .detail-layout,
+  .summary-grid,
+  .detail-layout-modal,
+  .participant-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .management-table-head {
+    display: none;
+  }
+
+  .users-table-layout,
+  .subscriptions-table-layout,
+  .payments-table-layout,
+  .management-table-row {
+    grid-template-columns: 1fr;
+  }
+
+  .management-table-row {
+    gap: 12px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .management-table-cell {
+    gap: 6px;
+  }
+
+  .management-table-cell::before {
+    content: attr(data-label);
+    color: rgba(255, 255, 255, 0.46);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .management-table-cell[data-label="Дії"] button,
+  .stacked-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-scroll-shell {
+    overflow-x: visible;
+  }
+
+  .table-scroll-shell .management-table {
+    min-width: 0;
+  }
+
+  .compact-stats-grid,
+  .compact-filter-panel,
+  .table-toolbar-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-panel {
+    padding: 16px;
+    max-height: calc(100vh - 24px);
+  }
+
+  .participant-sidebar {
+    position: static;
+  }
+
+  .marketing-header {
+    grid-template-columns: 1fr auto;
+    padding: 14px 16px;
+  }
+
+  .marketing-nav {
+    display: none;
+  }
+
+  .marketing-actions .login-link,
+  .marketing-actions .primary-cta,
+  .marketing-actions .session-pill {
+    display: none;
+  }
+
+  .dashboard-hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page .dashboard-links {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-create-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-create-panel .create-panel-field,
+  .schedule-create-panel .create-panel-action {
+    grid-column: span 1 !important;
+  }
+
+  .hero-section,
+  .zone-grid,
+  .trainer-grid,
+  .review-strip,
+  .pricing-showcase,
+  .location-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-section {
+    grid-template-areas:
+      "copy"
+      "stage"
+      "actions";
+    gap: 18px;
+    padding-top: 18px;
+  }
+
+  .class-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-stage {
+    min-height: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-main-shot {
+    min-height: 360px;
+  }
+
+  .cta-cluster {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .brand-logo {
+    width: 60px;
+    max-height: 52px;
+  }
+
+  .shell-main,
+  .marketing-page {
+    padding: 16px;
+  }
+
+  .topbar {
+    align-items: start;
+  }
+
+  .topbar-title-group {
+    width: 100%;
+    align-items: center;
+  }
+
+  .topbar-title-group > div {
+    min-width: 0;
+  }
+
+  .dashboard-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .table-toolbar,
+  .table-toolbar-wide {
+    align-items: stretch;
+  }
+
+  .toolbar-count {
+    width: 100%;
+  }
+
+  .marketing-page {
+    padding: 12px 12px 56px;
+  }
+
+  .marketing-header {
+    position: static;
+    grid-template-columns: 1fr auto;
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .marketing-actions {
+    justify-content: flex-end;
+  }
+
+  .primary-cta,
+  .login-link {
+    width: 100%;
+  }
+
+  .hero-section,
+  .zone-grid,
+  .class-menu,
+  .trainer-grid,
+  .review-strip,
+  .pricing-showcase,
+  .location-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-section {
+    grid-template-areas:
+      "copy"
+      "stage"
+      "actions";
+  }
+
+  .hero-title,
+  .location-copy h2 {
+    max-width: none;
+    font-size: 2.45rem;
+  }
+
+  .hero-proof {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-side-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .schedule-create-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-create-panel .create-panel-field,
+  .schedule-create-panel .create-panel-action {
+    grid-column: span 1 !important;
+  }
+
+  .management-table-row,
+  .stack-table-card,
+  .surface-card.detail-panel {
+    padding: 14px;
+  }
+
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .participant-modal-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: -4px -4px 0;
+    padding: 4px 4px 12px;
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(20, 20, 20, 0.88));
+  }
+
+  .confirm-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .marketing-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .marketing-actions .login-link,
+  .marketing-actions .primary-cta,
+  .marketing-actions .session-pill {
+    display: none;
+  }
+
+  .dashboard-hero-card,
+  .dashboard-focus-card {
+    padding: 24px;
+  }
+
+  .dashboard-hero-card h2 {
+    max-width: none;
+    font-size: 2.5rem;
+  }
+
+  .hero-main-shot {
+    min-height: 320px;
+  }
+
+  .modal-panel,
+  .participant-modal,
+  .confirm-modal {
+    width: 100%;
+    max-width: none;
+    min-height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 24px;
+  }
+
+  .hero-side-stack {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .hero-side-shot {
+    min-height: 170px;
+  }
+
+  .zone-card {
+    min-height: 320px;
+  }
+
+  .trainer-photo {
+    height: 300px;
+  }
+
+  .location-panel {
+    padding: 26px 22px;
+  }
+
+  .cta-cluster,
+  .cta-cluster .primary-cta,
+  .cta-cluster .login-link {
+    width: 100%;
+  }
+
+  .cta-cluster .primary-cta,
+  .cta-cluster .login-link {
+    min-width: 0;
+  }
+}

@@ -1,51 +1,26 @@
 // Показує тренеру або менеджменту актуальні заняття та їх історію.
 
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import {
-  completeSchedule,
-  getMyClasses,
-  getScheduleAttendees,
-  getSchedules
-} from "../../../shared/api";
 import { hasSessionEnded } from "../../../shared/lib/sessionTime";
 import { useAuthStore } from "../../auth";
+import { useClassesPageData } from "../hooks/useClassesPageData";
 
 function formatSessionPeriod(startTime: string, endTime: string): string {
   return `${new Date(startTime).toLocaleString("uk-UA")} - ${new Date(endTime).toLocaleString("uk-UA")}`;
 }
 
-// Показує список занять, історію та підтвердження завершення.
+// Сторінка поєднує три режими: активні заняття, очікування підтвердження і історію.
+// Один компонент тут виправданий, бо всі режими працюють над тим самим dataset.
 export function MyClassesPage() {
-  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const isManagement = user?.role === "ADMIN" || user?.role === "OWNER";
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [view, setView] = useState<"ACTIVE" | "PENDING" | "HISTORY">("ACTIVE");
   const [completionComment, setCompletionComment] = useState("");
 
-  const classesQuery = useQuery({
-    queryKey: [isManagement ? "all-classes" : "my-classes"],
-    queryFn: isManagement ? getSchedules : getMyClasses
-  });
-
-  const attendeesQuery = useQuery({
-    queryKey: ["class-attendees", selectedClassId],
-    queryFn: () => getScheduleAttendees(selectedClassId as string),
-    enabled: Boolean(selectedClassId)
-  });
-
-  const completeMutation = useMutation({
-    mutationFn: ({ classId, comment }: { classId: string; comment: string }) =>
-      completeSchedule(classId, { comment }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-classes"] });
-      queryClient.invalidateQueries({ queryKey: ["all-classes"] });
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-my-classes"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-schedules"] });
-    }
+  const { classesQuery, attendeesQuery, completeMutation } = useClassesPageData({
+    isManagement,
+    selectedClassId
   });
 
   const visibleClasses = useMemo(() => {
@@ -90,6 +65,8 @@ export function MyClassesPage() {
   );
 
   useEffect(() => {
+    // Коли змінюється вибране заняття, textarea має показувати актуальний коментар,
+    // а не залишок від попередньо відкритого класу.
     setCompletionComment(selectedClass?.completion_comment ?? "");
   }, [selectedClass?.completion_comment, selectedClass?.id]);
 
@@ -97,7 +74,7 @@ export function MyClassesPage() {
   const canConfirmCompletion =
     Boolean(selectedClass) &&
     Boolean(user) &&
-    hasSessionEnded(selectedClass.end_time) &&
+    hasSessionEnded(selectedClass!.end_time) &&
     (isManagement || selectedClass?.trainer_id === user?.id);
 
   const headingTitle = isManagement ? "Заняття клубу та історія" : "Мої заняття та учасники";
@@ -195,6 +172,8 @@ export function MyClassesPage() {
         </div>
 
         <div className="surface-card classes-detail-panel">
+          {/* Права панель завжди працює від selectedClass: або показує учасників
+              активного заняття, або підсумок/коментар для завершеного. */}
           <h3>{view === "ACTIVE" ? "Учасники заняття" : "Підсумок заняття"}</h3>
           {selectedClass ? (
             <div className="classes-detail-meta">
